@@ -1,6 +1,13 @@
 package de.shiewk.smoderation.punishments;
 
+import de.shiewk.smoderation.event.PunishmentIssueEvent;
+import de.shiewk.smoderation.storage.PunishmentContainer;
 import de.shiewk.smoderation.util.ByteUtil;
+import de.shiewk.smoderation.util.PlayerUtil;
+import de.shiewk.smoderation.util.TimeUtil;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
@@ -77,5 +84,42 @@ public class Punishment {
                 ", by=" + by +
                 ", to=" + to +
                 '}';
+    }
+
+    public static void issue(Punishment punishment, PunishmentContainer container){
+        container.add(punishment);
+        Bukkit.getPluginManager().callEvent(new PunishmentIssueEvent(punishment, container));
+    }
+
+    public Component playerMessage(){
+
+        NamedTextColor PRIMARY_COLOR = NamedTextColor.RED;
+        NamedTextColor SECONDARY_COLOR = NamedTextColor.GOLD;
+
+        switch (type) {
+            case MUTE -> {
+                return Component.text("You have been muted by ")
+                    .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
+                    .append(Component.text(".\nYour mute expires in "))
+                    .append(Component.text(TimeUtil.formatTimeLong(this.until - System.currentTimeMillis())).color(SECONDARY_COLOR))
+                    .append(Component.text("."))
+                    .color(PRIMARY_COLOR);
+            }
+            case KICK -> {
+                return Component.text("You have been kicked by ")
+                    .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
+                    .append(Component.text("."))
+                    .color(PRIMARY_COLOR);
+            }
+            case BAN -> {
+                return Component.text("You have been banned from this server by ")
+                        .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
+                        .append(Component.text(".\nYour ban expires in "))
+                        .append(Component.text(TimeUtil.formatTimeLong(this.until - System.currentTimeMillis())).color(SECONDARY_COLOR))
+                        .append(Component.text("."))
+                        .color(PRIMARY_COLOR);
+            }
+            default -> throw new IllegalStateException("Unknown punishment type " + type);
+        }
     }
 }
