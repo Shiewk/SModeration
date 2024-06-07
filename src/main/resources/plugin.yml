@@ -1,0 +1,4 @@
+name: SModeration
+version: '${version}'
+main: de.shiewk.smoderation.SModeration
+api-version: '1.20'
