@@ -2,3 +2,42 @@ name: SModeration
 version: '${version}'
 main: de.shiewk.smoderation.SModeration
 api-version: '1.20'
+load: STARTUP
+commands:
+  mute:
+    aliases:
+      - smodmute
+    permission: smod.mute
+    description: Mutes a player, either temporarily or permanently.
+  ban:
+    aliases:
+      - smodban
+      - tempban
+    permission: smod.ban
+    description: Bans a player, either temporarily or permanently.
+  kick:
+    aliases:
+      - smodkick
+    permission: smod.kick
+    description: Kicks a player
+  smod:
+    aliases:
+      - smodmenu
+      - smoderation
+    permission: smod.menu
+    description: Shows the SModeration menu.
+permissions:
+  smod.mute:
+    default: op
+    description: Allows the player to mute other players.
+  smod.ban:
+    default: op
+    description: Allows the player to ban and kick other players.
+    children:
+      - smod.kick
+  smod.kick:
+    default: op
+    description: Allows the player to kick other players.
+  smod.menu:
+    default: op
+    description: Allows the player to use the SModeration menu.
