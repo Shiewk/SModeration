@@ -4,6 +4,8 @@ import de.shiewk.smoderation.command.*;
 import de.shiewk.smoderation.event.CustomInventoryEvents;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.command.PluginCommand;
@@ -19,6 +21,7 @@ public final class SModeration extends JavaPlugin {
     public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
     public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
     public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
+    public static final TextComponent CHAT_PREFIX = Component.text("SM \u00BB ").color(SECONDARY_COLOR);
 
     @Override
     public void onLoad() {

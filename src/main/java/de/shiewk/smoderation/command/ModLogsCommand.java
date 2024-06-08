@@ -42,9 +42,9 @@ public class ModLogsCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             name = PlayerUtil.offlinePlayerName(uuid);
-            sender.sendMessage(Component.text("Player ").color(PRIMARY_COLOR)
+            sender.sendMessage(CHAT_PREFIX.append(Component.text("Player ").color(PRIMARY_COLOR)
                     .append(Component.text(name).color(SECONDARY_COLOR))
-                    .append(Component.text(" (%s)".formatted(uuid)).color(INACTIVE_COLOR)));
+                    .append(Component.text(" (%s)".formatted(uuid)).color(INACTIVE_COLOR))));
             UUID finalUuid = uuid;
             final List<Punishment> punishments = SModeration.container.findAll(p -> p.to.equals(finalUuid) && p.isActive());
             for (Punishment punishment : punishments) {

@@ -13,6 +13,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 
+import static de.shiewk.smoderation.SModeration.CHAT_PREFIX;
+
 public class PunishmentListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW)
@@ -22,7 +24,7 @@ public class PunishmentListener implements Listener {
                 && p.to.equals(event.getPlayer().getUniqueId())
                 && p.isActive());
         if (punishment != null){
-            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, punishment.playerMessage());
+            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, CHAT_PREFIX.append(punishment.playerMessage()));
         }
     }
 
@@ -35,7 +37,7 @@ public class PunishmentListener implements Listener {
                         && p.isActive());
         if (punishment != null) {
             event.setCancelled(true);
-            player.sendMessage(punishment.playerMessage());
+            player.sendMessage(CHAT_PREFIX.append(punishment.playerMessage()));
         }
     }
 
@@ -52,7 +54,7 @@ public class PunishmentListener implements Listener {
             case KICK, BAN -> {
                 final Player player = Bukkit.getPlayer(punishment.to);
                 if (player != null) {
-                    player.kick(punishment.playerMessage());
+                    player.kick(CHAT_PREFIX.append(punishment.playerMessage()));
                 }
             }
         }

@@ -48,8 +48,8 @@ public class UnbanCommand implements CommandExecutor, TabCompleter {
             UUID finalUuid = uuid;
             final Punishment punishment = SModeration.container.find(p -> p.to.equals(finalUuid) && p.isActive() && p.type == PunishmentType.BAN);
             if (punishment != null) {
-                punishment.cancel(senderUUID);
-                punishment.broadcastCancellation(SModeration.container);
+                punishment.undo(senderUUID);
+                punishment.broadcastUndo(SModeration.container);
             } else {
                 sender.sendMessage(Component.text("This player is not banned.").color(NamedTextColor.RED));
             }

@@ -204,12 +204,12 @@ public class SModMenu extends PageableCustomInventory {
                 lore.add(applyFormatting(Component.text("Expires: ").color(SECONDARY_COLOR).append(Component.text(expires).color(PRIMARY_COLOR))));
             }
             lore.add(applyFormatting(Component.text("Reason: ").color(SECONDARY_COLOR).append(Component.text(punishment.reason).color(PRIMARY_COLOR))));
-            if (punishment.wasCancelled()){
-                lore.add(applyFormatting(Component.text("Cancelled by: ").color(NamedTextColor.RED).append(Component.text(PlayerUtil.offlinePlayerName(punishment.cancelledBy())).color(NamedTextColor.GOLD))));
+            if (punishment.wasUndone()){
+                lore.add(applyFormatting(Component.text("Undone by: ").color(NamedTextColor.RED).append(Component.text(PlayerUtil.offlinePlayerName(punishment.undoneBy())).color(NamedTextColor.GOLD))));
             } else if (punishment.isActive()) {
                 if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))){
                     lore.add(Component.empty());
-                    lore.add(applyFormatting(Component.text("\u00BB Click to cancel punishment").color(NamedTextColor.GOLD)));
+                    lore.add(applyFormatting(Component.text("\u00BB Click to undo punishment").color(NamedTextColor.GOLD)));
                 }
             }
             meta.lore(lore);
@@ -260,9 +260,9 @@ public class SModMenu extends PageableCustomInventory {
                 if (timestamp != null) {
                     final Punishment punishment = container.findByTimestamp(timestamp);
                     if (punishment != null) {
-                        new ConfirmationInventory(player, "Do you want to cancel this punishment?", () -> {
-                            punishment.cancel(player.getUniqueId());
-                            punishment.broadcastCancellation(container);
+                        new ConfirmationInventory(player, "Do you want to undo this punishment?", () -> {
+                            punishment.undo(player.getUniqueId());
+                            punishment.broadcastUndo(container);
                             player.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
                             this.open();
                         }, this::open, false).open();

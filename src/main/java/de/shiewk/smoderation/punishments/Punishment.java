@@ -8,13 +8,11 @@ import de.shiewk.smoderation.util.TimeUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import static de.shiewk.smoderation.SModeration.PRIMARY_COLOR;
-import static de.shiewk.smoderation.SModeration.SECONDARY_COLOR;
+import static de.shiewk.smoderation.SModeration.*;
 
 public class Punishment {
     public static final String DEFAULT_REASON = "No reason provided.";
@@ -24,7 +22,7 @@ public class Punishment {
     public final UUID by;
     public final UUID to;
     public final String reason;
-    private UUID cancelledBy;
+    private UUID undoneBy;
 
     public Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason) {
         this.type = type;
@@ -35,23 +33,23 @@ public class Punishment {
         this.reason = reason;
     }
 
-    public boolean wasCancelled(){
-        return cancelledBy != null;
+    public boolean wasUndone(){
+        return undoneBy != null;
     }
 
-    public UUID cancelledBy() {
-        return cancelledBy;
+    public UUID undoneBy() {
+        return undoneBy;
     }
 
-    public void cancel(UUID cancelledBy){
-        if (this.cancelledBy != null){
-            throw new IllegalArgumentException("This punishment is already cancelled.");
+    public void undo(UUID undoneBy){
+        if (this.undoneBy != null){
+            throw new IllegalArgumentException("This punishment was already undone.");
         }
-        this.cancelledBy = cancelledBy;
+        this.undoneBy = undoneBy;
     }
 
     public boolean isActive(){
-        return until > System.currentTimeMillis() && !wasCancelled();
+        return until > System.currentTimeMillis() && !wasUndone();
     }
 
     public static Punishment mute(long time, long until, UUID by, UUID to, String reason){
@@ -70,7 +68,7 @@ public class Punishment {
 
     public byte[] toBytes(){
         final byte[] reasonBytes = reason.getBytes();
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_LENGTH + reasonBytes.length + (cancelledBy != null ? 17 : 1));
+        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_LENGTH + reasonBytes.length + (undoneBy != null ? 17 : 1));
         buffer.putInt(0, type.ordinal());
         buffer.putLong(4, time);
         buffer.putLong(12, until);
@@ -78,14 +76,14 @@ public class Punishment {
         buffer.put(36, ByteUtil.uuidToBytes(to));
         buffer.putInt(40, reason.length());
         buffer.put(44, reasonBytes);
-        buffer.put(44+reasonBytes.length, cancelledBy != null ? (byte) 1 : (byte) 0);
-        if (cancelledBy != null){
-            buffer.put(44+reasonBytes.length+1, ByteUtil.uuidToBytes(cancelledBy));
+        buffer.put(44+reasonBytes.length, undoneBy != null ? (byte) 1 : (byte) 0);
+        if (undoneBy != null){
+            buffer.put(44+reasonBytes.length+1, ByteUtil.uuidToBytes(undoneBy));
         }
         return buffer.array();
     }
 
-    private Component cancellationMessage(){
+    private Component undoMessage(){
         String msg = "";
         switch (type){
             case MUTE -> msg = "unmuted";
@@ -96,41 +94,14 @@ public class Punishment {
                 .append(Component.text(" was ").color(PRIMARY_COLOR))
                 .append(Component.text(msg))
                 .append(Component.text(" by ").color(PRIMARY_COLOR))
-                .append(Component.text(PlayerUtil.offlinePlayerName(cancelledBy)))
+                .append(Component.text(PlayerUtil.offlinePlayerName(undoneBy)))
                 .append(Component.text(".").color(PRIMARY_COLOR));
     }
 
-    public void broadcastCancellation(PunishmentContainer container){
+    public void broadcastUndo(PunishmentContainer container){
         for (CommandSender sender : container.collectBroadcastTargets()) {
-            sender.sendMessage(cancellationMessage());
+            sender.sendMessage(CHAT_PREFIX.append(undoMessage()));
         }
-    }
-
-    /**
-     * @deprecated behaves weirdly, does not support punishment reasons
-     */
-    @Deprecated(forRemoval = true)
-    public static @NotNull Punishment fromBytes(byte[] bytes){
-        if (bytes.length != BUFFER_LENGTH){
-            throw new IllegalArgumentException("the array has to be %s in length".formatted(BUFFER_LENGTH));
-        }
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        final int ptypeIndex = buffer.getInt(0);
-        PunishmentType ptype;
-        try {
-            ptype = PunishmentType.values()[ptypeIndex];
-        } catch (IndexOutOfBoundsException e){
-            throw new IllegalArgumentException("The punishment type %s does not exist.".formatted(ptypeIndex));
-        }
-        final long time = buffer.getLong(4);
-        final long until = buffer.getLong(12);
-        final byte[] byBytes = new byte[16];
-        System.arraycopy(bytes, 20, byBytes, 0, 16);
-        final byte[] toBytes = new byte[16];
-        System.arraycopy(bytes, 36, toBytes, 0, 16);
-        final UUID by = ByteUtil.bytesToUuid(byBytes);
-        final UUID to = ByteUtil.bytesToUuid(toBytes);
-        return new Punishment(ptype, time, until, by, to, "");
     }
 
     @Override
@@ -190,7 +161,7 @@ public class Punishment {
 
     private void broadcastIssue(PunishmentContainer container){
         for (CommandSender sender : container.collectBroadcastTargets()) {
-            sender.sendMessage(broadcastMessage());
+            sender.sendMessage(CHAT_PREFIX.append(broadcastMessage()));
         }
     }
 
@@ -199,7 +170,7 @@ public class Punishment {
             case MUTE, BAN -> {
                 final CommandSender sender = PlayerUtil.senderByUUID(to);
                 if (sender != null) {
-                    sender.sendMessage(playerMessage());
+                    sender.sendMessage(CHAT_PREFIX.append(playerMessage()));
                 }
             }
         }
