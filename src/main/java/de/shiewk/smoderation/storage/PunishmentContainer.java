@@ -1,8 +1,14 @@
 package de.shiewk.smoderation.storage;
 
 import de.shiewk.smoderation.punishments.Punishment;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
@@ -20,8 +26,8 @@ public class PunishmentContainer {
         return punishments.remove(index);
     }
 
-    public boolean remove(Punishment punishment){
-        return punishments.remove(punishment);
+    public void remove(Punishment punishment){
+        punishments.remove(punishment);
     }
 
     public @Nullable Punishment find(Predicate<Punishment> predicate){
@@ -31,6 +37,17 @@ public class PunishmentContainer {
             }
         }
         return null;
+    }
+
+    public List<CommandSender> collectBroadcastTargets(){
+        ArrayList<CommandSender> senders = new ArrayList<>();
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (onlinePlayer.hasPermission("smod.notifications")){
+                senders.add(onlinePlayer);
+            }
+        }
+        senders.add(Bukkit.getConsoleSender());
+        return Collections.unmodifiableList(senders);
     }
 
     public @Nullable Punishment findByTimestamp(long timestamp){

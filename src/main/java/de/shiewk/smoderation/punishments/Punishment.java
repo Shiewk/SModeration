@@ -15,6 +15,9 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 public class Punishment {
+
+    public static final NamedTextColor PRIMARY_COLOR = NamedTextColor.RED;
+    public static final NamedTextColor SECONDARY_COLOR = NamedTextColor.GOLD;
     public final PunishmentType type;
     public final long time;
     public final long until;
@@ -92,11 +95,48 @@ public class Punishment {
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()){
             container.add(punishment);
-            punishment.firstIssue();
+            punishment.firstIssue(container);
         }
     }
 
-    private void firstIssue(){
+    private Component broadcastMessage(){
+        final String toName = PlayerUtil.offlinePlayerName(to);
+        switch (type) {
+            case MUTE -> {
+                return Component.text(toName).color(SECONDARY_COLOR).append(
+                        Component.text(" has been muted by ").color(PRIMARY_COLOR)
+                        .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
+                        .append(Component.text(" for "))
+                        .append(Component.text(TimeUtil.formatTimeLong(this.until - this.time)).color(SECONDARY_COLOR))
+                        .append(Component.text(".")));
+            }
+            case KICK -> {
+                return Component.text(toName).color(SECONDARY_COLOR).append(
+                        Component.text(" has been kicked by ").color(PRIMARY_COLOR)
+                        .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
+                        .append(Component.text("."))
+                        .color(PRIMARY_COLOR));
+            }
+            case BAN -> {
+                return Component.text(toName).color(SECONDARY_COLOR).append(
+                        Component.text(" has been kicked by ").color(PRIMARY_COLOR)
+                        .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
+                        .append(Component.text(" for "))
+                        .append(Component.text(TimeUtil.formatTimeLong(this.until - this.time)).color(SECONDARY_COLOR))
+                        .append(Component.text("."))
+                        .color(PRIMARY_COLOR));
+            }
+            default -> throw new IllegalStateException("Unknown punishment type " + type);
+        }
+    }
+
+    private void broadcastIssue(PunishmentContainer container){
+        for (CommandSender sender : container.collectBroadcastTargets()) {
+            sender.sendMessage(broadcastMessage());
+        }
+    }
+
+    private void firstIssue(PunishmentContainer container){
         switch (type) {
             case MUTE, BAN -> {
                 final CommandSender sender = PlayerUtil.senderByUUID(to);
@@ -105,12 +145,10 @@ public class Punishment {
                 }
             }
         }
+        broadcastIssue(container);
     }
 
     public Component playerMessage(){
-
-        NamedTextColor PRIMARY_COLOR = NamedTextColor.RED;
-        NamedTextColor SECONDARY_COLOR = NamedTextColor.GOLD;
 
         switch (type) {
             case MUTE -> {

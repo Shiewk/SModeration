@@ -45,3 +45,6 @@ permissions:
   smod.menu:
     default: op
     description: Allows the player to use the SModeration menu.
+  smod.notifications:
+    default: op
+    description: Allows the player to be notified when a punishment is issued.
