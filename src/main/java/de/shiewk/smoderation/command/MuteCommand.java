@@ -62,6 +62,10 @@ public class MuteCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(Component.text("Please provide a valid duration.").color(NamedTextColor.RED));
                 return false;
             }
+            if (duration < 0){
+                sender.sendMessage(Component.text("Please provide a duration that's longer than 0ms.").color(NamedTextColor.RED));
+                return false;
+            }
             StringBuilder reason = new StringBuilder();
             for (int i = p; i < args.length; i++) {
                 if (!reason.isEmpty()){
