@@ -207,7 +207,7 @@ public class SModMenu extends PageableCustomInventory {
             if (punishment.wasCancelled()){
                 lore.add(applyFormatting(Component.text("Cancelled by: ").color(NamedTextColor.RED).append(Component.text(PlayerUtil.offlinePlayerName(punishment.cancelledBy())).color(NamedTextColor.GOLD))));
             } else if (punishment.isActive()) {
-                if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.cancelBan")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.cancelMute"))){
+                if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))){
                     lore.add(Component.empty());
                     lore.add(applyFormatting(Component.text("\u00BB Click to cancel punishment").color(NamedTextColor.GOLD)));
                 }
@@ -233,7 +233,7 @@ public class SModMenu extends PageableCustomInventory {
                 final Punishment punishment = punishments.get(ci);
                 final ItemStack item = createPunishmentItem(punishment);
                 if (punishment.isActive()){
-                    if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.cancelBan")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.cancelMute"))) {
+                    if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))) {
                         item.editMeta(meta -> meta.getPersistentDataContainer().set(PUNISHMENT_STORE_KEY, PersistentDataType.LONG, punishment.time));
                     }
                 }

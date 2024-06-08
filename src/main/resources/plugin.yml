@@ -58,10 +58,10 @@ permissions:
   smod.notifications:
     default: op
     description: Allows the player to be notified when a punishment is issued.
-  smod.cancelMute:
+  smod.unmute:
     default: op
     description: Allows the player to unmute other players.
-  smod.cancelBan:
+  smod.unban:
     default: op
     description: Allows the player to unban other players.
   smod.logs:
