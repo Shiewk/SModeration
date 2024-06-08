@@ -1,5 +1,7 @@
 package de.shiewk.smoderation.util;
 
+import de.shiewk.smoderation.SModeration;
+import de.shiewk.smoderation.punishments.Punishment;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -26,6 +28,11 @@ public abstract class PlayerUtil {
         if (offlinePlayer != null) {
             return offlinePlayer.getUniqueId();
         } else {
+            // try to find uuid by searching through punishments
+            final Punishment punishment = SModeration.container.find(p -> offlinePlayerName(p.to).equalsIgnoreCase(name));
+            if (punishment != null) {
+                return punishment.to;
+            }
             return null;
         }
     }
