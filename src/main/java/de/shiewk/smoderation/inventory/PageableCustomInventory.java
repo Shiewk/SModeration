@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Material;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 public abstract class PageableCustomInventory implements CustomInventory {
@@ -18,7 +19,7 @@ public abstract class PageableCustomInventory implements CustomInventory {
     }
 
     @Override
-    public void click(ItemStack stack) {
+    public void click(ItemStack stack, InventoryClickEvent event) {
         if (stack != null){
             if (stack.equals(previousStack)){
                 previousPage();
