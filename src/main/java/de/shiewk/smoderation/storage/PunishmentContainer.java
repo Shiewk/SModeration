@@ -53,4 +53,8 @@ public class PunishmentContainer {
     public @Nullable Punishment findByTimestamp(long timestamp){
         return find(punishment -> punishment.time == timestamp);
     }
+
+    public ArrayList<Punishment> copy() {
+        return new ArrayList<>(punishments);
+    }
 }

@@ -26,7 +26,7 @@ public class Punishment {
     public final UUID to;
     public final String reason;
 
-    protected Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason) {
+    public Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason) {
         this.type = type;
         this.time = time;
         this.until = until;

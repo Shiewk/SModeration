@@ -46,6 +46,7 @@ public class PunishmentListener implements Listener {
         final Punishment duplicate = container.find(p -> p.to.equals(punishment.to) && p.type == punishment.type && p.until >= punishment.time);
         if (duplicate != null){
             container.remove(duplicate);
+            container.add(new Punishment(duplicate.type, duplicate.time, System.currentTimeMillis(), duplicate.by, duplicate.to, duplicate.reason));
         }
         switch (punishment.type){
             case KICK, BAN -> {
