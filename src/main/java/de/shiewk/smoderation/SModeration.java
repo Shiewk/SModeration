@@ -3,6 +3,7 @@ package de.shiewk.smoderation;
 import de.shiewk.smoderation.command.BanCommand;
 import de.shiewk.smoderation.command.KickCommand;
 import de.shiewk.smoderation.command.MuteCommand;
+import de.shiewk.smoderation.event.CustomInventoryEvents;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
 import org.bukkit.command.PluginCommand;
@@ -23,6 +24,7 @@ public final class SModeration extends JavaPlugin {
     @Override
     public void onEnable() {
         getPluginManager().registerEvents(new PunishmentListener(), this);
+        getPluginManager().registerEvents(new CustomInventoryEvents(), this);
 
         final PluginCommand mute = getCommand("mute");
         assert mute != null;
