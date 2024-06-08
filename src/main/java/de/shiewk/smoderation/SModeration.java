@@ -54,5 +54,15 @@ public final class SModeration extends JavaPlugin {
         assert logs != null;
         logs.setExecutor(new ModLogsCommand());
         logs.setTabCompleter(new ModLogsCommand());
+
+        final PluginCommand unmute = getCommand("unmute");
+        assert unmute != null;
+        unmute.setExecutor(new UnmuteCommand());
+        unmute.setTabCompleter(new UnmuteCommand());
+
+        final PluginCommand unban = getCommand("unban");
+        assert unban != null;
+        unban.setExecutor(new UnbanCommand());
+        unban.setTabCompleter(new UnbanCommand());
     }
 }

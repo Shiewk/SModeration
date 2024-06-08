@@ -6,6 +6,7 @@ import de.shiewk.smoderation.punishments.PunishmentType;
 import de.shiewk.smoderation.util.PlayerUtil;
 import de.shiewk.smoderation.util.TimeUtil;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -37,7 +38,7 @@ public class ModLogsCommand implements CommandExecutor, TabCompleter {
                 uuid = PlayerUtil.offlinePlayerUUIDByName(playername);
             }
             if (uuid == null){
-                sender.sendMessage(Component.text("This player was not found. Try running /%s with an UUID instead.".formatted(label)));
+                sender.sendMessage(Component.text("This player was not found. Try running /%s with an UUID instead.".formatted(label)).color(NamedTextColor.RED));
                 return true;
             }
             name = PlayerUtil.offlinePlayerName(uuid);

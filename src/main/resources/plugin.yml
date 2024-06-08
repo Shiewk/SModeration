@@ -40,6 +40,20 @@ commands:
       - smoderation
     permission: smod.menu
     description: Shows the SModeration menu.
+  unmute:
+    usage: "§cUsage: /unmute <player|uuid>"
+    aliases:
+      - sunmute
+    permission: smod.unmute
+    description: Unmutes a muted player.
+  unban:
+    usage: "§cUsage: /unban <player|uuid>"
+    aliases:
+      - sunban
+      - pardon
+      - spardon
+    permission: smod.unban
+    description: Unbans a banned player.
 permissions:
   smod.mute:
     default: op
