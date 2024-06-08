@@ -4,6 +4,7 @@ import de.shiewk.smoderation.SModeration;
 import de.shiewk.smoderation.event.PunishmentIssueEvent;
 import de.shiewk.smoderation.punishments.Punishment;
 import de.shiewk.smoderation.punishments.PunishmentType;
+import de.shiewk.smoderation.storage.PunishmentContainer;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -41,6 +42,11 @@ public class PunishmentListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPunishmentIssue(PunishmentIssueEvent event){
         final Punishment punishment = event.getPunishment();
+        final PunishmentContainer container = event.getContainer();
+        final Punishment duplicate = container.find(p -> p.to.equals(punishment.to) && p.type == punishment.type && p.until >= punishment.time);
+        if (duplicate != null){
+            container.remove(duplicate);
+        }
         switch (punishment.type){
             case KICK, BAN -> {
                 final Player player = Bukkit.getPlayer(punishment.to);
