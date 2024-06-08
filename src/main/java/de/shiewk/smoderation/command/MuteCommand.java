@@ -82,7 +82,9 @@ public class MuteCommand implements CommandExecutor, TabCompleter {
                     try {
                         Long.parseLong(args[i]);
                     } catch (NumberFormatException ignored){
-                        return List.of();
+                        if (i != 1){
+                            return List.of();
+                        }
                     }
                 }
             }
