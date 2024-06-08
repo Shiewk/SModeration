@@ -2,6 +2,7 @@ package de.shiewk.smoderation.util;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,6 +27,14 @@ public abstract class PlayerUtil {
             return offlinePlayer.getUniqueId();
         } else {
             return null;
+        }
+    }
+
+    public static @Nullable CommandSender senderByUUID(@NotNull UUID uid){
+        if (uid.equals(UUID_CONSOLE)){
+            return Bukkit.getConsoleSender();
+        } else {
+            return Bukkit.getPlayer(uid);
         }
     }
 

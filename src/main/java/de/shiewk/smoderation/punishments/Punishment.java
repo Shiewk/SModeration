@@ -8,6 +8,7 @@ import de.shiewk.smoderation.util.TimeUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
@@ -91,6 +92,18 @@ public class Punishment {
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()){
             container.add(punishment);
+            punishment.firstIssue();
+        }
+    }
+
+    private void firstIssue(){
+        switch (type) {
+            case MUTE, BAN -> {
+                final CommandSender sender = PlayerUtil.senderByUUID(to);
+                if (sender != null) {
+                    sender.sendMessage(playerMessage());
+                }
+            }
         }
     }
 
