@@ -86,6 +86,27 @@ public class Punishment {
         return buffer.array();
     }
 
+    private Component cancellationMessage(){
+        String msg = "";
+        switch (type){
+            case MUTE -> msg = "unmuted";
+            case KICK -> msg = "unkicked??";
+            case BAN -> msg = "unbanned";
+        }
+        return Component.text(PlayerUtil.offlinePlayerName(to)).color(SECONDARY_COLOR)
+                .append(Component.text(" was ").color(PRIMARY_COLOR))
+                .append(Component.text(msg))
+                .append(Component.text(" by ").color(PRIMARY_COLOR))
+                .append(Component.text(PlayerUtil.offlinePlayerName(cancelledBy)))
+                .append(Component.text(".").color(PRIMARY_COLOR));
+    }
+
+    public void broadcastCancellation(PunishmentContainer container){
+        for (CommandSender sender : container.collectBroadcastTargets()) {
+            sender.sendMessage(cancellationMessage());
+        }
+    }
+
     /**
      * @deprecated behaves weirdly, does not support punishment reasons
      */

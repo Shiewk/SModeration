@@ -237,8 +237,6 @@ public class SModMenu extends PageableCustomInventory {
                 if (punishment.isActive()){
                     if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.cancelBan")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.cancelMute"))) {
                         item.editMeta(meta -> meta.getPersistentDataContainer().set(PUNISHMENT_STORE_KEY, PersistentDataType.LONG, punishment.time));
-                    } else {
-                        System.out.println("asd");
                     }
                 }
                 inventory.setItem(i, item);
@@ -266,14 +264,11 @@ public class SModMenu extends PageableCustomInventory {
                     if (punishment != null) {
                         new ConfirmationInventory(player, "Do you want to cancel this punishment?", () -> {
                             punishment.cancel(player.getUniqueId());
+                            punishment.broadcastCancellation(container);
                             player.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
                             this.open();
                         }, this::open, false).open();
-                    } else {
-                        System.out.println("kalsjkdaklsjd");
                     }
-                } else {
-                    System.out.println("asasdasd");
                 }
             }
         }
