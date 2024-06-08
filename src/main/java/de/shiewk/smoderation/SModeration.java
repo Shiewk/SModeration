@@ -1,5 +1,7 @@
 package de.shiewk.smoderation;
 
+import de.shiewk.smoderation.command.BanCommand;
+import de.shiewk.smoderation.command.KickCommand;
 import de.shiewk.smoderation.command.MuteCommand;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
@@ -26,6 +28,16 @@ public final class SModeration extends JavaPlugin {
         assert mute != null;
         mute.setExecutor(new MuteCommand());
         mute.setTabCompleter(new MuteCommand());
+
+        final PluginCommand ban = getCommand("ban");
+        assert ban != null;
+        ban.setExecutor(new BanCommand());
+        ban.setTabCompleter(new BanCommand());
+
+        final PluginCommand kick = getCommand("kick");
+        assert kick != null;
+        kick.setExecutor(new KickCommand());
+        kick.setTabCompleter(new KickCommand());
     }
 
     @Override

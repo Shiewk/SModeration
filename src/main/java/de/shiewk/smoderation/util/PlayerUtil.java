@@ -15,14 +15,14 @@ public abstract class PlayerUtil {
 
     public static @NotNull String offlinePlayerName(UUID uuid){
         if (uuid.equals(UUID_CONSOLE)){
-            return "UUID_CONSOLE";
+            return "CONSOLE";
         }
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
         return player.getName() == null ? uuid.toString() : player.getName();
     }
 
     public static @Nullable UUID offlinePlayerUUIDByName(String name){
-        final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayerIfCached(name);// getOfflinePlayerIfCached(String) is safer (I have experience with getOfflinePlayer(String) returning wrong UUIDs)
+        final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayerIfCached(name); // getOfflinePlayerIfCached(String) is safer (I have experience with getOfflinePlayer(String) returning wrong UUIDs)
         if (offlinePlayer != null) {
             return offlinePlayer.getUniqueId();
         } else {

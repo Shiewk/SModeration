@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MuteCommand implements CommandExecutor, TabCompleter {
+public class BanCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 2){
@@ -38,7 +38,7 @@ public class MuteCommand implements CommandExecutor, TabCompleter {
             String playerName = args[0];
             UUID uuid = PlayerUtil.offlinePlayerUUIDByName(playerName);
             if (senderUUID.equals(uuid)) {
-                sender.sendMessage(Component.text("You can't mute yourself.").color(NamedTextColor.RED));
+                sender.sendMessage(Component.text("You can't ban yourself.").color(NamedTextColor.RED));
                 return true;
             }
             if (uuid == null) {
@@ -69,7 +69,7 @@ public class MuteCommand implements CommandExecutor, TabCompleter {
                 }
                 reason.append(args[i]);
             }
-            final Punishment punishment = Punishment.mute(System.currentTimeMillis(), System.currentTimeMillis() + duration, senderUUID, uuid, reason.isEmpty() ? Punishment.DEFAULT_REASON : reason.toString());
+            final Punishment punishment = Punishment.ban(System.currentTimeMillis(), System.currentTimeMillis() + duration, senderUUID, uuid, reason.isEmpty() ? Punishment.DEFAULT_REASON : reason.toString());
             Punishment.issue(punishment, SModeration.container);
             return true;
         }
