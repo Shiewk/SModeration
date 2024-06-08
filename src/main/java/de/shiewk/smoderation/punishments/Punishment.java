@@ -25,6 +25,7 @@ public class Punishment {
     public final UUID by;
     public final UUID to;
     public final String reason;
+    private UUID cancelledBy;
 
     public Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason) {
         this.type = type;
@@ -33,6 +34,25 @@ public class Punishment {
         this.by = by;
         this.to = to;
         this.reason = reason;
+    }
+
+    public boolean wasCancelled(){
+        return cancelledBy != null;
+    }
+
+    public UUID cancelledBy() {
+        return cancelledBy;
+    }
+
+    public void cancel(UUID cancelledBy){
+        if (this.cancelledBy != null){
+            throw new IllegalArgumentException("This punishment is already cancelled.");
+        }
+        this.cancelledBy = cancelledBy;
+    }
+
+    public boolean isActive(){
+        return until > System.currentTimeMillis() && !wasCancelled();
     }
 
     public static Punishment mute(long time, long until, UUID by, UUID to, String reason){
@@ -51,7 +71,7 @@ public class Punishment {
 
     public byte[] toBytes(){
         final byte[] reasonBytes = reason.getBytes();
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_LENGTH + reasonBytes.length);
+        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_LENGTH + reasonBytes.length + (cancelledBy != null ? 17 : 1));
         buffer.putInt(0, type.ordinal());
         buffer.putLong(4, time);
         buffer.putLong(12, until);
@@ -59,6 +79,10 @@ public class Punishment {
         buffer.put(36, ByteUtil.uuidToBytes(to));
         buffer.putInt(40, reason.length());
         buffer.put(44, reasonBytes);
+        buffer.put(44+reasonBytes.length, cancelledBy != null ? (byte) 1 : (byte) 0);
+        if (cancelledBy != null){
+            buffer.put(44+reasonBytes.length+1, ByteUtil.uuidToBytes(cancelledBy));
+        }
         return buffer.array();
     }
 

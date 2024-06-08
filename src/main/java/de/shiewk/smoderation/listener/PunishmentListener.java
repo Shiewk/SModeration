@@ -20,7 +20,7 @@ public class PunishmentListener implements Listener {
         Punishment punishment = SModeration.container.find(p ->
                 p.type == PunishmentType.BAN
                 && p.to.equals(event.getPlayer().getUniqueId())
-                && p.until >= System.currentTimeMillis());
+                && p.isActive());
         if (punishment != null){
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, punishment.playerMessage());
         }
@@ -32,7 +32,7 @@ public class PunishmentListener implements Listener {
         final Punishment punishment = SModeration.container.find(p ->
                 p.type == PunishmentType.MUTE
                         && p.to.equals(player.getUniqueId())
-                        && p.until >= System.currentTimeMillis());
+                        && p.isActive());
         if (punishment != null) {
             event.setCancelled(true);
             player.sendMessage(punishment.playerMessage());
@@ -43,7 +43,7 @@ public class PunishmentListener implements Listener {
     public void onPunishmentIssue(PunishmentIssueEvent event){
         final Punishment punishment = event.getPunishment();
         final PunishmentContainer container = event.getContainer();
-        final Punishment duplicate = container.find(p -> p.to.equals(punishment.to) && p.type == punishment.type && p.until >= punishment.time);
+        final Punishment duplicate = container.find(p -> p.to.equals(punishment.to) && p.type == punishment.type && p.isActive());
         if (duplicate != null){
             container.remove(duplicate);
             container.add(new Punishment(duplicate.type, duplicate.time, System.currentTimeMillis(), duplicate.by, duplicate.to, duplicate.reason));

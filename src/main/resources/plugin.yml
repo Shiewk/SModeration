@@ -3,6 +3,9 @@ version: '${version}'
 main: de.shiewk.smoderation.SModeration
 api-version: '1.20'
 load: STARTUP
+authors:
+  - Shiewk
+description: "SModeration is an easy-to-use minecraft plugin for moderating your server."
 commands:
   mute:
     usage: "§cUsage: /mute <player> <duration> <reason>"
@@ -48,3 +51,9 @@ permissions:
   smod.notifications:
     default: op
     description: Allows the player to be notified when a punishment is issued.
+  smod.cancelMute:
+    default: op
+    description: Allows the player to unmute other players.
+  smod.cancelBan:
+    default: op
+    description: Allows the player to unban other players.

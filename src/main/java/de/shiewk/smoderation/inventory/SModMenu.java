@@ -10,12 +10,16 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -26,8 +30,8 @@ import java.util.function.Predicate;
 public class SModMenu extends PageableCustomInventory {
 
     public enum Filter {
-        ACTIVE("Active punishments", p -> p.until > System.currentTimeMillis()),
-        OLD("Expired punishments", p -> p.until < System.currentTimeMillis()),
+        ACTIVE("Active punishments", Punishment::isActive),
+        OLD("Old punishments", p -> !p.isActive()),
         ALL("All punishments", p -> true);
 
         public static final Material ICON = Material.HOPPER;
@@ -60,6 +64,7 @@ public class SModMenu extends PageableCustomInventory {
     public static final NamedTextColor PRIMARY_COLOR = NamedTextColor.AQUA;
     public static final NamedTextColor SECONDARY_COLOR = NamedTextColor.GREEN;
     public static final NamedTextColor INACTIVE_COLOR = NamedTextColor.GRAY;
+    private static final NamespacedKey PUNISHMENT_STORE_KEY = new NamespacedKey("smod", "punishmentid");
 
     private final Inventory inventory;
     private final Player player;
@@ -201,6 +206,14 @@ public class SModMenu extends PageableCustomInventory {
                 lore.add(applyFormatting(Component.text("Expires: ").color(SECONDARY_COLOR).append(Component.text(expires).color(PRIMARY_COLOR))));
             }
             lore.add(applyFormatting(Component.text("Reason: ").color(SECONDARY_COLOR).append(Component.text(punishment.reason).color(PRIMARY_COLOR))));
+            if (punishment.wasCancelled()){
+                lore.add(applyFormatting(Component.text("Cancelled by: ").color(NamedTextColor.RED).append(Component.text(PlayerUtil.offlinePlayerName(punishment.cancelledBy())).color(NamedTextColor.GOLD))));
+            } else if (punishment.isActive()) {
+                if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.cancelBan")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.cancelMute"))){
+                    lore.add(Component.empty());
+                    lore.add(applyFormatting(Component.text("\u00BB Click to cancel punishment").color(NamedTextColor.GOLD)));
+                }
+            }
             meta.lore(lore);
         });
         return stack;
@@ -219,7 +232,16 @@ public class SModMenu extends PageableCustomInventory {
         for (int i = 0; i < 45; i++) {
             int ci = i + (getPage() * 45);
             if (punishments.size() > ci){
-                inventory.setItem(i, createPunishmentItem(punishments.get(ci)));
+                final Punishment punishment = punishments.get(ci);
+                final ItemStack item = createPunishmentItem(punishment);
+                if (punishment.isActive()){
+                    if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.cancelBan")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.cancelMute"))) {
+                        item.editMeta(meta -> meta.getPersistentDataContainer().set(PUNISHMENT_STORE_KEY, PersistentDataType.LONG, punishment.time));
+                    } else {
+                        System.out.println("asd");
+                    }
+                }
+                inventory.setItem(i, item);
             } else {
                 inventory.setItem(i, new ItemStack(Material.AIR));
             }
@@ -234,6 +256,25 @@ public class SModMenu extends PageableCustomInventory {
                 cycleFilter(event.isRightClick());
             } else if (stack.equals(sortStack)){
                 cycleSort(event.isRightClick());
+            }
+            final ItemMeta itemMeta = stack.getItemMeta();
+            if (itemMeta != null) {
+                final PersistentDataContainer persistentDataContainer = itemMeta.getPersistentDataContainer();
+                final Long timestamp = persistentDataContainer.get(PUNISHMENT_STORE_KEY, PersistentDataType.LONG);
+                if (timestamp != null) {
+                    final Punishment punishment = container.findByTimestamp(timestamp);
+                    if (punishment != null) {
+                        new ConfirmationInventory(player, "Do you want to cancel this punishment?", () -> {
+                            punishment.cancel(player.getUniqueId());
+                            player.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
+                            this.open();
+                        }, this::open, false).open();
+                    } else {
+                        System.out.println("kalsjkdaklsjd");
+                    }
+                } else {
+                    System.out.println("asasdasd");
+                }
             }
         }
     }
