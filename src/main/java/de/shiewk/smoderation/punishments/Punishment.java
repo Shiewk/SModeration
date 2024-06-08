@@ -18,44 +18,54 @@ public class Punishment {
 
     public static final NamedTextColor PRIMARY_COLOR = NamedTextColor.RED;
     public static final NamedTextColor SECONDARY_COLOR = NamedTextColor.GOLD;
+    public static final String DEFAULT_REASON = "No reason provided.";
     public final PunishmentType type;
     public final long time;
     public final long until;
     public final UUID by;
     public final UUID to;
+    public final String reason;
 
-    protected Punishment(PunishmentType type, long time, long until, UUID by, UUID to) {
+    protected Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason) {
         this.type = type;
         this.time = time;
         this.until = until;
         this.by = by;
         this.to = to;
+        this.reason = reason;
     }
 
-    public static Punishment mute(long time, long until, UUID by, UUID to){
-        return new Punishment(PunishmentType.MUTE, time, until, by, to);
+    public static Punishment mute(long time, long until, UUID by, UUID to, String reason){
+        return new Punishment(PunishmentType.MUTE, time, until, by, to, reason);
     }
 
-    public static Punishment ban(long time, long until, UUID by, UUID to){
-        return new Punishment(PunishmentType.BAN, time, until, by, to);
+    public static Punishment ban(long time, long until, UUID by, UUID to, String reason){
+        return new Punishment(PunishmentType.BAN, time, until, by, to, reason);
     }
 
-    public static Punishment kick(long time, UUID by, UUID to){
-        return new Punishment(PunishmentType.KICK, time, time, by, to);
+    public static Punishment kick(long time, UUID by, UUID to, String reason){
+        return new Punishment(PunishmentType.KICK, time, time, by, to, reason);
     }
 
-    public static final int BUFFER_LENGTH = 52;
+    private static final int BUFFER_LENGTH = 56;
 
     public byte[] toBytes(){
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_LENGTH);
+        final byte[] reasonBytes = reason.getBytes();
+        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_LENGTH + reasonBytes.length);
         buffer.putInt(0, type.ordinal());
         buffer.putLong(4, time);
         buffer.putLong(12, until);
         buffer.put(20, ByteUtil.uuidToBytes(by));
         buffer.put(36, ByteUtil.uuidToBytes(to));
+        buffer.putInt(40, reason.length());
+        buffer.put(44, reasonBytes);
         return buffer.array();
     }
 
+    /**
+     * @deprecated behaves weirdly, does not support punishment reasons
+     */
+    @Deprecated(forRemoval = true)
     public static @NotNull Punishment fromBytes(byte[] bytes){
         if (bytes.length != BUFFER_LENGTH){
             throw new IllegalArgumentException("the array has to be %s in length".formatted(BUFFER_LENGTH));
@@ -76,7 +86,7 @@ public class Punishment {
         System.arraycopy(bytes, 36, toBytes, 0, 16);
         final UUID by = ByteUtil.bytesToUuid(byBytes);
         final UUID to = ByteUtil.bytesToUuid(toBytes);
-        return new Punishment(ptype, time, until, by, to);
+        return new Punishment(ptype, time, until, by, to, "");
     }
 
     @Override
@@ -87,6 +97,7 @@ public class Punishment {
                 ", until=" + until +
                 ", by=" + by +
                 ", to=" + to +
+                ", reason=" + reason +
                 '}';
     }
 
@@ -108,22 +119,25 @@ public class Punishment {
                         .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
                         .append(Component.text(" for "))
                         .append(Component.text(TimeUtil.formatTimeLong(this.until - this.time)).color(SECONDARY_COLOR))
-                        .append(Component.text(".")));
+                        .append(Component.text(".\nReason: "))
+                        .append(Component.text(reason).color(SECONDARY_COLOR)));
             }
             case KICK -> {
                 return Component.text(toName).color(SECONDARY_COLOR).append(
                         Component.text(" has been kicked by ").color(PRIMARY_COLOR)
                         .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                        .append(Component.text("."))
+                        .append(Component.text(".\nReason: "))
+                        .append(Component.text(reason).color(SECONDARY_COLOR))
                         .color(PRIMARY_COLOR));
             }
             case BAN -> {
                 return Component.text(toName).color(SECONDARY_COLOR).append(
-                        Component.text(" has been kicked by ").color(PRIMARY_COLOR)
+                        Component.text(" has been banned by ").color(PRIMARY_COLOR)
                         .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
                         .append(Component.text(" for "))
                         .append(Component.text(TimeUtil.formatTimeLong(this.until - this.time)).color(SECONDARY_COLOR))
-                        .append(Component.text("."))
+                        .append(Component.text(".\nReason: "))
+                        .append(Component.text(reason).color(SECONDARY_COLOR))
                         .color(PRIMARY_COLOR));
             }
             default -> throw new IllegalStateException("Unknown punishment type " + type);
@@ -149,12 +163,13 @@ public class Punishment {
     }
 
     public Component playerMessage(){
-
         switch (type) {
             case MUTE -> {
                 return Component.text("You have been muted by ")
                     .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                    .append(Component.text(".\nYour mute expires in "))
+                    .append(Component.text(".\nReason: "))
+                    .append(Component.text(reason).color(SECONDARY_COLOR))
+                    .append(Component.text("\nYour mute expires in "))
                     .append(Component.text(TimeUtil.formatTimeLong(this.until - System.currentTimeMillis())).color(SECONDARY_COLOR))
                     .append(Component.text("."))
                     .color(PRIMARY_COLOR);
@@ -162,13 +177,16 @@ public class Punishment {
             case KICK -> {
                 return Component.text("You have been kicked by ")
                     .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                    .append(Component.text("."))
+                    .append(Component.text(".\nReason: "))
+                    .append(Component.text(reason).color(SECONDARY_COLOR))
                     .color(PRIMARY_COLOR);
             }
             case BAN -> {
                 return Component.text("You have been banned from this server by ")
                         .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                        .append(Component.text(".\nYour ban expires in "))
+                        .append(Component.text(".\nReason: "))
+                        .append(Component.text(reason).color(SECONDARY_COLOR))
+                        .append(Component.text("\nYour ban expires in "))
                         .append(Component.text(TimeUtil.formatTimeLong(this.until - System.currentTimeMillis())).color(SECONDARY_COLOR))
                         .append(Component.text("."))
                         .color(PRIMARY_COLOR);

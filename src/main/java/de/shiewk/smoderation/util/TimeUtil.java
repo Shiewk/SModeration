@@ -5,6 +5,7 @@ public abstract class TimeUtil {
 
     public static String formatTimeLong(long millis){
         long seconds = millis / 1000;
+        millis -= seconds * 1000;
 
         long minutes = seconds / 60;
         seconds -= minutes * 60;
@@ -73,6 +74,10 @@ public abstract class TimeUtil {
                 builder.append(" ");
             }
             builder.append("%s seconds".formatted(seconds));
+        }
+
+        if (builder.isEmpty()){
+            builder.append("%s ms".formatted(millis));
         }
 
         return builder.toString();

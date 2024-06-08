@@ -46,10 +46,12 @@ public class MuteCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             long duration = 0;
+            int p = 1;
             for (int i = 1 /* start with index 1 to avoid player name */; i < args.length; i++) {
                 String arg = args[i];
                 long parsedDuration = TimeUtil.parseDurationMillisSafely(arg);
                 if (parsedDuration == -1){
+                    p = i;
                     break;
                 } else {
                     duration += parsedDuration;
@@ -59,7 +61,14 @@ public class MuteCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(Component.text("Please provide a valid duration.").color(NamedTextColor.RED));
                 return false;
             }
-            final Punishment punishment = Punishment.mute(System.currentTimeMillis(), System.currentTimeMillis() + duration, senderUUID, uuid);
+            StringBuilder reason = new StringBuilder();
+            for (int i = p; i < args.length; i++) {
+                if (!reason.isEmpty()){
+                    reason.append(" ");
+                }
+                reason.append(args[i]);
+            }
+            final Punishment punishment = Punishment.mute(System.currentTimeMillis(), System.currentTimeMillis() + duration, senderUUID, uuid, reason.isEmpty() ? Punishment.DEFAULT_REASON : reason.toString());
             Punishment.issue(punishment, SModeration.container);
             return true;
         }
