@@ -27,6 +27,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
+import static de.shiewk.smoderation.SModeration.*;
+
 public class SModMenu extends PageableCustomInventory {
 
     public enum Filter {
@@ -60,10 +62,6 @@ public class SModMenu extends PageableCustomInventory {
             this.comparator = comparator;
         }
     }
-
-    public static final NamedTextColor PRIMARY_COLOR = NamedTextColor.AQUA;
-    public static final NamedTextColor SECONDARY_COLOR = NamedTextColor.GREEN;
-    public static final NamedTextColor INACTIVE_COLOR = NamedTextColor.GRAY;
     private static final NamespacedKey PUNISHMENT_STORE_KEY = new NamespacedKey("smod", "punishmentid");
 
     private final Inventory inventory;

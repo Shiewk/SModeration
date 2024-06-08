@@ -7,6 +7,13 @@ authors:
   - Shiewk
 description: "SModeration is an easy-to-use minecraft plugin for moderating your server."
 commands:
+  modlogs:
+    usage: "§cUsage: /modlogs <player|uuid>"
+    aliases:
+      - logs
+      - seen
+      - smodlogs
+    permission: smod.logs
   mute:
     usage: "§cUsage: /mute <player> <duration> <reason>"
     aliases:
@@ -57,3 +64,6 @@ permissions:
   smod.cancelBan:
     default: op
     description: Allows the player to unban other players.
+  smod.logs:
+    default: op
+    description: Allows the player to view mod logs.

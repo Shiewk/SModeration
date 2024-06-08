@@ -6,7 +6,6 @@ import de.shiewk.smoderation.util.ByteUtil;
 import de.shiewk.smoderation.util.PlayerUtil;
 import de.shiewk.smoderation.util.TimeUtil;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -14,10 +13,10 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-public class Punishment {
+import static de.shiewk.smoderation.SModeration.PRIMARY_COLOR;
+import static de.shiewk.smoderation.SModeration.SECONDARY_COLOR;
 
-    public static final NamedTextColor PRIMARY_COLOR = NamedTextColor.RED;
-    public static final NamedTextColor SECONDARY_COLOR = NamedTextColor.GOLD;
+public class Punishment {
     public static final String DEFAULT_REASON = "No reason provided.";
     public final PunishmentType type;
     public final long time;

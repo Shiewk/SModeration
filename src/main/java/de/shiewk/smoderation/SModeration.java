@@ -1,12 +1,11 @@
 package de.shiewk.smoderation;
 
-import de.shiewk.smoderation.command.BanCommand;
-import de.shiewk.smoderation.command.KickCommand;
-import de.shiewk.smoderation.command.MuteCommand;
-import de.shiewk.smoderation.command.SModCommand;
+import de.shiewk.smoderation.command.*;
 import de.shiewk.smoderation.event.CustomInventoryEvents;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,6 +15,10 @@ public final class SModeration extends JavaPlugin {
 
     public static final PunishmentContainer container = new PunishmentContainer();
     public static SModeration PLUGIN = null;
+
+    public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
+    public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
+    public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
 
     @Override
     public void onLoad() {
@@ -46,10 +49,10 @@ public final class SModeration extends JavaPlugin {
         assert smod != null;
         smod.setExecutor(new SModCommand());
         smod.setTabCompleter(new SModCommand());
-    }
 
-    @Override
-    public void onDisable() {
-
+        final PluginCommand logs = getCommand("modlogs");
+        assert logs != null;
+        logs.setExecutor(new ModLogsCommand());
+        logs.setTabCompleter(new ModLogsCommand());
     }
 }

@@ -4,6 +4,7 @@ import de.shiewk.smoderation.punishments.Punishment;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -37,6 +38,16 @@ public class PunishmentContainer {
             }
         }
         return null;
+    }
+
+    public @NotNull List<Punishment> findAll(Predicate<Punishment> predicate){
+        List<Punishment> found = new ArrayList<>();
+        for (Punishment punishment : new CopyOnWriteArrayList<>(punishments)) {
+            if (predicate.test(punishment)){
+                found.add(punishment);
+            }
+        }
+        return found;
     }
 
     public List<CommandSender> collectBroadcastTargets(){
