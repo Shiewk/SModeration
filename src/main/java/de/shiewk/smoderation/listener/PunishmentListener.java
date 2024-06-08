@@ -38,7 +38,7 @@ public class PunishmentListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPunishmentIssue(PunishmentIssueEvent event){
         final Punishment punishment = event.getPunishment();
         switch (punishment.type){

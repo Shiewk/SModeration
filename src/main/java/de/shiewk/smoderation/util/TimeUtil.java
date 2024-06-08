@@ -77,4 +77,34 @@ public abstract class TimeUtil {
 
         return builder.toString();
     }
+
+    public static long parseDurationMillisSafely(String in){
+        try {
+            return parseDurationMillis(in);
+        } catch (Throwable e){
+            return -1;
+        }
+    }
+
+    public static long parseDurationMillis(String in){
+        if (in.endsWith("ms")){
+            return Long.parseLong(in.substring(0, in.length()-2));
+        } else if (in.endsWith("s")){
+            return Long.parseLong(in.substring(0, in.length()-1)) * 1000L;
+        } else if (in.endsWith("min")){
+            return Long.parseLong(in.substring(0, in.length()-3)) * 60000L;
+        } else if (in.endsWith("h")){
+            return Long.parseLong(in.substring(0, in.length()-1)) * 3600000L;
+        } else if (in.endsWith("d")){
+            return Long.parseLong(in.substring(0, in.length()-1)) * 86400000L;
+        } else if (in.endsWith("w")){
+            return Long.parseLong(in.substring(0, in.length()-1)) * 604800000L;
+        } else if (in.endsWith("mo")){
+            return Long.parseLong(in.substring(0, in.length()-2)) * 2592000000L;
+        } else if (in.endsWith("y")){
+            return Long.parseLong(in.substring(0, in.length()-1)) * 31536000000L;
+        } else {
+            return -1;
+        }
+    }
 }

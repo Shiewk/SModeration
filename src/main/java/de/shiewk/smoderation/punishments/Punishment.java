@@ -87,8 +87,11 @@ public class Punishment {
     }
 
     public static void issue(Punishment punishment, PunishmentContainer container){
-        container.add(punishment);
-        Bukkit.getPluginManager().callEvent(new PunishmentIssueEvent(punishment, container));
+        final PunishmentIssueEvent event = new PunishmentIssueEvent(punishment, container);
+        Bukkit.getPluginManager().callEvent(event);
+        if (!event.isCancelled()){
+            container.add(punishment);
+        }
     }
 
     public Component playerMessage(){

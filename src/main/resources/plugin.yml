@@ -5,22 +5,26 @@ api-version: '1.20'
 load: STARTUP
 commands:
   mute:
+    usage: /mute <player> <duration>
     aliases:
       - smodmute
     permission: smod.mute
     description: Mutes a player, either temporarily or permanently.
   ban:
+    usage: /ban <player> <duration>
     aliases:
       - smodban
       - tempban
     permission: smod.ban
     description: Bans a player, either temporarily or permanently.
   kick:
+    usage: /kick <player>
     aliases:
       - smodkick
     permission: smod.kick
     description: Kicks a player
   smod:
+    usage: /smod
     aliases:
       - smodmenu
       - smoderation

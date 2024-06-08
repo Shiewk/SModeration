@@ -1,7 +1,9 @@
 package de.shiewk.smoderation;
 
+import de.shiewk.smoderation.command.MuteCommand;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import static org.bukkit.Bukkit.getPluginManager;
@@ -19,6 +21,11 @@ public final class SModeration extends JavaPlugin {
     @Override
     public void onEnable() {
         getPluginManager().registerEvents(new PunishmentListener(), this);
+
+        final PluginCommand mute = getCommand("mute");
+        assert mute != null;
+        mute.setExecutor(new MuteCommand());
+        mute.setTabCompleter(new MuteCommand());
     }
 
     @Override
