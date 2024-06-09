@@ -42,4 +42,19 @@ public abstract class ByteUtil {
         long m = bytesToLong(new byte[]{ i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7] });
         return new UUID(m, l);
     }
+
+    public static int bytesToInt(byte[] bytes) {
+        if (bytes.length != 4){
+            throw new IllegalArgumentException("length must be 4");
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.put(0, bytes);
+        return buffer.getInt(0);
+    }
+
+    public static byte[] intToBytes(int value) {
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.putInt(value);
+        return buffer.array();
+    }
 }

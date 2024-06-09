@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.world.WorldSaveEvent;
 
 import static de.shiewk.smoderation.SModeration.CHAT_PREFIX;
 
@@ -57,6 +58,13 @@ public class PunishmentListener implements Listener {
                     player.kick(CHAT_PREFIX.append(punishment.playerMessage()));
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onWorldSave(WorldSaveEvent event){
+        if (event.getWorld().equals(Bukkit.getServer().getWorlds().get(0))){
+            SModeration.container.save(SModeration.SAVE_FILE);
         }
     }
 }

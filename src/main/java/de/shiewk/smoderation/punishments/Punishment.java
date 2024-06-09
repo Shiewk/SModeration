@@ -9,7 +9,10 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
-import java.nio.ByteBuffer;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
 import static de.shiewk.smoderation.SModeration.*;
@@ -25,12 +28,41 @@ public class Punishment {
     private UUID undoneBy;
 
     public Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason) {
+        this(type, time, until, by, to, reason, null);
+    }
+
+    private Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason, UUID undoneBy) {
         this.type = type;
         this.time = time;
         this.until = until;
         this.by = by;
         this.to = to;
         this.reason = reason;
+        this.undoneBy = undoneBy;
+    }
+
+    private static byte[] readStreamInternal(InputStream stream, int len) throws IOException {
+        final byte[] bytes = stream.readNBytes(len);
+        if (bytes.length != len){
+            throw new EOFException("Stream has ended before enough bytes were read");
+        }
+        return bytes;
+    }
+
+    public static Punishment load(InputStream in) throws IOException {
+        PunishmentType type = PunishmentType.values()[ByteUtil.bytesToInt(readStreamInternal(in, 4))];
+        long time = ByteUtil.bytesToLong(readStreamInternal(in, 8));
+        long until = ByteUtil.bytesToLong(readStreamInternal(in, 8));
+        UUID by = ByteUtil.bytesToUuid(readStreamInternal(in, 16));
+        UUID to = ByteUtil.bytesToUuid(readStreamInternal(in, 16));
+        int reasonLen = ByteUtil.bytesToInt(readStreamInternal(in, 4));
+        String reason = new String(readStreamInternal(in, reasonLen));
+        UUID undoneBy = null;
+        boolean undone = in.read() == 1;
+        if (undone){
+            undoneBy = ByteUtil.bytesToUuid(readStreamInternal(in, 16));
+        }
+        return new Punishment(type, time, until, by, to, reason, undoneBy);
     }
 
     public boolean wasUndone(){
@@ -66,21 +98,19 @@ public class Punishment {
 
     private static final int BUFFER_LENGTH = 56;
 
-    public byte[] toBytes(){
+    public void writeBytes(OutputStream stream) throws IOException {
+        stream.write(ByteUtil.intToBytes(type.ordinal()));
+        stream.write(ByteUtil.longToBytes(time));
+        stream.write(ByteUtil.longToBytes(until));
+        stream.write(ByteUtil.uuidToBytes(by));
+        stream.write(ByteUtil.uuidToBytes(to));
         final byte[] reasonBytes = reason.getBytes();
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_LENGTH + reasonBytes.length + (undoneBy != null ? 17 : 1));
-        buffer.putInt(0, type.ordinal());
-        buffer.putLong(4, time);
-        buffer.putLong(12, until);
-        buffer.put(20, ByteUtil.uuidToBytes(by));
-        buffer.put(36, ByteUtil.uuidToBytes(to));
-        buffer.putInt(40, reason.length());
-        buffer.put(44, reasonBytes);
-        buffer.put(44+reasonBytes.length, undoneBy != null ? (byte) 1 : (byte) 0);
-        if (undoneBy != null){
-            buffer.put(44+reasonBytes.length+1, ByteUtil.uuidToBytes(undoneBy));
+        stream.write(ByteUtil.intToBytes(reasonBytes.length));
+        stream.write(reasonBytes);
+        stream.write(wasUndone() ? 1 : 0);
+        if (wasUndone()){
+            stream.write(ByteUtil.uuidToBytes(undoneBy));
         }
-        return buffer.array();
     }
 
     private Component undoMessage(){

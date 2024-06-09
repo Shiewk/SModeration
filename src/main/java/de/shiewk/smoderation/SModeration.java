@@ -8,24 +8,31 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
 
 import static org.bukkit.Bukkit.getPluginManager;
 
 public final class SModeration extends JavaPlugin {
 
     public static final PunishmentContainer container = new PunishmentContainer();
+    public static ComponentLogger LOGGER = null;
     public static SModeration PLUGIN = null;
+    public static File SAVE_FILE = null;
 
     public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
     public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
     public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
-    public static final TextComponent CHAT_PREFIX = Component.text("SM \u00BB ").color(SECONDARY_COLOR);
+    public static final TextComponent CHAT_PREFIX = Component.text("SM \u00BB ").color(PRIMARY_COLOR);
 
     @Override
     public void onLoad() {
+        LOGGER = getComponentLogger();
         PLUGIN = this;
+        SAVE_FILE = new File(this.getDataFolder().getAbsolutePath() + "/container.gz");
     }
 
     @Override
@@ -67,5 +74,12 @@ public final class SModeration extends JavaPlugin {
         assert unban != null;
         unban.setExecutor(new UnbanCommand());
         unban.setTabCompleter(new UnbanCommand());
+
+        container.load(SAVE_FILE);
+    }
+
+    @Override
+    public void onDisable() {
+        SModeration.container.save(SModeration.SAVE_FILE);
     }
 }
