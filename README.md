@@ -8,8 +8,10 @@ If you have any feature requests, please [open an issue](https://github.com/Shie
 
 ## The SMod menu
 ![SMod Menu Interface](https://github.com/Shiewk/SModeration/assets/152653291/d89da0f5-61de-44cf-b59e-feea08831959)
+
 SModeration provides a nice user interface that can be used instead of chat commands.
 ![SMod Menu Sort](https://github.com/Shiewk/SModeration/assets/152653291/23e3862d-0915-47bd-9c47-6d8d10f8ab69)
+
 It has helpful functions like filtering and sorting options.
 
 ## Commands
