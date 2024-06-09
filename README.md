@@ -7,16 +7,17 @@ It keeps track of all punishments to ensure that you get a complete overview of 
 If you have any feature requests, please [open an issue](https://github.com/Shiewk/SModeration/issues).
 
 ## The SMod menu
-![SMod Menu Interface](https://github.com/Shiewk/SModeration/assets/images/menu0.png)
+![SMod Menu Interface](https://github.com/Shiewk/SModeration/assets/152653291/d89da0f5-61de-44cf-b59e-feea08831959)
 SModeration provides a nice user interface that can be used instead of chat commands.
-![SMod Menu Sort](https://github.com/Shiewk/SModeration/assets/images/menu1.png)
+![SMod Menu Sort](https://github.com/Shiewk/SModeration/assets/152653291/23e3862d-0915-47bd-9c47-6d8d10f8ab69)
 It has helpful functions like filtering and sorting options.
 
 ## Commands
+
 ### /smod
 The /smod command just opens the SMod menu. It takes no arguments.
 ### /mute
-The /mute command is used to mute players. 
+The /mute command is used to mute players.
 
 It requires 2 arguments:
 - Player name
