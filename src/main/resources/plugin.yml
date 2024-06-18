@@ -54,6 +54,23 @@ commands:
       - spardon
     permission: smod.unban
     description: Unbans a banned player.
+  invsee:
+    usage: "§cUsage: /invsee <player>"
+    aliases:
+      - sinvsee
+      - smodinvsee
+      - invs
+    permission: smod.invsee
+    description: Views the inventory of another player.
+  enderchestsee:
+    usage: "§cUsage: /enderchestsee <player>"
+    aliases:
+      - secsee
+      - senderchestsee
+      - ecsee
+      - ecs
+    permission: smod.enderchestsee
+    description: Views the ender chest of another player.
 permissions:
   smod.mute:
     default: op
@@ -81,3 +98,22 @@ permissions:
   smod.logs:
     default: op
     description: Allows the player to view mod logs.
+  smod.invsee:
+    default: op
+    description: Allows the player to view other players inventories.
+  smod.invsee.modify:
+    default: op
+    description: Allows the player to view and modify other players inventories.
+    children:
+      - smod.invsee
+  smod.invsee.preventmodify:
+    default: op
+    description: When giving this permission to a player, prevents their inventory from being modified.
+  smod.enderchestsee:
+    default: op
+    description: Allows the player to view other players ender chests.
+  smod.enderchestsee.modify:
+    default: op
+    description: Allows the player to view and modify other players ender chests.
+    children:
+      - smod.enderchestsee
