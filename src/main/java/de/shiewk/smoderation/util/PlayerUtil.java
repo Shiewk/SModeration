@@ -5,6 +5,7 @@ import de.shiewk.smoderation.punishments.Punishment;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,6 +44,15 @@ public abstract class PlayerUtil {
         } else {
             return Bukkit.getPlayer(uid);
         }
+    }
+
+    public static @Nullable Player findOnlinePlayer(String name){
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (onlinePlayer.getName().equalsIgnoreCase(name)){
+                return onlinePlayer;
+            }
+        }
+        return null;
     }
 
 }

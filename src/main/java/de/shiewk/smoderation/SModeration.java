@@ -2,6 +2,7 @@ package de.shiewk.smoderation;
 
 import de.shiewk.smoderation.command.*;
 import de.shiewk.smoderation.event.CustomInventoryEvents;
+import de.shiewk.smoderation.event.InvSeeEvents;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
 import net.kyori.adventure.text.Component;
@@ -26,6 +27,7 @@ public final class SModeration extends JavaPlugin {
     public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
     public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
     public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
+    public static final TextColor FAIL_COLOR = NamedTextColor.RED;
     public static final TextComponent CHAT_PREFIX = Component.text("SM \u00BB ").color(PRIMARY_COLOR);
 
     @Override
@@ -39,6 +41,7 @@ public final class SModeration extends JavaPlugin {
     public void onEnable() {
         getPluginManager().registerEvents(new PunishmentListener(), this);
         getPluginManager().registerEvents(new CustomInventoryEvents(), this);
+        getPluginManager().registerEvents(new InvSeeEvents(), this);
 
         final PluginCommand mute = getCommand("mute");
         assert mute != null;
@@ -74,6 +77,11 @@ public final class SModeration extends JavaPlugin {
         assert unban != null;
         unban.setExecutor(new UnbanCommand());
         unban.setTabCompleter(new UnbanCommand());
+
+        final PluginCommand invsee = getCommand("invsee");
+        assert invsee != null;
+        invsee.setExecutor(new InvseeCommand());
+        invsee.setTabCompleter(new InvseeCommand());
 
         container.load(SAVE_FILE);
     }
