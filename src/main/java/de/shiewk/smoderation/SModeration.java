@@ -2,6 +2,7 @@ package de.shiewk.smoderation;
 
 import de.shiewk.smoderation.command.*;
 import de.shiewk.smoderation.event.CustomInventoryEvents;
+import de.shiewk.smoderation.event.EnderchestSeeEvents;
 import de.shiewk.smoderation.event.InvSeeEvents;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
@@ -42,6 +43,7 @@ public final class SModeration extends JavaPlugin {
         getPluginManager().registerEvents(new PunishmentListener(), this);
         getPluginManager().registerEvents(new CustomInventoryEvents(), this);
         getPluginManager().registerEvents(new InvSeeEvents(), this);
+        getPluginManager().registerEvents(new EnderchestSeeEvents(), this);
 
         final PluginCommand mute = getCommand("mute");
         assert mute != null;
@@ -82,6 +84,11 @@ public final class SModeration extends JavaPlugin {
         assert invsee != null;
         invsee.setExecutor(new InvseeCommand());
         invsee.setTabCompleter(new InvseeCommand());
+
+        final PluginCommand ecsee = getCommand("enderchestsee");
+        assert ecsee != null;
+        ecsee.setExecutor(new EnderchestSeeCommand());
+        ecsee.setTabCompleter(new EnderchestSeeCommand());
 
         container.load(SAVE_FILE);
     }
