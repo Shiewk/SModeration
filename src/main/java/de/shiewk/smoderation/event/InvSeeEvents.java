@@ -7,6 +7,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.Objects;
+
 public class InvSeeEvents implements Listener {
 
     @EventHandler
@@ -14,6 +16,9 @@ public class InvSeeEvents implements Listener {
         final Inventory clicked = event.getView().getTopInventory();
         if (clicked instanceof PlayerInventory inventory){
             final HumanEntity holder = inventory.getHolder();
+            if (Objects.equals(holder, event.getWhoClicked())){
+                return;
+            }
             if (!event.getWhoClicked().hasPermission("smod.invsee.modify")){
                 event.setCancelled(true);
                 return;
