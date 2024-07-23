@@ -40,3 +40,14 @@ The /enderchestsee command can, similarly to /invsee, be used to view the ender 
 
 It takes one argument: the player name.
 The player has to be online.
+
+### /vanish
+The /vanish command is used to toggle vanish mode.
+
+In vanish mode, other players (who don't have the necessary permissions) can't see that you're online.
+
+To toggle vanish mode for yourself, use **/vanish**.
+
+To toggle vanish mode for someone else, use **/vanish <playername>**.
+
+Vanish status is not saved, so you re-appear when you leave the server.
