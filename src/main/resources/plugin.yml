@@ -71,6 +71,12 @@ commands:
       - ecs
     permission: smod.enderchestsee
     description: Views the ender chest of another player.
+  vanish:
+    usage: "§cUsage: /vanish <player>"
+    aliases:
+      - smvanish
+    permission: smod.vanish
+    description: Toggles vanish mode which prevents other players from seeing you're online
 permissions:
   smod.mute:
     default: op
@@ -117,3 +123,18 @@ permissions:
     description: Allows the player to view and modify other players ender chests.
     children:
       - smod.enderchestsee
+  smod.preventmute:
+    default: op
+    description: Prevents the player from being muted (if online)
+  smod.preventkick:
+    default: op
+    description: Prevents the player from being muted (if online)
+  smod.preventban:
+    default: op
+    description: Prevents the player from being muted (if online)
+  smod.vanish:
+    default: op
+    description: Allows the player to use /vanish
+  smod.vanish.see:
+    default: op
+    description: Allows the player to see vanished players

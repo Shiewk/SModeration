@@ -1,7 +1,10 @@
 # SModeration permissions
 - **smod.mute**: Allows the player to mute other players.
+- **smod.preventmute**: Prevents the player from being muted (if they are online).
 - **smod.ban**: Allows the player to ban and kick other players.
+- **smod.preventban**: Prevents the player from being banned (if they are online).
 - **smod.kick**: Allows the player to kick other players.
+- **smod.preventkick**: Prevents the player from being kicked (if they are online).
 - **smod.menu**: Allows the player to use the SModeration menu.
 - **smod.notifications**: Allows the player to be notified when a punishment is issued.
 - **smod.unmute**: Allows the player to unmute other players.

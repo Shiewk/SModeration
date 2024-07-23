@@ -16,7 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class KickCommand implements CommandExecutor, TabCompleter {
+import static net.kyori.adventure.text.Component.text;
+
+public class KickCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 1){
@@ -43,6 +45,10 @@ public class KickCommand implements CommandExecutor, TabCompleter {
             UUID uuid = player.getUniqueId();
             if (senderUUID.equals(uuid)) {
                 sender.sendMessage(Component.text("You can't kick yourself.").color(NamedTextColor.RED));
+                return true;
+            }
+            if (player.hasPermission("smod.preventkick")){
+                sender.sendMessage(text().content("This player can't be kicked.").color(NamedTextColor.RED));
                 return true;
             }
             StringBuilder reason = new StringBuilder();

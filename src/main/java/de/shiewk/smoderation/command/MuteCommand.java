@@ -4,7 +4,6 @@ import de.shiewk.smoderation.SModeration;
 import de.shiewk.smoderation.punishments.Punishment;
 import de.shiewk.smoderation.util.PlayerUtil;
 import de.shiewk.smoderation.util.TimeUtil;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
@@ -17,7 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MuteCommand implements CommandExecutor, TabCompleter {
+import static net.kyori.adventure.text.Component.text;
+
+public class MuteCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 2){
@@ -29,20 +30,25 @@ public class MuteCommand implements CommandExecutor, TabCompleter {
             } else if (sender instanceof Player pl){
                 senderUUID = pl.getUniqueId();
             } else if (sender instanceof BlockCommandSender){
-                sender.sendMessage(Component.text("Blocks can't execute this command.").color(NamedTextColor.RED));
+                sender.sendMessage(text("Blocks can't execute this command.").color(NamedTextColor.RED));
                 return true;
             } else {
-                sender.sendMessage(Component.text("Your command sender type is unknown (%s).".formatted(sender.getClass().getName())).color(NamedTextColor.RED));
+                sender.sendMessage(text("Your command sender type is unknown (%s).".formatted(sender.getClass().getName())).color(NamedTextColor.RED));
                 return true;
             }
             String playerName = args[0];
             UUID uuid = PlayerUtil.offlinePlayerUUIDByName(playerName);
             if (senderUUID.equals(uuid)) {
-                sender.sendMessage(Component.text("You can't mute yourself.").color(NamedTextColor.RED));
+                sender.sendMessage(text("You can't mute yourself.").color(NamedTextColor.RED));
                 return true;
             }
             if (uuid == null) {
-                sender.sendMessage(Component.text("This player is either offline or was never on this server.").color(NamedTextColor.RED));
+                sender.sendMessage(text("This player is either offline or was never on this server.").color(NamedTextColor.RED));
+                return true;
+            }
+            final Player toPlayer = Bukkit.getPlayer(uuid);
+            if (toPlayer != null && toPlayer.hasPermission("smod.preventmute")){
+                sender.sendMessage(text().content("This player can't be muted.").color(NamedTextColor.RED));
                 return true;
             }
             long duration = 0;
@@ -59,11 +65,11 @@ public class MuteCommand implements CommandExecutor, TabCompleter {
                 if (i == args.length - 1){ p = args.length; }
             }
             if (duration == 0){
-                sender.sendMessage(Component.text("Please provide a valid duration.").color(NamedTextColor.RED));
+                sender.sendMessage(text("Please provide a valid duration.").color(NamedTextColor.RED));
                 return false;
             }
             if (duration < 0){
-                sender.sendMessage(Component.text("Please provide a duration that's longer than 0ms.").color(NamedTextColor.RED));
+                sender.sendMessage(text("Please provide a duration that's longer than 0ms.").color(NamedTextColor.RED));
                 return false;
             }
             StringBuilder reason = new StringBuilder();

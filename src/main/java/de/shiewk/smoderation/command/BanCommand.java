@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class BanCommand implements CommandExecutor, TabCompleter {
+import static net.kyori.adventure.text.Component.text;
+
+public class BanCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 2){
@@ -43,6 +45,11 @@ public class BanCommand implements CommandExecutor, TabCompleter {
             }
             if (uuid == null) {
                 sender.sendMessage(Component.text("This player is either offline or was never on this server.").color(NamedTextColor.RED));
+                return true;
+            }
+            final Player toPlayer = Bukkit.getPlayer(uuid);
+            if (toPlayer != null && toPlayer.hasPermission("smod.preventban")){
+                sender.sendMessage(text().content("This player can't be banned.").color(NamedTextColor.RED));
                 return true;
             }
             long duration = 0;
