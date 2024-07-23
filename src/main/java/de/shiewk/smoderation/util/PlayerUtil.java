@@ -9,7 +9,10 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public abstract class PlayerUtil {
     private PlayerUtil(){}
@@ -55,4 +58,17 @@ public abstract class PlayerUtil {
         return null;
     }
 
+    public static List<String> listPlayerNames(){
+        return listPlayerNames(pl -> true);
+    }
+
+    public static List<String> listPlayerNames(final Predicate<Player> predicate) {
+        final ArrayList<String> names = new ArrayList<>();
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (predicate.test(onlinePlayer)){
+                names.add(onlinePlayer.getName());
+            }
+        }
+        return List.copyOf(names);
+    }
 }
