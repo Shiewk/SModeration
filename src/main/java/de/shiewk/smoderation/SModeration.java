@@ -12,6 +12,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -45,52 +46,27 @@ public final class SModeration extends JavaPlugin {
         getPluginManager().registerEvents(new InvSeeEvents(), this);
         getPluginManager().registerEvents(new EnderchestSeeEvents(), this);
 
-        final PluginCommand mute = getCommand("mute");
-        assert mute != null;
-        mute.setExecutor(new MuteCommand());
-        mute.setTabCompleter(new MuteCommand());
-
-        final PluginCommand ban = getCommand("ban");
-        assert ban != null;
-        ban.setExecutor(new BanCommand());
-        ban.setTabCompleter(new BanCommand());
-
-        final PluginCommand kick = getCommand("kick");
-        assert kick != null;
-        kick.setExecutor(new KickCommand());
-        kick.setTabCompleter(new KickCommand());
-
-        final PluginCommand smod = getCommand("smod");
-        assert smod != null;
-        smod.setExecutor(new SModCommand());
-        smod.setTabCompleter(new SModCommand());
-
-        final PluginCommand logs = getCommand("modlogs");
-        assert logs != null;
-        logs.setExecutor(new ModLogsCommand());
-        logs.setTabCompleter(new ModLogsCommand());
-
-        final PluginCommand unmute = getCommand("unmute");
-        assert unmute != null;
-        unmute.setExecutor(new UnmuteCommand());
-        unmute.setTabCompleter(new UnmuteCommand());
-
-        final PluginCommand unban = getCommand("unban");
-        assert unban != null;
-        unban.setExecutor(new UnbanCommand());
-        unban.setTabCompleter(new UnbanCommand());
-
-        final PluginCommand invsee = getCommand("invsee");
-        assert invsee != null;
-        invsee.setExecutor(new InvseeCommand());
-        invsee.setTabCompleter(new InvseeCommand());
-
-        final PluginCommand ecsee = getCommand("enderchestsee");
-        assert ecsee != null;
-        ecsee.setExecutor(new EnderchestSeeCommand());
-        ecsee.setTabCompleter(new EnderchestSeeCommand());
+        registerCommand("mute", new MuteCommand());
+        registerCommand("ban", new BanCommand());
+        registerCommand("kick", new KickCommand());
+        registerCommand("smod", new SModCommand());
+        registerCommand("modlogs", new ModLogsCommand());
+        registerCommand("unmute", new UnmuteCommand());
+        registerCommand("unban", new UnbanCommand());
+        registerCommand("invsee", new InvseeCommand());
+        registerCommand("enderchestsee", new EnderchestSeeCommand());
 
         container.load(SAVE_FILE);
+    }
+
+    private void registerCommand(String label, TabExecutor executor){
+        final PluginCommand command = getCommand(label);
+        if (command != null) {
+            command.setExecutor(executor);
+            command.setTabCompleter(executor);
+        } else {
+            LOGGER.warn("Command %s failed to register: This command does not exist".formatted(label));
+        }
     }
 
     @Override

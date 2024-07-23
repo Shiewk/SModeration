@@ -4,9 +4,8 @@ import de.shiewk.smoderation.util.PlayerUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
@@ -18,7 +17,7 @@ import java.util.List;
 
 import static de.shiewk.smoderation.SModeration.*;
 
-public class EnderchestSeeCommand implements CommandExecutor, TabCompleter {
+public class EnderchestSeeCommand implements TabExecutor {
 
 
     @Override
