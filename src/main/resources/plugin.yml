@@ -117,3 +117,12 @@ permissions:
     description: Allows the player to view and modify other players ender chests.
     children:
       - smod.enderchestsee
+  smod.preventmute:
+    default: op
+    description: Prevents the player from being muted (if online)
+  smod.preventkick:
+    default: op
+    description: Prevents the player from being muted (if online)
+  smod.preventban:
+    default: op
+    description: Prevents the player from being muted (if online)
