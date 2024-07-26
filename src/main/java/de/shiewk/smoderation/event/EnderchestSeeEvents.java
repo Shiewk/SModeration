@@ -15,7 +15,7 @@ public class EnderchestSeeEvents implements Listener {
         final Inventory clicked = event.getView().getTopInventory();
         if (!(clicked instanceof PlayerInventory)){
             final InventoryHolder holder = clicked.getHolder();
-            if (holder instanceof HumanEntity humanHolder){
+            if (holder instanceof HumanEntity humanHolder && humanHolder.getEnderChest().equals(clicked)){
                 if (!event.getWhoClicked().hasPermission("smod.enderchestsee.modify")){
                     event.setCancelled(true);
                 }
