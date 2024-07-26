@@ -1,6 +1,7 @@
 package de.shiewk.smoderation.listener;
 
 import de.shiewk.smoderation.SModeration;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,14 +22,16 @@ public class VanishListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST) public void onPlayerJoin(PlayerJoinEvent event){
-        final Player player = event.getPlayer();
-        if (player.hasPermission("smod.vanish.see")){
-            for (Player vanishedPlayer : SModeration.getVanishedPlayers()) {
-                // to show visible vanished players
-                player.showEntity(SModeration.PLUGIN, vanishedPlayer);
+    @EventHandler(priority = EventPriority.MONITOR) public void onPlayerJoin(PlayerJoinEvent event){
+        Bukkit.getScheduler().scheduleSyncDelayedTask(SModeration.PLUGIN, () -> {
+            final Player player = event.getPlayer();
+            if (player.hasPermission("smod.vanish.see")){
+                for (Player vanishedPlayer : SModeration.getVanishedPlayers()) {
+                    // to show visible vanished players
+                    player.showEntity(SModeration.PLUGIN, vanishedPlayer);
+                }
             }
-        }
+        });
     }
 
 }
