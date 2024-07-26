@@ -15,5 +15,7 @@
 - **smod.invsee.preventmodify**: When giving this permission to a player, prevents their inventory from being modified.
 - **smod.enderchestsee**: Allows the player to view other players ender chests.
 - **smod.enderchestsee.modify**: Allows the player to view and modify other players ender chests.
+- **smod.vanish**: Allows the player to enter and leave vanish mode.
+- **smod.vanish.see**: Allows the player to see vanished players
 
 All of these permissions are granted by default if the player is a server operator.
