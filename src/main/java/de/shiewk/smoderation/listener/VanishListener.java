@@ -1,6 +1,7 @@
 package de.shiewk.smoderation.listener;
 
 import de.shiewk.smoderation.SModeration;
+import de.shiewk.smoderation.command.VanishCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,10 +14,10 @@ public class VanishListener implements Listener {
 
     @EventHandler public void onPlayerQuit(PlayerQuitEvent event){
         final Player player = event.getPlayer();
-        if (SModeration.isVanished(player)){
-            SModeration.toggleVanish(player);
+        if (VanishCommand.isVanished(player)){
+            VanishCommand.toggleVanish(player);
         }
-        for (Player vanishedPlayer : SModeration.getVanishedPlayers()) {
+        for (Player vanishedPlayer : VanishCommand.getVanishedPlayers()) {
             // to clean up visibility status
             player.hideEntity(SModeration.PLUGIN, vanishedPlayer);
         }
@@ -26,7 +27,7 @@ public class VanishListener implements Listener {
         Bukkit.getScheduler().scheduleSyncDelayedTask(SModeration.PLUGIN, () -> {
             final Player player = event.getPlayer();
             if (player.hasPermission("smod.vanish.see")){
-                for (Player vanishedPlayer : SModeration.getVanishedPlayers()) {
+                for (Player vanishedPlayer : VanishCommand.getVanishedPlayers()) {
                     // to show visible vanished players
                     player.showEntity(SModeration.PLUGIN, vanishedPlayer);
                 }

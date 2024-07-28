@@ -7,13 +7,11 @@ import de.shiewk.smoderation.event.InvSeeEvents;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.listener.VanishListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
@@ -21,6 +19,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 
+import static de.shiewk.smoderation.command.VanishCommand.isVanished;
+import static de.shiewk.smoderation.command.VanishCommand.toggleVanish;
 import static net.kyori.adventure.text.Component.text;
 import static org.bukkit.Bukkit.getPluginManager;
 
@@ -85,53 +85,5 @@ public final class SModeration extends JavaPlugin {
                 toggleVanish(player);
             }
         }
-    }
-
-    private static final ObjectArrayList<Player> vanishedPlayers = new ObjectArrayList<>();
-
-    public static void toggleVanish(Player player){
-        final boolean newStatus = !isVanished(player);
-        if (newStatus){
-            vanishedPlayers.add(player);
-            for (CommandSender sender : container.collectBroadcastTargets()) {
-                sender.sendMessage(CHAT_PREFIX.append(
-                        player.displayName()
-                                .colorIfAbsent(SECONDARY_COLOR)
-                ).append(
-                        text()
-                                .content(" vanished.")
-                                .color(PRIMARY_COLOR)
-                ));
-            }
-            player.sendMessage(CHAT_PREFIX.append(text("You are now vanished.").color(PRIMARY_COLOR)));
-            player.setVisibleByDefault(false);
-            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (onlinePlayer.hasPermission("smod.vanish.see")){
-                    onlinePlayer.showEntity(PLUGIN, player);
-                }
-            }
-        } else {
-            vanishedPlayers.remove(player);
-            for (CommandSender sender : container.collectBroadcastTargets()) {
-                sender.sendMessage(CHAT_PREFIX.append(
-                        player.displayName()
-                                .colorIfAbsent(SECONDARY_COLOR)
-                ).append(
-                        text()
-                                .content(" re-appeared.")
-                                .color(PRIMARY_COLOR)
-                ));
-            }
-            player.sendMessage(CHAT_PREFIX.append(text("You are no longer vanished.").color(PRIMARY_COLOR)));
-            player.setVisibleByDefault(true);
-        }
-    }
-
-    public static boolean isVanished(Player player){
-        return vanishedPlayers.contains(player);
-    }
-
-    public static ObjectArrayList<Player> getVanishedPlayers() {
-        return vanishedPlayers.clone();
     }
 }
