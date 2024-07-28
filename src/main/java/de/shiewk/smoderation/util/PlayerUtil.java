@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -70,5 +71,9 @@ public abstract class PlayerUtil {
             }
         }
         return List.copyOf(names);
+    }
+
+    public static List<String> listPlayerNames(String search) {
+        return StringUtil.copyPartialMatches(search, listPlayerNames(), new ArrayList<>());
     }
 }

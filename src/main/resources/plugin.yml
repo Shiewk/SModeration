@@ -72,7 +72,7 @@ commands:
     permission: smod.enderchestsee
     description: Views the ender chest of another player.
   vanish:
-    usage: "§cUsage: /vanish <player>"
+    usage: "§cUsage: /vanish list or /vanish toggle <player>"
     aliases:
       - smvanish
     permission: smod.vanish

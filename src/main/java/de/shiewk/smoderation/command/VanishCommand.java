@@ -3,6 +3,9 @@ package de.shiewk.smoderation.command;
 import de.shiewk.smoderation.SModeration;
 import de.shiewk.smoderation.util.PlayerUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectListIterator;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -20,14 +23,25 @@ public class VanishCommand implements TabExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        Player player = null;
-        if (args.length > 0){
-            player = PlayerUtil.findOnlinePlayer(args[0]);
-        } else if (sender instanceof Player){
-            player = (Player) sender;
-        }
-        if (player != null){
-            toggleVanish(player);
+        if (args.length == 0 || args[0].equalsIgnoreCase("toggle")){
+            Player player = null;
+            if (args.length > 1){
+                player = PlayerUtil.findOnlinePlayer(args[1]);
+            } else if (sender instanceof Player){
+                player = (Player) sender;
+            }
+            if (player != null){
+                toggleVanish(player);
+                return true;
+            } else {
+                return false;
+            }
+        } else if (args[0].equalsIgnoreCase("list")) {
+            if (sender.hasPermission("smod.vanish.see")){
+                listVanishedPlayersTo(sender);
+            } else {
+                sender.sendMessage(text().color(NamedTextColor.RED).content("You do not have permission to list all vanished players."));
+            }
             return true;
         } else {
             return false;
@@ -37,7 +51,10 @@ public class VanishCommand implements TabExecutor {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 2){
-            return PlayerUtil.listPlayerNames();
+            return List.of("list", "toggle");
+        }
+        if (args.length < 3 && args[0].equalsIgnoreCase("toggle")){
+            return PlayerUtil.listPlayerNames(args[1]);
         }
         return List.of();
     }
@@ -88,5 +105,29 @@ public class VanishCommand implements TabExecutor {
 
     public static ObjectArrayList<Player> getVanishedPlayers() {
         return vanishedPlayers.clone();
+    }
+
+    public static void listVanishedPlayersTo(CommandSender receiver){
+        if (vanishedPlayers.isEmpty()){
+            receiver.sendMessage(CHAT_PREFIX.append(
+                    text().content("No players are currently vanished.").color(PRIMARY_COLOR)
+            ));
+        } else {
+            Component vanishList = CHAT_PREFIX.append(
+                    text().content("The following players are currently vanished: ").color(PRIMARY_COLOR)
+            );
+            for (ObjectListIterator<Player> iterator = vanishedPlayers.iterator(); iterator.hasNext(); ) {
+                Player vanishedPlayer = iterator.next();
+                vanishList = vanishList.append(
+                        vanishedPlayer.displayName().colorIfAbsent(SECONDARY_COLOR)
+                );
+                if (iterator.hasNext()){
+                    vanishList = vanishList.append(
+                            text().content(", ").color(PRIMARY_COLOR)
+                    );
+                }
+            }
+            receiver.sendMessage(vanishList);
+        }
     }
 }

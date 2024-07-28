@@ -25,12 +25,14 @@ public class VanishListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR) public void onPlayerJoin(PlayerJoinEvent event){
         Bukkit.getScheduler().scheduleSyncDelayedTask(SModeration.PLUGIN, () -> {
-            final Player player = event.getPlayer();
+            final Player player = event.getPlayer().getPlayer();
+            assert player != null;
             if (player.hasPermission("smod.vanish.see")){
                 for (Player vanishedPlayer : VanishCommand.getVanishedPlayers()) {
                     // to show visible vanished players
                     player.showEntity(SModeration.PLUGIN, vanishedPlayer);
                 }
+                VanishCommand.listVanishedPlayersTo(player);
             }
         });
     }
