@@ -239,4 +239,23 @@ public class Punishment {
             default -> throw new IllegalStateException("Unknown punishment type " + type);
         }
     }
+
+    public boolean matchesSearchQuery(String searchQuery) {
+        if (searchQuery == null) return true;
+        searchQuery = searchQuery.toLowerCase();
+        return reason.toLowerCase().contains(searchQuery)
+                || by.toString().equalsIgnoreCase(searchQuery)
+                || to.toString().equalsIgnoreCase(searchQuery)
+                || getPlayerName().toLowerCase().contains(searchQuery)
+                || getModeratorName().toLowerCase().contains(searchQuery);
+
+    }
+
+    private String getPlayerName() {
+        return PlayerUtil.offlinePlayerName(to);
+    }
+
+    private String getModeratorName() {
+        return PlayerUtil.offlinePlayerName(by);
+    }
 }

@@ -4,6 +4,7 @@ import de.shiewk.smoderation.command.*;
 import de.shiewk.smoderation.event.CustomInventoryEvents;
 import de.shiewk.smoderation.event.EnderchestSeeEvents;
 import de.shiewk.smoderation.event.InvSeeEvents;
+import de.shiewk.smoderation.input.ChatInputListener;
 import de.shiewk.smoderation.listener.PunishmentListener;
 import de.shiewk.smoderation.listener.VanishListener;
 import de.shiewk.smoderation.storage.PunishmentContainer;
@@ -51,6 +52,7 @@ public final class SModeration extends JavaPlugin {
         getPluginManager().registerEvents(new InvSeeEvents(), this);
         getPluginManager().registerEvents(new EnderchestSeeEvents(), this);
         getPluginManager().registerEvents(new VanishListener(), this);
+        getPluginManager().registerEvents(new ChatInputListener(), this);
 
         registerCommand("mute", new MuteCommand());
         registerCommand("ban", new BanCommand());
