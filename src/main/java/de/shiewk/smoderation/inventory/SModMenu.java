@@ -1,11 +1,13 @@
 package de.shiewk.smoderation.inventory;
 
+import de.shiewk.smoderation.input.ChatInput;
 import de.shiewk.smoderation.punishments.Punishment;
 import de.shiewk.smoderation.punishments.PunishmentType;
 import de.shiewk.smoderation.storage.PunishmentContainer;
 import de.shiewk.smoderation.util.PlayerUtil;
 import de.shiewk.smoderation.util.TimeUtil;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
@@ -15,6 +17,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -25,9 +28,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static de.shiewk.smoderation.SModeration.*;
+import static net.kyori.adventure.text.Component.text;
 
 public class SModMenu extends PageableCustomInventory {
 
@@ -70,13 +75,17 @@ public class SModMenu extends PageableCustomInventory {
     private List<Punishment> punishments;
     private ItemStack sortStack = null;
     private ItemStack filterStack = null;
+    private ItemStack searchStack = null;
+    private ItemStack typeStack = null;
     private int sort = 0;
     private int filter = 0;
+    private int type = -1;
+    private String searchQuery = null;
 
     public SModMenu(Player player, PunishmentContainer container) {
         this.player = player;
         this.container = container;
-        this.inventory = Bukkit.createInventory(this, 54, Component.text("SMod Menu"));
+        this.inventory = Bukkit.createInventory(this, 54, text("SMod Menu"));
         reload();
     }
 
@@ -88,8 +97,23 @@ public class SModMenu extends PageableCustomInventory {
         return Filter.values()[filter];
     }
 
+    public PunishmentType getType(){
+        return type == -1 ? null : PunishmentType.values()[type];
+    }
+
     private void reload(){
-        this.punishments = container.copy().stream().filter(getFilter().filter).sorted(getSort().comparator).toList();
+        this.punishments = container.copy().stream().filter(getFilter().filter).filter(p -> getType() == null || p.type == getType()).filter(p -> p.matchesSearchQuery(searchQuery)).sorted(getSort().comparator).toList();
+    }
+
+    public void promptSearchQuery(){
+        Bukkit.getScheduler().scheduleSyncDelayedTask(PLUGIN, player::closeInventory);
+        ChatInput.prompt(player, component -> {
+            if (component instanceof TextComponent text){
+                this.searchQuery = text.content();
+                // chat event is async
+                Bukkit.getScheduler().scheduleSyncDelayedTask(PLUGIN, this::open);
+            }
+        }, text("Enter your search query in chat").color(SECONDARY_COLOR), 30);
     }
 
     @Override
@@ -135,6 +159,25 @@ public class SModMenu extends PageableCustomInventory {
         refresh();
     }
 
+    public void cycleType(boolean backwards){
+        player.playSound(player, Sound.UI_BUTTON_CLICK, 1f, backwards ? 0.8f : 2f);
+        if (backwards){
+            if (type <= -1){
+                type = PunishmentType.values().length-1;
+            } else {
+                type--;
+            }
+        } else {
+            if (type >= PunishmentType.values().length-1){
+                type = -1;
+            } else {
+                type++;
+            }
+        }
+        reload();
+        refresh();
+    }
+
     @Override
     public void switchPage() {
         player.playSound(player, Sound.BLOCK_STONE_HIT, 0.75f, 1f);
@@ -144,40 +187,82 @@ public class SModMenu extends PageableCustomInventory {
         final Filter filter = getFilter();
         final ItemStack stack = new ItemStack(Filter.ICON);
         stack.editMeta(meta -> {
-            meta.displayName(applyFormatting(Component.text("Filter: " + filter.name).color(SECONDARY_COLOR)));
+            meta.displayName(applyFormatting(text("Filter: " + filter.name).color(PRIMARY_COLOR)));
             ArrayList<Component> lore = new ArrayList<>();
             lore.add(Component.empty());
             for (Filter value : Filter.values()) {
                 final boolean selected = filter == value;
-                Component filterText = applyFormatting(Component.text((selected ? "\u00BB " : "") + value.name).color(selected ? PRIMARY_COLOR : INACTIVE_COLOR));
+                Component filterText = applyFormatting(text((selected ? "\u00BB " : "") + value.name).color(selected ? SECONDARY_COLOR : INACTIVE_COLOR));
                 lore.add(filterText);
             }
             lore.add(Component.empty());
-            lore.add(applyFormatting(Component.text("\u00BB Click to switch filter").color(NamedTextColor.GOLD)));
+            lore.add(applyFormatting(text("\u00BB Click to switch filter").color(NamedTextColor.GOLD)));
             meta.lore(lore);
         });
         filterStack = stack;
         return stack;
     }
 
+    private ItemStack createTypeItem(){
+        final PunishmentType type = getType();
+        final ItemStack stack = new ItemStack(Material.CHEST);
+        stack.editMeta(meta -> {
+            meta.displayName(applyFormatting(text("Type: " + (type == null ? "All" : type.name)).color(PRIMARY_COLOR)));
+            ArrayList<Component> lore = new ArrayList<>();
+            lore.add(Component.empty());
+            final Consumer<PunishmentType> addToLore = value -> {
+                final boolean selected = type == value;
+                Component typeText = applyFormatting(text((selected ? "\u00BB " : "") + (value == null ? "All" : value.name)).color(selected ? SECONDARY_COLOR : INACTIVE_COLOR));
+                lore.add(typeText);
+            };
+            addToLore.accept(null);
+            for (PunishmentType value : PunishmentType.values()) {
+                addToLore.accept(value);
+            }
+            lore.add(Component.empty());
+            lore.add(applyFormatting(text("\u00BB Click to switch type").color(NamedTextColor.GOLD)));
+            meta.lore(lore);
+        });
+        return typeStack = stack;
+    }
+
     private ItemStack createSortItem(){
         final Sort sort = getSort();
         final ItemStack stack = new ItemStack(Sort.ICON);
         stack.editMeta(meta -> {
-            meta.displayName(applyFormatting(Component.text("Sort by: " + sort.name).color(PRIMARY_COLOR)));
+            meta.displayName(applyFormatting(text("Sort by: " + sort.name).color(PRIMARY_COLOR)));
             ArrayList<Component> lore = new ArrayList<>();
             lore.add(Component.empty());
             for (Sort value : Sort.values()) {
                 final boolean selected = sort == value;
-                Component sortText = applyFormatting(Component.text((selected ? "\u00BB " : "") + value.name).color(selected ? SECONDARY_COLOR : INACTIVE_COLOR));
+                Component sortText = applyFormatting(text((selected ? "\u00BB " : "") + value.name).color(selected ? SECONDARY_COLOR : INACTIVE_COLOR));
                 lore.add(sortText);
             }
             lore.add(Component.empty());
-            lore.add(applyFormatting(Component.text("\u00BB Click to switch sorting option").color(NamedTextColor.GOLD)));
+            lore.add(applyFormatting(text("\u00BB Click to switch sorting option").color(NamedTextColor.GOLD)));
             meta.lore(lore);
         });
         sortStack = stack;
         return stack;
+    }
+
+    private ItemStack createSearchItem(){
+        final ItemStack stack = new ItemStack(Material.FLOWER_BANNER_PATTERN);
+        stack.editMeta(meta -> {
+            meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
+            meta.displayName(applyFormatting(text("Search").color(PRIMARY_COLOR)));
+            final ArrayList<Component> lore = new ArrayList<>(List.of(
+                    Component.empty(),
+                    applyFormatting(text("Current search query: %s".formatted(searchQuery == null ? "None" : "\"" + searchQuery + "\"")).color(SECONDARY_COLOR)),
+                    Component.empty(),
+                    applyFormatting(text("\u00BB Click to enter new search query").color(NamedTextColor.GOLD))
+            ));
+            if (searchQuery != null){
+                lore.add(applyFormatting(text("\u00BB Right click to remove search query").color(NamedTextColor.GOLD)));
+            }
+            meta.lore(lore);
+        });
+        return searchStack = stack;
     }
 
     private ItemStack createPunishmentItem(Punishment punishment){
@@ -186,13 +271,13 @@ public class SModMenu extends PageableCustomInventory {
             if (meta instanceof SkullMeta skullMeta){
                 skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(punishment.to));
             }
-            meta.displayName(applyFormatting(Component.text(punishment.type.name).color(NamedTextColor.RED).decorate(TextDecoration.BOLD)));
+            meta.displayName(applyFormatting(text(punishment.type.name).color(NamedTextColor.RED).decorate(TextDecoration.BOLD)));
             ArrayList<Component> lore = new ArrayList<>();
-            lore.add(applyFormatting(Component.text("Player: ").color(SECONDARY_COLOR).append(Component.text(PlayerUtil.offlinePlayerName(punishment.to)).color(PRIMARY_COLOR))));
-            lore.add(applyFormatting(Component.text("Punished by: ").color(SECONDARY_COLOR).append(Component.text(PlayerUtil.offlinePlayerName(punishment.by)).color(PRIMARY_COLOR))));
-            lore.add(applyFormatting(Component.text("Timestamp: ").color(SECONDARY_COLOR).append(Component.text(TimeUtil.calendarTimestamp(punishment.time)).color(PRIMARY_COLOR))));
+            lore.add(applyFormatting(text("Player: ").color(SECONDARY_COLOR).append(text(PlayerUtil.offlinePlayerName(punishment.to)).color(PRIMARY_COLOR))));
+            lore.add(applyFormatting(text("Punished by: ").color(SECONDARY_COLOR).append(text(PlayerUtil.offlinePlayerName(punishment.by)).color(PRIMARY_COLOR))));
+            lore.add(applyFormatting(text("Timestamp: ").color(SECONDARY_COLOR).append(text(TimeUtil.calendarTimestamp(punishment.time)).color(PRIMARY_COLOR))));
             if (punishment.type != PunishmentType.KICK){
-                lore.add(applyFormatting(Component.text("Duration: ").color(SECONDARY_COLOR).append(Component.text(TimeUtil.formatTimeLong(punishment.until - punishment.time)).color(PRIMARY_COLOR))));
+                lore.add(applyFormatting(text("Duration: ").color(SECONDARY_COLOR).append(text(TimeUtil.formatTimeLong(punishment.until - punishment.time)).color(PRIMARY_COLOR))));
                 long remainingTime = punishment.until - System.currentTimeMillis();
                 final String expires;
                 if (remainingTime > 0){
@@ -201,15 +286,15 @@ public class SModMenu extends PageableCustomInventory {
                     remainingTime *= -1;
                     expires = TimeUtil.formatTimeLong(remainingTime) + " ago";
                 }
-                lore.add(applyFormatting(Component.text("Expires: ").color(SECONDARY_COLOR).append(Component.text(expires).color(PRIMARY_COLOR))));
+                lore.add(applyFormatting(text("Expires: ").color(SECONDARY_COLOR).append(text(expires).color(PRIMARY_COLOR))));
             }
-            lore.add(applyFormatting(Component.text("Reason: ").color(SECONDARY_COLOR).append(Component.text(punishment.reason).color(PRIMARY_COLOR))));
+            lore.add(applyFormatting(text("Reason: ").color(SECONDARY_COLOR).append(text(punishment.reason).color(PRIMARY_COLOR))));
             if (punishment.wasUndone()){
-                lore.add(applyFormatting(Component.text("Undone by: ").color(NamedTextColor.RED).append(Component.text(PlayerUtil.offlinePlayerName(punishment.undoneBy())).color(NamedTextColor.GOLD))));
+                lore.add(applyFormatting(text("Undone by: ").color(NamedTextColor.RED).append(text(PlayerUtil.offlinePlayerName(punishment.undoneBy())).color(NamedTextColor.GOLD))));
             } else if (punishment.isActive()) {
                 if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))){
                     lore.add(Component.empty());
-                    lore.add(applyFormatting(Component.text("\u00BB Click to undo punishment").color(NamedTextColor.GOLD)));
+                    lore.add(applyFormatting(text("\u00BB Click to undo punishment").color(NamedTextColor.GOLD)));
                 }
             }
             meta.lore(lore);
@@ -224,8 +309,10 @@ public class SModMenu extends PageableCustomInventory {
         }
         inventory.setItem(45, createPreviousPageStack());
         inventory.setItem(53, createNextPageStack());
+        inventory.setItem(47, createSearchItem());
+        inventory.setItem(48, createTypeItem());
         inventory.setItem(50, createFilterItem());
-        inventory.setItem(48, createSortItem());
+        inventory.setItem(51, createSortItem());
 
         for (int i = 0; i < 45; i++) {
             int ci = i + (getPage() * 45);
@@ -252,6 +339,18 @@ public class SModMenu extends PageableCustomInventory {
                 cycleFilter(event.isRightClick());
             } else if (stack.equals(sortStack)){
                 cycleSort(event.isRightClick());
+            } else if (stack.equals(searchStack)){
+                if (event.isRightClick() && searchQuery != null){
+                    player.playSound(player, Sound.UI_BUTTON_CLICK, 1f, 0.8f);
+                    searchQuery = null;
+                    reload();
+                    refresh();
+                } else {
+                    player.playSound(player, Sound.UI_BUTTON_CLICK, 1f, 2f);
+                    promptSearchQuery();
+                }
+            } else if (stack.equals(typeStack)) {
+                cycleType(event.isRightClick());
             }
             final ItemMeta itemMeta = stack.getItemMeta();
             if (itemMeta != null) {

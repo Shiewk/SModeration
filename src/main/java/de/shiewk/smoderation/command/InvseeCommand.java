@@ -1,5 +1,6 @@
 package de.shiewk.smoderation.command;
 
+import de.shiewk.smoderation.inventory.InvSeeEquipmentInventory;
 import de.shiewk.smoderation.util.PlayerUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -19,16 +20,30 @@ import static de.shiewk.smoderation.SModeration.*;
 
 public class InvseeCommand implements TabExecutor {
 
+    private enum InvseeType {
+        INVENTORY,
+        EQUIPMENT
+    }
+
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length < 1) {
             return false;
         }
+        final InvseeType type;
+        if (args.length > 1){
+            switch (args[1].toLowerCase()){
+                case "armor", "equipment" -> type = InvseeType.EQUIPMENT;
+                default -> type = InvseeType.INVENTORY;
+            }
+        } else {
+            type = InvseeType.INVENTORY;
+        }
         if (sender instanceof HumanEntity human){
             final Player player = PlayerUtil.findOnlinePlayer(args[0]);
             if (player != null) {
-                if (human.getUniqueId().equals(player.getUniqueId())){
+                if (human.getUniqueId().equals(player.getUniqueId()) && type != InvseeType.EQUIPMENT){
                     human.sendMessage(Component.text("You can't open your own inventory.").color(FAIL_COLOR));
                 } else {
                     human.sendMessage(CHAT_PREFIX.append(
@@ -36,7 +51,10 @@ public class InvseeCommand implements TabExecutor {
                                     .append(Component.text(player.getName()).color(SECONDARY_COLOR))
                                     .append(Component.text("."))
                     ));
-                    human.openInventory(player.getInventory());
+                    switch (type){
+                        case INVENTORY -> human.openInventory(player.getInventory());
+                        case EQUIPMENT -> new InvSeeEquipmentInventory(human, player).open();
+                    }
                 }
             } else {
                 human.sendMessage(Component.text("This player is not online.").color(FAIL_COLOR));
@@ -49,8 +67,10 @@ public class InvseeCommand implements TabExecutor {
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length > 1){
+        if (args.length > 2){
             return List.of();
+        } else if (args.length > 1){
+            return List.of("armor", "equipment", "inventory");
         }
         List<String> available = new ArrayList<>();
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
