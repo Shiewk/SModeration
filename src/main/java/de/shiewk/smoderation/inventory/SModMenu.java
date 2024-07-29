@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static de.shiewk.smoderation.SModeration.*;
@@ -75,8 +76,10 @@ public class SModMenu extends PageableCustomInventory {
     private ItemStack sortStack = null;
     private ItemStack filterStack = null;
     private ItemStack searchStack = null;
+    private ItemStack typeStack = null;
     private int sort = 0;
     private int filter = 0;
+    private int type = -1;
     private String searchQuery = null;
 
     public SModMenu(Player player, PunishmentContainer container) {
@@ -94,8 +97,12 @@ public class SModMenu extends PageableCustomInventory {
         return Filter.values()[filter];
     }
 
+    public PunishmentType getType(){
+        return type == -1 ? null : PunishmentType.values()[type];
+    }
+
     private void reload(){
-        this.punishments = container.copy().stream().filter(getFilter().filter).filter(p -> p.matchesSearchQuery(searchQuery)).sorted(getSort().comparator).toList();
+        this.punishments = container.copy().stream().filter(getFilter().filter).filter(p -> getType() == null || p.type == getType()).filter(p -> p.matchesSearchQuery(searchQuery)).sorted(getSort().comparator).toList();
     }
 
     public void promptSearchQuery(){
@@ -152,6 +159,25 @@ public class SModMenu extends PageableCustomInventory {
         refresh();
     }
 
+    public void cycleType(boolean backwards){
+        player.playSound(player, Sound.UI_BUTTON_CLICK, 1f, backwards ? 0.8f : 2f);
+        if (backwards){
+            if (type <= -1){
+                type = PunishmentType.values().length-1;
+            } else {
+                type--;
+            }
+        } else {
+            if (type >= PunishmentType.values().length-1){
+                type = -1;
+            } else {
+                type++;
+            }
+        }
+        reload();
+        refresh();
+    }
+
     @Override
     public void switchPage() {
         player.playSound(player, Sound.BLOCK_STONE_HIT, 0.75f, 1f);
@@ -175,6 +201,29 @@ public class SModMenu extends PageableCustomInventory {
         });
         filterStack = stack;
         return stack;
+    }
+
+    private ItemStack createTypeItem(){
+        final PunishmentType type = getType();
+        final ItemStack stack = new ItemStack(Material.CHEST);
+        stack.editMeta(meta -> {
+            meta.displayName(applyFormatting(text("Type: " + (type == null ? "All" : type.name)).color(PRIMARY_COLOR)));
+            ArrayList<Component> lore = new ArrayList<>();
+            lore.add(Component.empty());
+            final Consumer<PunishmentType> addToLore = value -> {
+                final boolean selected = type == value;
+                Component typeText = applyFormatting(text((selected ? "\u00BB " : "") + (value == null ? "All" : value.name)).color(selected ? SECONDARY_COLOR : INACTIVE_COLOR));
+                lore.add(typeText);
+            };
+            addToLore.accept(null);
+            for (PunishmentType value : PunishmentType.values()) {
+                addToLore.accept(value);
+            }
+            lore.add(Component.empty());
+            lore.add(applyFormatting(text("\u00BB Click to switch type").color(NamedTextColor.GOLD)));
+            meta.lore(lore);
+        });
+        return typeStack = stack;
     }
 
     private ItemStack createSortItem(){
@@ -260,9 +309,10 @@ public class SModMenu extends PageableCustomInventory {
         }
         inventory.setItem(45, createPreviousPageStack());
         inventory.setItem(53, createNextPageStack());
-        inventory.setItem(51, createFilterItem());
-        inventory.setItem(49, createSortItem());
         inventory.setItem(47, createSearchItem());
+        inventory.setItem(48, createTypeItem());
+        inventory.setItem(50, createFilterItem());
+        inventory.setItem(51, createSortItem());
 
         for (int i = 0; i < 45; i++) {
             int ci = i + (getPage() * 45);
@@ -299,6 +349,8 @@ public class SModMenu extends PageableCustomInventory {
                     player.playSound(player, Sound.UI_BUTTON_CLICK, 1f, 2f);
                     promptSearchQuery();
                 }
+            } else if (stack.equals(typeStack)) {
+                cycleType(event.isRightClick());
             }
             final ItemMeta itemMeta = stack.getItemMeta();
             if (itemMeta != null) {
