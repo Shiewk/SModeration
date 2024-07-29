@@ -1,4 +1,4 @@
-package de.shiewk.smoderation.event;
+package de.shiewk.smoderation.listener;
 
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
@@ -9,7 +9,7 @@ import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Objects;
 
-public class InvSeeEvents implements Listener {
+public class InvSeeListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event){

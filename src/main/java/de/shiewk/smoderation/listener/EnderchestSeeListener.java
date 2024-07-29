@@ -1,4 +1,4 @@
-package de.shiewk.smoderation.event;
+package de.shiewk.smoderation.listener;
 
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
@@ -8,7 +8,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.PlayerInventory;
 
-public class EnderchestSeeEvents implements Listener {
+public class EnderchestSeeListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event){

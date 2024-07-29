@@ -1,12 +1,8 @@
 package de.shiewk.smoderation;
 
 import de.shiewk.smoderation.command.*;
-import de.shiewk.smoderation.event.CustomInventoryEvents;
-import de.shiewk.smoderation.event.EnderchestSeeEvents;
-import de.shiewk.smoderation.event.InvSeeEvents;
 import de.shiewk.smoderation.input.ChatInputListener;
-import de.shiewk.smoderation.listener.PunishmentListener;
-import de.shiewk.smoderation.listener.VanishListener;
+import de.shiewk.smoderation.listener.*;
 import de.shiewk.smoderation.storage.PunishmentContainer;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -48,9 +44,9 @@ public final class SModeration extends JavaPlugin {
     @Override
     public void onEnable() {
         getPluginManager().registerEvents(new PunishmentListener(), this);
-        getPluginManager().registerEvents(new CustomInventoryEvents(), this);
-        getPluginManager().registerEvents(new InvSeeEvents(), this);
-        getPluginManager().registerEvents(new EnderchestSeeEvents(), this);
+        getPluginManager().registerEvents(new CustomInventoryListener(), this);
+        getPluginManager().registerEvents(new InvSeeListener(), this);
+        getPluginManager().registerEvents(new EnderchestSeeListener(), this);
         getPluginManager().registerEvents(new VanishListener(), this);
         getPluginManager().registerEvents(new ChatInputListener(), this);
 

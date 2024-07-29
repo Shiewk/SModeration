@@ -1,4 +1,4 @@
-package de.shiewk.smoderation.event;
+package de.shiewk.smoderation.listener;
 
 import de.shiewk.smoderation.inventory.CustomInventory;
 import org.bukkit.event.EventHandler;
@@ -6,7 +6,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
-public class CustomInventoryEvents implements Listener {
+public class CustomInventoryListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event){
         if (event.getInventory().getHolder() instanceof CustomInventory customInventory){
