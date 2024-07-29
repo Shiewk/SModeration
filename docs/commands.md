@@ -1,53 +1,17 @@
 # SModeration commands
 
-### /smod
-The /smod command just opens the SMod menu. It takes no arguments.
-### /mute
-The /mute command is used to mute players.
-
-It requires 2 arguments:
-- Player name
-- Duration
-
-If you want to, you can also add a **reason**.
-
-For example, if you want to mute a player for breaking server rules, just use **/mute playername 1h 30min Breaking server rules.**
-
-The player will be muted for 1 hour and 30 minutes with the reason "Breaking server rules.".
-
-Muted players can still join the server, but can't use the chat.
-### /ban
-The /ban command works the same as the /mute command, with one important difference:
-
-Banned players **can't even join** the server until the ban expires.
-### /kick
-The /kick command is a bit different. It does not require a duration because kicks are instant. Instead, you can use the command like this: **/kick playername reason**
-### /modlogs
-The /modlogs command can be used when the /smod menu is unavailable. It displays information about a player in chat instead of a menu.
-
-Example: **/modlogs playername** shows you a message in chat that tells you whether the player is muted or banned.
-### /unmute & /unban
-The /unmute and /unban commands only take one argument, the player name.
-
-The specified player will then be unmuted or unbanned.
-### /invsee
-The /invsee command can be used to view the inventory of another player.
-
-It takes one argument: the player name.
-The player has to be online.
-### /enderchestsee
-The /enderchestsee command can, similarly to /invsee, be used to view the ender chest of another player.
-
-It takes one argument: the player name.
-The player has to be online.
-
-### /vanish
-The /vanish command is used to toggle vanish mode.
-
-In vanish mode, other players (who don't have the necessary permissions) can't see that you're online.
-
-To toggle vanish mode for yourself, use **/vanish**.
-
-To toggle vanish mode for someone else, use **/vanish <playername>**.
-
-Vanish status is not saved, so you re-appear when you leave the server.
+| Command                                | Description                                                                  | Permission          |
+|----------------------------------------|------------------------------------------------------------------------------|---------------------|
+| /smod                                  | Opens the SMod menu.                                                         | smod.menu           |
+| /mute \<player> \<duration> \<reason?> | Mutes a player so that they can't type in chat for the specified duration.   | smod.mute           |  
+| /ban \<player> \<duration> \<reason?>  | Bans a player so that they can't join the server for the specified duration. | smod.ban            |
+| /kick \<player> \<reason?>             | Kicks a player from the server.                                              | smod.kick           |
+| /modlogs <player\|uuid>                | Lists a player's active punishments in chat.                                 | smod.logs           |
+| /unmute <player>                       | Clears a player's mute status.                                               | smod.unmute         |
+| /unban <player>                        | Clears a player's ban status.                                                | smod.unban          |
+| /invsee \<player> inventory            | Views another player's inventory.                                            | smod.invsee         |
+| /invsee \<player> equipment            | Views another player's equipment (armor and offhand).                        | smod.invsee         |
+| /enderchestsee <player>                | Views another player's ender chest.                                          | smod.enderchestsee  |
+| /vanish                                | Toggles vanish mode so that other players can't see you're online.           | smod.vanish         |
+| /vanish toggle \<player>               | Toggles vanish mode for another player.                                      | smod.vanish         |
+| /vanish list                           | Lists all vanished players.                                                  | smod.vanish.see     |

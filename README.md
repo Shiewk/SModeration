@@ -25,6 +25,7 @@ The most important ones are:
 - /smod
 - /unmute & /unban
 - /invsee & /enderchestsee
+- /vanish
 
 ## Permissions
 This plugin uses Bukkit permissions for commands and other actions.
