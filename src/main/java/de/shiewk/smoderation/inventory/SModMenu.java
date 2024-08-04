@@ -102,7 +102,11 @@ public class SModMenu extends PageableCustomInventory {
     }
 
     private void reload(){
-        this.punishments = container.copy().stream().filter(getFilter().filter).filter(p -> getType() == null || p.type == getType()).filter(p -> p.matchesSearchQuery(searchQuery)).sorted(getSort().comparator).toList();
+        this.punishments = container.copy().stream()
+                .filter(getFilter().filter)
+                .filter(p -> getType() == null || p.type == getType())
+                .filter(p -> p.matchesSearchQuery(searchQuery))
+                .sorted(getSort().comparator).toList();
     }
 
     public void promptSearchQuery(){
@@ -269,7 +273,11 @@ public class SModMenu extends PageableCustomInventory {
         ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
         stack.editMeta(meta -> {
             if (meta instanceof SkullMeta skullMeta){
-                skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(punishment.to));
+                try {
+                    skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(punishment.to));
+                } catch (NullPointerException e) {
+                    LOGGER.warn("Player {} has a punishment but was never on this server!", punishment.to);
+                };
             }
             meta.displayName(applyFormatting(text(punishment.type.name).color(NamedTextColor.RED).decorate(TextDecoration.BOLD)));
             ArrayList<Component> lore = new ArrayList<>();
