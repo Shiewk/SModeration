@@ -2,13 +2,18 @@ package de.shiewk.smoderation.listener;
 
 import de.shiewk.smoderation.SModeration;
 import de.shiewk.smoderation.command.VanishCommand;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+
+import static de.shiewk.smoderation.SModeration.SECONDARY_COLOR;
+import static net.kyori.adventure.text.Component.text;
 
 public class VanishListener implements Listener {
 
@@ -35,6 +40,19 @@ public class VanishListener implements Listener {
                 VanishCommand.listVanishedPlayersTo(player);
             }
         });
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerDeath(PlayerDeathEvent event){
+        final Component message = event.deathMessage();
+        if (VanishCommand.isVanished(event.getPlayer()) && message != null){
+            event.deathMessage(null);
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                if (onlinePlayer.hasPermission("smod.vanish.see")){
+                    onlinePlayer.sendMessage(text("[VANISH] ").color(SECONDARY_COLOR).append(message));
+                }
+            }
+        }
     }
 
 }
