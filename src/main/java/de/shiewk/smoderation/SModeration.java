@@ -1,6 +1,7 @@
 package de.shiewk.smoderation;
 
 import de.shiewk.smoderation.command.*;
+import de.shiewk.smoderation.config.SModerationConfig;
 import de.shiewk.smoderation.input.ChatInputListener;
 import de.shiewk.smoderation.listener.*;
 import de.shiewk.smoderation.storage.PunishmentContainer;
@@ -26,6 +27,7 @@ public final class SModeration extends JavaPlugin {
     public static final PunishmentContainer container = new PunishmentContainer();
     public static ComponentLogger LOGGER = null;
     public static SModeration PLUGIN = null;
+    public static SModerationConfig CONFIG = null;
     public static File SAVE_FILE = null;
 
     public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
@@ -38,6 +40,7 @@ public final class SModeration extends JavaPlugin {
     public void onLoad() {
         LOGGER = getComponentLogger();
         PLUGIN = this;
+        CONFIG = new SModerationConfig(this.getConfig(), this);
         SAVE_FILE = new File(this.getDataFolder().getAbsolutePath() + "/container.gz");
     }
 
@@ -49,6 +52,7 @@ public final class SModeration extends JavaPlugin {
         getPluginManager().registerEvents(new EnderchestSeeListener(), this);
         getPluginManager().registerEvents(new VanishListener(), this);
         getPluginManager().registerEvents(new ChatInputListener(), this);
+        getPluginManager().registerEvents(new SocialSpyListener(), this);
 
         registerCommand("mute", new MuteCommand());
         registerCommand("ban", new BanCommand());
@@ -60,6 +64,7 @@ public final class SModeration extends JavaPlugin {
         registerCommand("invsee", new InvseeCommand());
         registerCommand("enderchestsee", new EnderchestSeeCommand());
         registerCommand("vanish", new VanishCommand());
+        registerCommand("socialspy", new SocialSpyCommand());
 
         container.load(SAVE_FILE);
     }

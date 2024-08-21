@@ -19,5 +19,6 @@
 | smod.enderchestsee.modify | Allows the player to view and modify other players ender chests. |
 | smod.vanish               | Allows the player to enter and leave vanish mode.                |
 | smod.vanish.see           | Allows the player to see vanished players                        |
+| smod.socialspy            | Allows the player to enable SocialSpy                            |
 
 All of these permissions are granted by default if the player is a server operator.
