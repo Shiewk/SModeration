@@ -28,16 +28,12 @@ public class EnderchestSeeCommand implements TabExecutor {
         if (sender instanceof HumanEntity human){
             final Player player = PlayerUtil.findOnlinePlayer(args[0]);
             if (player != null) {
-                if (human.getUniqueId().equals(player.getUniqueId())){
-                    human.sendMessage(Component.text("You can't open your own ender chest.").color(FAIL_COLOR));
-                } else {
-                    human.sendMessage(CHAT_PREFIX.append(
-                            Component.text("Opening ender chest of ").color(PRIMARY_COLOR)
-                                    .append(Component.text(player.getName()).color(SECONDARY_COLOR))
-                                    .append(Component.text("."))
-                    ));
-                    human.openInventory(player.getEnderChest());
-                }
+                human.sendMessage(CHAT_PREFIX.append(
+                        Component.text("Opening ender chest of ").color(PRIMARY_COLOR)
+                                .append(Component.text(player.getName()).color(SECONDARY_COLOR))
+                                .append(Component.text("."))
+                ));
+                human.openInventory(player.getEnderChest());
             } else {
                 human.sendMessage(Component.text("This player is not online.").color(FAIL_COLOR));
             }
