@@ -84,10 +84,13 @@ public class SocialSpyListener implements Listener {
 
     public static void command(Player player, String command){
         for (CommandSender target : targets) {
-            target.sendMessage(text("[SocialSpy] ")
-                    .append(player.displayName().colorIfAbsent(SECONDARY_COLOR))
-                    .append(text(": " + command).color(SECONDARY_COLOR))
-                    .color(PRIMARY_COLOR));
+            target.sendMessage(text("[", PRIMARY_COLOR)
+                    .append(text("SocialSpy", SECONDARY_COLOR))
+                    .append(text("] "))
+                    .append(player.displayName().colorIfAbsent(PRIMARY_COLOR))
+                    .append(text(": ", PRIMARY_COLOR))
+                    .append(text(command, SECONDARY_COLOR))
+            );
         }
     }
 

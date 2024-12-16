@@ -14,7 +14,7 @@ SModeration provides a nice user interface that can be used instead of chat comm
 
 ![SMod Menu Sort](https://github.com/Shiewk/SModeration/assets/152653291/23e3862d-0915-47bd-9c47-6d8d10f8ab69)
 
-It has helpful functions like filtering and sorting options.
+It has helpful functions like filtering, searching and sorting options.
 
 ## Commands
 This plugin has many commands, for a complete list of commands and their usage, please see [the commands list](https://github.com/Shiewk/SModeration/blob/main/docs/commands.md).

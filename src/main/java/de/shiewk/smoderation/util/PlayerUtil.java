@@ -25,7 +25,7 @@ public abstract class PlayerUtil {
             return "CONSOLE";
         }
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-        return player.getName() == null ? "Unknown Player" + uuid : player.getName();
+        return player.getName() == null ? "Unknown Player " + uuid : player.getName();
     }
 
     public static @Nullable UUID offlinePlayerUUIDByName(String name){

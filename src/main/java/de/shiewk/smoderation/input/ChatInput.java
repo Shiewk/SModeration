@@ -27,7 +27,7 @@ public class ChatInput {
         this.player = player;
         this.prompt = prompt;
         this.action = action;
-        this.remainingTicks = remainingSeconds * 20;
+        this.remainingTicks = remainingSeconds * 20 + 1;
     }
 
     static void tickAll() {
