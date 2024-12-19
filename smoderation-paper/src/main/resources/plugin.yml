@@ -1,0 +1,155 @@
+name: SModeration
+version: '1.4.1'
+main: de.shiewk.smoderation.paper.SModerationPaper
+api-version: '1.20'
+load: STARTUP
+authors:
+  - Shiewk
+description: "SModeration is an easy-to-use minecraft plugin for moderating your server."
+commands:
+  modlogs:
+    usage: "§cUsage: /modlogs <player|uuid>"
+    aliases:
+      - logs
+      - seen
+      - smodlogs
+    permission: smod.logs
+  mute:
+    usage: "§cUsage: /mute <player> <duration> <reason>"
+    aliases:
+      - smodmute
+    permission: smod.mute
+    description: Mutes a player, either temporarily or permanently.
+  ban:
+    usage: "§cUsage: /ban <player> <duration> <reason>"
+    aliases:
+      - smodban
+      - tempban
+    permission: smod.ban
+    description: Bans a player, either temporarily or permanently.
+  kick:
+    usage: "§cUsage: /kick <player> <reason>"
+    aliases:
+      - smodkick
+    permission: smod.kick
+    description: Kicks a player
+  smod:
+    usage: "§cUsage: /smod"
+    aliases:
+      - smodmenu
+      - smoderation
+    permission: smod.menu
+    description: Shows the SModeration menu.
+  unmute:
+    usage: "§cUsage: /unmute <player|uuid>"
+    aliases:
+      - sunmute
+    permission: smod.unmute
+    description: Unmutes a muted player.
+  unban:
+    usage: "§cUsage: /unban <player|uuid>"
+    aliases:
+      - sunban
+      - pardon
+      - spardon
+    permission: smod.unban
+    description: Unbans a banned player.
+  invsee:
+    usage: "§cUsage: /invsee <player>"
+    aliases:
+      - sinvsee
+      - smodinvsee
+      - invs
+    permission: smod.invsee
+    description: Views the inventory of another player.
+  enderchestsee:
+    usage: "§cUsage: /enderchestsee <player>"
+    aliases:
+      - secsee
+      - senderchestsee
+      - ecsee
+      - ecs
+    permission: smod.enderchestsee
+    description: Views the ender chest of another player.
+  vanish:
+    usage: "§cUsage: /vanish list or /vanish toggle <player>"
+    aliases:
+      - smvanish
+      - smodvanish
+      - v
+      - smv
+    permission: smod.vanish
+    description: Toggles vanish mode which prevents other players from seeing you're online
+  socialspy:
+    usage: "§cUsage: /socialspy"
+    description: Enables socialspy mode (you can see private messages of other players)
+    permission: smod.socialspy
+    aliases:
+      - smodsocialspy
+      - smsocialspy
+      - smss
+      - ss
+permissions:
+  smod.mute:
+    default: op
+    description: Allows the player to mute other players.
+  smod.ban:
+    default: op
+    description: Allows the player to ban and kick other players.
+    children:
+      - smod.kick
+  smod.kick:
+    default: op
+    description: Allows the player to kick other players.
+  smod.menu:
+    default: op
+    description: Allows the player to use the SModeration menu.
+  smod.notifications:
+    default: op
+    description: Allows the player to be notified when a punishment is issued.
+  smod.unmute:
+    default: op
+    description: Allows the player to unmute other players.
+  smod.unban:
+    default: op
+    description: Allows the player to unban other players.
+  smod.logs:
+    default: op
+    description: Allows the player to view mod logs.
+  smod.invsee:
+    default: op
+    description: Allows the player to view other players inventories.
+  smod.invsee.modify:
+    default: op
+    description: Allows the player to view and modify other players inventories.
+    children:
+      - smod.invsee
+  smod.invsee.preventmodify:
+    default: op
+    description: When giving this permission to a player, prevents their inventory from being modified.
+  smod.enderchestsee:
+    default: op
+    description: Allows the player to view other players ender chests.
+  smod.enderchestsee.modify:
+    default: op
+    description: Allows the player to view and modify other players ender chests.
+    children:
+      - smod.enderchestsee
+  smod.preventmute:
+    default: op
+    description: Prevents the player from being muted (if online)
+  smod.preventkick:
+    default: op
+    description: Prevents the player from being muted (if online)
+  smod.preventban:
+    default: op
+    description: Prevents the player from being muted (if online)
+  smod.vanish:
+    default: op
+    description: Allows the player to use /vanish
+  smod.vanish.see:
+    default: op
+    description: Allows the player to see vanished players
+  smod.socialspy:
+    default: op
+    description: Allows the player to enable SocialSpy
