@@ -1,6 +1,7 @@
 package de.shiewk.smoderation.paper.command;
 
 import de.shiewk.smoderation.paper.SModerationPaper;
+import de.shiewk.smoderation.paper.event.VanishToggleEvent;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
@@ -63,6 +64,11 @@ public class VanishCommand implements TabExecutor {
 
     public static void toggleVanish(Player player){
         final boolean newStatus = !isVanished(player);
+        VanishToggleEvent event = new VanishToggleEvent(player, newStatus);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()){
+            return;
+        }
         if (newStatus){
             vanishedPlayers.add(player);
             for (CommandSender sender : SModerationPaper.container.collectBroadcastTargets()) {
