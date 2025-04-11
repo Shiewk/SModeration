@@ -102,7 +102,6 @@ public class PunishmentContainer {
     public void save(File file) {
         final ComponentLogger logger = SModerationPaper.LOGGER;
         try {
-            logger.info("Saving to {}", file.getPath());
             if (!file.isFile()){
                 file.mkdirs();
                 file.delete();
@@ -115,7 +114,6 @@ public class PunishmentContainer {
                 }
                 gzout.close();
             }
-            logger.info("Successfully saved.");
         } catch (IOException e){
             logger.error("An error occurred while saving: {}", e.toString());
             for (StackTraceElement stackTraceElement : e.getStackTrace()) {
