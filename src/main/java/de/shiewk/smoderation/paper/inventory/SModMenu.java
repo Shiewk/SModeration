@@ -284,7 +284,7 @@ public class SModMenu extends PageableCustomInventory {
                                 PlayerProfile profile = Bukkit.createProfile(punishment.to);
                                 profile.setProperty(new ProfileProperty(
                                         "textures",
-                                        "ewogICJ0aW1lc3RhbXAiIDogMTc0NjA5MDc5MDc1NCwKICAicHJvZmlsZUlkIiA6ICJhOGY0YzVhOWFiMmM0YWVlODg2MWRlMDhkMmJmMzYyNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJlaW5lU3BlaXNlIiwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNiMDc0N2UzMTEyYjJiMmQ0MGE1M2Q5YjZlZTkxMDQ4ODQyMDc5MDllY2ZjMzdlZDdmYmZjM2FhMzBhNDE0NGQiCiAgICB9LAogICAgIkNBUEUiIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzVjMjk0MTAwNTdlMzJhYmVjMDJkODcwZWNiNTJlYzI1ZmI0NWVhODFlNzg1YTc4NTRhZTg0MjlkNzIzNmNhMjYiCiAgICB9CiAgfQp9"
+                                        texture
                                 ));
                                 skullMeta.setPlayerProfile(profile);
                             }
