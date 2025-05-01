@@ -1,66 +1,83 @@
 package de.shiewk.smoderation.paper.command;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.event.VanishToggleEvent;
-import de.shiewk.smoderation.paper.util.PlayerUtil;
+import de.shiewk.smoderation.paper.util.CommandUtil;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 
 import static de.shiewk.smoderation.paper.SModerationPaper.*;
+import static io.papermc.paper.command.brigadier.Commands.argument;
+import static io.papermc.paper.command.brigadier.Commands.literal;
 import static net.kyori.adventure.text.Component.text;
 
-public class VanishCommand implements TabExecutor {
+public final class VanishCommand implements CommandProvider {
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length == 0 || args[0].equalsIgnoreCase("toggle")){
-            Player player = null;
-            if (args.length > 1){
-                player = PlayerUtil.findOnlinePlayer(args[1]);
-            } else if (sender instanceof Player){
-                player = (Player) sender;
-            }
-            if (player != null){
-                toggleVanish(player);
-                return true;
-            } else {
-                return false;
-            }
-        } else if (args[0].equalsIgnoreCase("list")) {
-            if (sender.hasPermission("smod.vanish.see")){
-                listVanishedPlayersTo(sender);
-            } else {
-                sender.sendMessage(text().color(NamedTextColor.RED).content("You do not have permission to list all vanished players."));
-            }
-            return true;
+    public LiteralCommandNode<CommandSourceStack> getCommandNode() {
+        return literal("vanish")
+                .requires(CommandUtil.requirePermission("smod.vanish"))
+                .executes(this::toggleVanishSelf)
+                .then(literal("toggle")
+                        .executes(this::toggleVanishSelf)
+                        .then(argument("targets", ArgumentTypes.players())
+                                .executes(this::toggleVanishForTargets)
+                        )
+                )
+                .then(literal("list")
+                        .requires(CommandUtil.requirePermission("smod.vanish.see"))
+                        .executes(this::listVanishedPlayers)
+                )
+                .build();
+    }
+
+    private int toggleVanishForTargets(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        List<Player> targets = context.getArgument("targets", PlayerSelectorArgumentResolver.class).resolve(context.getSource());
+        if (targets.isEmpty()){
+            CommandUtil.error("No player was found.");
         } else {
-            return false;
+            for (Player target : targets) {
+                toggleVanish(target);
+            }
         }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int toggleVanishSelf(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        toggleVanish(CommandUtil.getExecutingPlayer(context.getSource()));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int listVanishedPlayers(CommandContext<CommandSourceStack> context) {
+        listVanishedPlayersTo(context.getSource().getSender());
+        return Command.SINGLE_SUCCESS;
     }
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length < 2){
-            return List.of("list", "toggle");
-        }
-        if (args.length < 3 && args[0].equalsIgnoreCase("toggle")){
-            return PlayerUtil.listPlayerNames(args[1]);
-        }
-        return List.of();
+    public String getCommandDescription() {
+        return "Toggles vanish mode which prevents other players from seeing you're online";
     }
 
-    private static final ObjectArrayList<Player> vanishedPlayers = new ObjectArrayList<>();
+    @Override
+    public Collection<String> getAliases() {
+        return List.of("smvanish", "smodvanish", "v", "smv");
+    }
+
+    private static final ObjectArrayList<Player> vanishedPlayers = new ObjectArrayList<>(1);
 
     public static void toggleVanish(Player player){
         final boolean newStatus = !isVanished(player);
@@ -73,12 +90,10 @@ public class VanishCommand implements TabExecutor {
             vanishedPlayers.add(player);
             for (CommandSender sender : SModerationPaper.container.collectBroadcastTargets()) {
                 sender.sendMessage(CHAT_PREFIX.append(
-                        player.displayName()
-                                .colorIfAbsent(SECONDARY_COLOR)
-                ).append(
-                        text()
-                                .content(" vanished.")
-                                .color(PRIMARY_COLOR)
+                        player.displayName().colorIfAbsent(SECONDARY_COLOR)
+                ).append(text()
+                        .content(" vanished.")
+                        .color(PRIMARY_COLOR)
                 ));
             }
             player.sendMessage(CHAT_PREFIX.append(text("You are now vanished.").color(PRIMARY_COLOR)));
@@ -92,12 +107,10 @@ public class VanishCommand implements TabExecutor {
             vanishedPlayers.remove(player);
             for (CommandSender sender : container.collectBroadcastTargets()) {
                 sender.sendMessage(CHAT_PREFIX.append(
-                        player.displayName()
-                                .colorIfAbsent(SECONDARY_COLOR)
-                ).append(
-                        text()
-                                .content(" re-appeared.")
-                                .color(PRIMARY_COLOR)
+                        player.displayName().colorIfAbsent(SECONDARY_COLOR)
+                ).append(text()
+                        .content(" re-appeared.")
+                        .color(PRIMARY_COLOR)
                 ));
             }
             player.sendMessage(CHAT_PREFIX.append(text("You are no longer vanished.").color(PRIMARY_COLOR)));

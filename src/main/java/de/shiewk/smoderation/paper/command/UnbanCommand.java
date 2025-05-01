@@ -1,64 +1,56 @@
 package de.shiewk.smoderation.paper.command;
 
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.SModerationPaper;
+import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
 import de.shiewk.smoderation.paper.punishments.Punishment;
 import de.shiewk.smoderation.paper.punishments.PunishmentType;
-import de.shiewk.smoderation.paper.util.PlayerUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.command.*;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import de.shiewk.smoderation.paper.util.CommandUtil;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-public class UnbanCommand implements TabExecutor {
+import static io.papermc.paper.command.brigadier.Commands.argument;
+import static io.papermc.paper.command.brigadier.Commands.literal;
+
+public final class UnbanCommand implements CommandProvider {
+
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length < 1){
-            return false;
+    public LiteralCommandNode<CommandSourceStack> getCommandNode() {
+        return literal("unban")
+                .requires(CommandUtil.requirePermission("smod.unban"))
+                .then(argument("player", new PlayerUUIDArgument())
+                        .executes(this::unbanPlayer)
+                )
+                .build();
+    }
+
+    private int unbanPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        UUID senderUUID = CommandUtil.getSenderUUID(context.getSource());
+        UUID target = context.getArgument("player", UUID.class);
+        final Punishment punishment = SModerationPaper.container.find(
+                p -> p.to.equals(target) && p.isActive() && p.type == PunishmentType.BAN
+        );
+        if (punishment != null) {
+            punishment.undo(senderUUID);
+            punishment.broadcastUndo(SModerationPaper.container);
         } else {
-
-            UUID senderUUID;
-            if (sender instanceof ConsoleCommandSender){
-                senderUUID = PlayerUtil.UUID_CONSOLE;
-            } else if (sender instanceof Player pl){
-                senderUUID = pl.getUniqueId();
-            } else if (sender instanceof BlockCommandSender){
-                sender.sendMessage(Component.text("Blocks can't execute this command.").color(NamedTextColor.RED));
-                return true;
-            } else {
-                sender.sendMessage(Component.text("Your command sender type is unknown (%s).".formatted(sender.getClass().getName())).color(NamedTextColor.RED));
-                return true;
-            }
-
-            String nameArg = args[0];
-            UUID uuid;
-            try {
-                uuid = UUID.fromString(nameArg);
-            } catch (IllegalArgumentException ignored){
-                uuid = PlayerUtil.offlinePlayerUUIDByName(nameArg);
-            }
-            if (uuid == null){
-                sender.sendMessage(Component.text("This player was not found. Try running /%s with an UUID instead.".formatted(label)).color(NamedTextColor.RED));
-                return true;
-            }
-            UUID finalUuid = uuid;
-            final Punishment punishment = SModerationPaper.container.find(p -> p.to.equals(finalUuid) && p.isActive() && p.type == PunishmentType.BAN);
-            if (punishment != null) {
-                punishment.undo(senderUUID);
-                punishment.broadcastUndo(SModerationPaper.container);
-            } else {
-                sender.sendMessage(Component.text("This player is not banned.").color(NamedTextColor.RED));
-            }
-            return true;
+            CommandUtil.error("This player is not banned.");
         }
+        return com.mojang.brigadier.Command.SINGLE_SUCCESS;
     }
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return List.of();
+    public String getCommandDescription() {
+        return "Unbans a banned player.";
+    }
+
+    @Override
+    public Collection<String> getAliases() {
+        return List.of("smodunban");
     }
 }

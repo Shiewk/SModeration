@@ -1,124 +1,95 @@
 package de.shiewk.smoderation.paper.command;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.SModerationPaper;
+import de.shiewk.smoderation.paper.command.argument.DurationArgument;
+import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
 import de.shiewk.smoderation.paper.punishments.Punishment;
-import de.shiewk.smoderation.paper.util.PlayerUtil;
-import de.shiewk.smoderation.paper.util.TimeUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import de.shiewk.smoderation.paper.util.CommandUtil;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.Bukkit;
-import org.bukkit.command.*;
 import org.bukkit.entity.Player;
-import org.bukkit.util.StringUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import static net.kyori.adventure.text.Component.text;
+import static io.papermc.paper.command.brigadier.Commands.argument;
+import static io.papermc.paper.command.brigadier.Commands.literal;
 
-public class BanCommand implements TabExecutor {
+public final class BanCommand implements CommandProvider {
+
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length < 2){
-            return false;
-        } else {
-            UUID senderUUID;
-            if (sender instanceof ConsoleCommandSender){
-                senderUUID = PlayerUtil.UUID_CONSOLE;
-            } else if (sender instanceof Player pl){
-                senderUUID = pl.getUniqueId();
-            } else if (sender instanceof BlockCommandSender){
-                sender.sendMessage(Component.text("Blocks can't execute this command.").color(NamedTextColor.RED));
-                return true;
+    public LiteralCommandNode<CommandSourceStack> getCommandNode() {
+        return literal("ban")
+                .requires(CommandUtil.requirePermission("smod.ban"))
+                .then(argument("player", new PlayerUUIDArgument())
+                        .then(argument("duration", new DurationArgument())
+                                .executes(this::banWithoutReason)
+                                .then(argument("reason", StringArgumentType.greedyString())
+                                        .executes(this::banWithReason)
+                                )
+                        )
+                )
+                .build();
+    }
+
+    private int banWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        UUID sender = CommandUtil.getSenderUUID(context.getSource());
+        UUID target = context.getArgument("player", UUID.class);
+        long duration = context.getArgument("duration", Long.class);
+        executeBan(sender, target, duration, Punishment.DEFAULT_REASON);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int banWithReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        UUID sender = CommandUtil.getSenderUUID(context.getSource());
+        UUID target = context.getArgument("player", UUID.class);
+        long duration = context.getArgument("duration", Long.class);
+        String reason = StringArgumentType.getString(context, "reason");
+        executeBan(sender, target, duration, reason);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    public static void executeBan(UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
+        Player targetPlayer = Bukkit.getPlayer(target);
+        if (duration == 0){
+            if (targetPlayer == null){
+                CommandUtil.error("You can't ban an offline player for less than 1ms.");
             } else {
-                sender.sendMessage(Component.text("Your command sender type is unknown (%s).".formatted(sender.getClass().getName())).color(NamedTextColor.RED));
-                return true;
+                KickCommand.executeKick(sender, targetPlayer, reason);
             }
-            String playerName = args[0];
-            UUID uuid = PlayerUtil.offlinePlayerUUIDByName(playerName);
-            if (senderUUID.equals(uuid)) {
-                sender.sendMessage(Component.text("You can't ban yourself.").color(NamedTextColor.RED));
-                return true;
+            return;
+        }
+        if (sender.equals(target)) {
+            CommandUtil.error("You can't ban yourself.");
+        } else {
+            if (targetPlayer != null && targetPlayer.hasPermission("smod.preventban")){
+                CommandUtil.error("This player can't be banned.");
+            } else {
+                final Punishment punishment = Punishment.ban(
+                        System.currentTimeMillis(),
+                        System.currentTimeMillis() + duration,
+                        sender,
+                        target,
+                        reason
+                );
+                Punishment.issue(punishment, SModerationPaper.container);
             }
-            if (uuid == null) {
-                sender.sendMessage(Component.text("This player is either offline or was never on this server.").color(NamedTextColor.RED));
-                return true;
-            }
-            final Player toPlayer = Bukkit.getPlayer(uuid);
-            if (toPlayer != null && toPlayer.hasPermission("smod.preventban")){
-                sender.sendMessage(text().content("This player can't be banned.").color(NamedTextColor.RED));
-                return true;
-            }
-            long duration = 0;
-            int p = 1;
-            for (int i = 1 /* start with index 1 to avoid player name */; i < args.length; i++) {
-                String arg = args[i];
-                long parsedDuration = TimeUtil.parseDurationMillisSafely(arg);
-                if (parsedDuration == -1){
-                    p = i;
-                    break;
-                } else {
-                    duration += parsedDuration;
-                }
-                if (i == args.length - 1){ p = args.length; }
-            }
-            if (duration == 0){
-                sender.sendMessage(Component.text("Please provide a valid duration.").color(NamedTextColor.RED));
-                return false;
-            }
-            if (duration < 0){
-                sender.sendMessage(Component.text("Please provide a duration that's longer than 0ms.").color(NamedTextColor.RED));
-                return false;
-            }
-            StringBuilder reason = new StringBuilder();
-            for (int i = p; i < args.length; i++) {
-                if (!reason.isEmpty()){
-                    reason.append(" ");
-                }
-                reason.append(args[i]);
-            }
-            final Punishment punishment = Punishment.ban(System.currentTimeMillis(), System.currentTimeMillis() + duration, senderUUID, uuid, reason.isEmpty() ? Punishment.DEFAULT_REASON : reason.toString());
-            Punishment.issue(punishment, SModerationPaper.container);
-            return true;
         }
     }
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length < 2){
-            String toComplete = args.length > 0 ? args[0] : "";
-            ArrayList<String> names = new ArrayList<>();
-            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                names.add(onlinePlayer.getName());
-            }
-            ArrayList<String> completions = new ArrayList<>();
-            StringUtil.copyPartialMatches(toComplete, names, completions);
-            return completions;
-        } else {
-            for (int i = 1; i < args.length; i++) {
-                if (TimeUtil.parseDurationMillisSafely(args[i]) == -1){
-                    try {
-                        Long.parseLong(args[i]);
-                    } catch (NumberFormatException ignored){
-                        if (i != 1){
-                            return List.of();
-                        }
-                    }
-                }
-            }
-            return List.of(
-                    "100ms",
-                    "15s", // some sample completions for duration
-                    "30min", // you can input your own ones as well
-                    "6h",
-                    "1d",
-                    "2w",
-                    "3mo",
-                    "1y"
-            );
-        }
+    public String getCommandDescription() {
+        return "Bans a player for a customizable duration.";
+    }
+
+    @Override
+    public Collection<String> getAliases() {
+        return List.of("smodban");
     }
 }

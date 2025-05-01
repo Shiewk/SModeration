@@ -1,81 +1,77 @@
 package de.shiewk.smoderation.paper.command;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.punishments.Punishment;
-import de.shiewk.smoderation.paper.util.PlayerUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.command.*;
+import de.shiewk.smoderation.paper.util.CommandUtil;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import org.bukkit.entity.Player;
-import org.bukkit.util.StringUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import static net.kyori.adventure.text.Component.text;
+import static io.papermc.paper.command.brigadier.Commands.argument;
+import static io.papermc.paper.command.brigadier.Commands.literal;
 
-public class KickCommand implements TabExecutor {
+public final class KickCommand implements CommandProvider {
+
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length < 1){
-            return false;
-        } else {
-            UUID senderUUID;
-            if (sender instanceof ConsoleCommandSender){
-                senderUUID = PlayerUtil.UUID_CONSOLE;
-            } else if (sender instanceof Player pl){
-                senderUUID = pl.getUniqueId();
-            } else if (sender instanceof BlockCommandSender){
-                sender.sendMessage(Component.text("Blocks can't execute this command.").color(NamedTextColor.RED));
-                return true;
-            } else {
-                sender.sendMessage(Component.text("Your command sender type is unknown (%s).".formatted(sender.getClass().getName())).color(NamedTextColor.RED));
-                return true;
-            }
-            String playerName = args[0];
-            Player player = Bukkit.getPlayer(playerName);
-            if (player == null) {
-                sender.sendMessage(Component.text("This player is not online.").color(NamedTextColor.RED));
-                return true;
-            }
-            UUID uuid = player.getUniqueId();
-            if (senderUUID.equals(uuid)) {
-                sender.sendMessage(Component.text("You can't kick yourself.").color(NamedTextColor.RED));
-                return true;
-            }
-            if (player.hasPermission("smod.preventkick")){
-                sender.sendMessage(text().content("This player can't be kicked.").color(NamedTextColor.RED));
-                return true;
-            }
-            StringBuilder reason = new StringBuilder();
-            for (int i = 1; i < args.length; i++) {
-                if (!reason.isEmpty()){
-                    reason.append(" ");
-                }
-                reason.append(args[i]);
-            }
-            final Punishment punishment = Punishment.kick(System.currentTimeMillis(), senderUUID, uuid, reason.isEmpty() ? Punishment.DEFAULT_REASON : reason.toString());
-            Punishment.issue(punishment, SModerationPaper.container);
-            return true;
+    public LiteralCommandNode<CommandSourceStack> getCommandNode() {
+        return literal("kick")
+                .requires(CommandUtil.requirePermission("smod.kick"))
+                .then(argument("player", ArgumentTypes.player())
+                        .executes(this::kickWithoutReason)
+                        .then(argument("reason", StringArgumentType.greedyString())
+                                .executes(this::kickWithReason)
+                        )
+                )
+                .build();
+    }
+
+    private int kickWithReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        UUID sender = CommandUtil.getSenderUUID(context.getSource());
+        Player target = CommandUtil.getPlayerSingle(context, "player");
+        String reason = StringArgumentType.getString(context, "reason");
+        executeKick(sender, target, reason);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int kickWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        UUID sender = CommandUtil.getSenderUUID(context.getSource());
+        Player target = CommandUtil.getPlayerSingle(context, "player");
+        executeKick(sender, target, Punishment.DEFAULT_REASON);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    public static void executeKick(UUID sender, Player target, String reason) throws CommandSyntaxException {
+        UUID targetId = target.getUniqueId();
+        if (sender.equals(targetId)) {
+            CommandUtil.error("You can't kick yourself.");
+        } else if (target.hasPermission("smod.preventkick")){
+            CommandUtil.error("This player can't be kicked.");
         }
+        final Punishment punishment = Punishment.kick(
+                System.currentTimeMillis(),
+                sender,
+                targetId,
+                reason
+        );
+        Punishment.issue(punishment, SModerationPaper.container);
     }
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length < 2){
-            String toComplete = args.length > 0 ? args[0] : "";
-            ArrayList<String> names = new ArrayList<>();
-            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                names.add(onlinePlayer.getName());
-            }
-            ArrayList<String> completions = new ArrayList<>();
-            StringUtil.copyPartialMatches(toComplete, names, completions);
-            return completions;
-        }
-        return List.of();
+    public String getCommandDescription() {
+        return "Kicks a player";
+    }
+
+    @Override
+    public Collection<String> getAliases() {
+        return List.of("smodkick");
     }
 }

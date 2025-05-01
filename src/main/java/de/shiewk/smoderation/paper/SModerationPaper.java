@@ -5,13 +5,13 @@ import de.shiewk.smoderation.paper.config.SModerationConfig;
 import de.shiewk.smoderation.paper.input.ChatInputListener;
 import de.shiewk.smoderation.paper.listener.*;
 import de.shiewk.smoderation.paper.storage.PunishmentContainer;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommand;
-import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -34,7 +34,6 @@ public final class SModerationPaper extends JavaPlugin {
     public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
     public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
     public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
-    public static final TextColor FAIL_COLOR = NamedTextColor.RED;
     public static final TextComponent CHAT_PREFIX = text("SM \u00BB ").color(PRIMARY_COLOR);
 
     @Override
@@ -55,29 +54,31 @@ public final class SModerationPaper extends JavaPlugin {
         getPluginManager().registerEvents(new ChatInputListener(), this);
         getPluginManager().registerEvents(new SocialSpyListener(), this);
 
-        registerCommand("mute", new MuteCommand());
-        registerCommand("ban", new BanCommand());
-        registerCommand("kick", new KickCommand());
-        registerCommand("smod", new SModCommand());
-        registerCommand("modlogs", new ModLogsCommand());
-        registerCommand("unmute", new UnmuteCommand());
-        registerCommand("unban", new UnbanCommand());
-        registerCommand("invsee", new InvseeCommand());
-        registerCommand("enderchestsee", new EnderchestSeeCommand());
-        registerCommand("vanish", new VanishCommand());
-        registerCommand("socialspy", new SocialSpyCommand());
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            Commands commands = event.registrar();
+
+            registerCommand(commands, new KickCommand());
+            registerCommand(commands, new ModLogsCommand());
+            registerCommand(commands, new SModCommand());
+            registerCommand(commands, new InvseeCommand());
+            registerCommand(commands, new EnderchestSeeCommand());
+            registerCommand(commands, new SocialSpyCommand());
+            registerCommand(commands, new VanishCommand());
+            registerCommand(commands, new UnmuteCommand());
+            registerCommand(commands, new UnbanCommand());
+            registerCommand(commands, new MuteCommand());
+            registerCommand(commands, new BanCommand());
+        });
 
         container.load(SAVE_FILE);
     }
 
-    private void registerCommand(String label, TabExecutor executor){
-        final PluginCommand command = getCommand(label);
-        if (command != null) {
-            command.setExecutor(executor);
-            command.setTabCompleter(executor);
-        } else {
-            LOGGER.warn("Command {} failed to register: This command does not exist", label);
-        }
+    private void registerCommand(Commands commands, CommandProvider provider){
+        commands.register(
+                provider.getCommandNode(),
+                provider.getCommandDescription(),
+                provider.getAliases()
+        );
     }
 
     @Override
