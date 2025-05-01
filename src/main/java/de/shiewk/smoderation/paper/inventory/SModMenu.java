@@ -1,5 +1,8 @@
 package de.shiewk.smoderation.paper.inventory;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
+import de.shiewk.smoderation.paper.SkinTextureProvider;
 import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.punishments.Punishment;
 import de.shiewk.smoderation.paper.punishments.PunishmentType;
@@ -28,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -269,52 +273,79 @@ public class SModMenu extends PageableCustomInventory {
         return searchStack = stack;
     }
 
-    private ItemStack createPunishmentItem(Punishment punishment){
-        ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
-        stack.editMeta(meta -> {
-            if (meta instanceof SkullMeta skullMeta){
-                try {
-                    skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(punishment.to));
-                } catch (NullPointerException e) {
-                    LOGGER.warn("Player {} has a punishment but was never on this server!", punishment.to);
+    private CompletableFuture<ItemStack> createPunishmentItem(Punishment punishment){
+        SkinTextureProvider provider = getTextureProvider();
+        if (provider != null) {
+            return provider.textureProperty(punishment.to)
+                    .thenApply(texture -> {
+                        ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
+                        stack.editMeta(meta -> {
+                            if (meta instanceof SkullMeta skullMeta){
+                                PlayerProfile profile = Bukkit.createProfile(punishment.to);
+                                profile.setProperty(new ProfileProperty(
+                                        "textures",
+                                        "ewogICJ0aW1lc3RhbXAiIDogMTc0NjA5MDc5MDc1NCwKICAicHJvZmlsZUlkIiA6ICJhOGY0YzVhOWFiMmM0YWVlODg2MWRlMDhkMmJmMzYyNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJlaW5lU3BlaXNlIiwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNiMDc0N2UzMTEyYjJiMmQ0MGE1M2Q5YjZlZTkxMDQ4ODQyMDc5MDllY2ZjMzdlZDdmYmZjM2FhMzBhNDE0NGQiCiAgICB9LAogICAgIkNBUEUiIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzVjMjk0MTAwNTdlMzJhYmVjMDJkODcwZWNiNTJlYzI1ZmI0NWVhODFlNzg1YTc4NTRhZTg0MjlkNzIzNmNhMjYiCiAgICB9CiAgfQp9"
+                                ));
+                                skullMeta.setPlayerProfile(profile);
+                            }
+                            addPunishmentInfo(punishment, meta);
+                        });
+                        return stack;
+                    });
+        } else {
+            ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
+            stack.editMeta(meta -> {
+                if (meta instanceof SkullMeta skullMeta){
+                    try {
+                        skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(punishment.to));
+                    } catch (NullPointerException e) {
+                        LOGGER.warn("Player {} has a punishment but was never on this server!", punishment.to);
+                    }
                 }
-            }
-            meta.displayName(applyFormatting(text(punishment.type.name).color(NamedTextColor.RED).decorate(TextDecoration.BOLD)));
-            ArrayList<Component> lore = new ArrayList<>();
-            lore.add(applyFormatting(text("Player: ").color(SECONDARY_COLOR).append(text(PlayerUtil.offlinePlayerName(punishment.to)).color(PRIMARY_COLOR))));
-            lore.add(applyFormatting(text("Punished by: ").color(SECONDARY_COLOR).append(text(PlayerUtil.offlinePlayerName(punishment.by)).color(PRIMARY_COLOR))));
-            lore.add(applyFormatting(text("Timestamp: ").color(SECONDARY_COLOR).append(text(TimeUtil.calendarTimestamp(punishment.time)).color(PRIMARY_COLOR))));
-            if (punishment.type != PunishmentType.KICK){
-                lore.add(applyFormatting(text("Duration: ").color(SECONDARY_COLOR).append(text(TimeUtil.formatTimeLong(punishment.until - punishment.time)).color(PRIMARY_COLOR))));
-                long remainingTime = punishment.until - System.currentTimeMillis();
-                final String expires;
-                if (remainingTime > 0){
-                    expires = "in " + TimeUtil.formatTimeLong(remainingTime);
-                } else {
-                    remainingTime *= -1;
-                    expires = TimeUtil.formatTimeLong(remainingTime) + " ago";
-                }
-                lore.add(applyFormatting(text("Expires: ").color(SECONDARY_COLOR).append(text(expires).color(PRIMARY_COLOR))));
-            }
-            lore.add(applyFormatting(text("Reason: ").color(SECONDARY_COLOR).append(text(punishment.reason).color(PRIMARY_COLOR))));
-            if (punishment.wasUndone()){
-                lore.add(applyFormatting(text("Undone by: ").color(NamedTextColor.RED).append(text(PlayerUtil.offlinePlayerName(punishment.undoneBy())).color(NamedTextColor.GOLD))));
-            } else if (punishment.isActive()) {
-                if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))){
-                    lore.add(Component.empty());
-                    lore.add(applyFormatting(text("\u00BB Click to undo punishment").color(NamedTextColor.GOLD)));
-                }
-            }
-            meta.lore(lore);
-        });
-        return stack;
+                addPunishmentInfo(punishment, meta);
+            });
+            return CompletableFuture.completedFuture(stack);
+        }
     }
 
+    private void addPunishmentInfo(Punishment punishment, ItemMeta meta) {
+        meta.displayName(applyFormatting(text(punishment.type.name).color(NamedTextColor.RED).decorate(TextDecoration.BOLD)));
+        ArrayList<Component> lore = new ArrayList<>();
+        lore.add(applyFormatting(text("Player: ").color(SECONDARY_COLOR).append(text(PlayerUtil.offlinePlayerName(punishment.to)).color(PRIMARY_COLOR))));
+        lore.add(applyFormatting(text("Punished by: ").color(SECONDARY_COLOR).append(text(PlayerUtil.offlinePlayerName(punishment.by)).color(PRIMARY_COLOR))));
+        lore.add(applyFormatting(text("Timestamp: ").color(SECONDARY_COLOR).append(text(TimeUtil.calendarTimestamp(punishment.time)).color(PRIMARY_COLOR))));
+        if (punishment.type != PunishmentType.KICK){
+            lore.add(applyFormatting(text("Duration: ").color(SECONDARY_COLOR).append(text(TimeUtil.formatTimeLong(punishment.until - punishment.time)).color(PRIMARY_COLOR))));
+            long remainingTime = punishment.until - System.currentTimeMillis();
+            final String expires;
+            if (remainingTime > 0){
+                expires = "in " + TimeUtil.formatTimeLong(remainingTime);
+            } else {
+                remainingTime *= -1;
+                expires = TimeUtil.formatTimeLong(remainingTime) + " ago";
+            }
+            lore.add(applyFormatting(text("Expires: ").color(SECONDARY_COLOR).append(text(expires).color(PRIMARY_COLOR))));
+        }
+        lore.add(applyFormatting(text("Reason: ").color(SECONDARY_COLOR).append(text(punishment.reason).color(PRIMARY_COLOR))));
+        if (punishment.wasUndone()){
+            lore.add(applyFormatting(text("Undone by: ").color(NamedTextColor.RED).append(text(PlayerUtil.offlinePlayerName(punishment.undoneBy())).color(NamedTextColor.GOLD))));
+        } else if (punishment.isActive()) {
+            if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))){
+                lore.add(Component.empty());
+                lore.add(applyFormatting(text("\u00BB Click to undo punishment").color(NamedTextColor.GOLD)));
+            }
+        }
+        meta.lore(lore);
+    }
+
+    private int rfId = 0;
     @Override
     public void refresh() {
+        int rfId = ++this.rfId;
         while (getPage() > lastPage()){
             previousPage();
         }
+        inventory.clear();
         for (int i = 45; i < 54; i++) {
             inventory.setItem(i, createEmptyStack());
         }
@@ -329,13 +360,19 @@ public class SModMenu extends PageableCustomInventory {
             int ci = i + (getPage() * 45);
             if (punishments.size() > ci){
                 final Punishment punishment = punishments.get(ci);
-                final ItemStack item = createPunishmentItem(punishment);
-                if (punishment.isActive()){
-                    if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))) {
-                        item.editMeta(meta -> meta.getPersistentDataContainer().set(PUNISHMENT_STORE_KEY, PersistentDataType.LONG, punishment.time));
+                int slot = i;
+                createPunishmentItem(punishment).thenAccept(item -> {
+                    if (rfId != this.rfId) return;
+                    if (punishment.isActive()){
+                        if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))) {
+                            item.editMeta(meta -> meta.getPersistentDataContainer().set(PUNISHMENT_STORE_KEY, PersistentDataType.LONG, punishment.time));
+                        }
                     }
-                }
-                inventory.setItem(i, item);
+                    inventory.setItem(slot, item);
+                }).exceptionally(x -> {
+                    LOGGER.warn("Error creating punishment item", x);
+                    return null;
+                });
             } else {
                 inventory.setItem(i, new ItemStack(Material.AIR));
             }

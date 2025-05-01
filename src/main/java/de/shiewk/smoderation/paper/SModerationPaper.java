@@ -29,6 +29,7 @@ public final class SModerationPaper extends JavaPlugin {
     public static SModerationPaper PLUGIN = null;
     public static SModerationConfig CONFIG = null;
     public static File SAVE_FILE = null;
+    private static SkinTextureProvider textureProvider = null;
 
     public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
     public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
@@ -75,7 +76,7 @@ public final class SModerationPaper extends JavaPlugin {
             command.setExecutor(executor);
             command.setTabCompleter(executor);
         } else {
-            LOGGER.warn("Command %s failed to register: This command does not exist".formatted(label));
+            LOGGER.warn("Command {} failed to register: This command does not exist", label);
         }
     }
 
@@ -88,5 +89,13 @@ public final class SModerationPaper extends JavaPlugin {
                 toggleVanish(player);
             }
         }
+    }
+
+    public static SkinTextureProvider getTextureProvider() {
+        return textureProvider;
+    }
+
+    public static void setTextureProvider(SkinTextureProvider textureProvider) {
+        SModerationPaper.textureProvider = textureProvider;
     }
 }
