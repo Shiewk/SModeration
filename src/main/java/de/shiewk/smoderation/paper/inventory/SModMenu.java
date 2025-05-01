@@ -312,6 +312,9 @@ public class SModMenu extends PageableCustomInventory {
 
     @Override
     public void refresh() {
+        while (getPage() > lastPage()){
+            previousPage();
+        }
         for (int i = 45; i < 54; i++) {
             inventory.setItem(i, createEmptyStack());
         }
