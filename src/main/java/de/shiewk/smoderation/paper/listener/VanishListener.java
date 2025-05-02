@@ -2,7 +2,10 @@ package de.shiewk.smoderation.paper.listener;
 
 import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.command.VanishCommand;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,16 +14,27 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.persistence.PersistentDataType;
 
 import static de.shiewk.smoderation.paper.SModerationPaper.SECONDARY_COLOR;
 import static net.kyori.adventure.text.Component.text;
 
 public class VanishListener implements Listener {
 
-    @EventHandler public void onPlayerQuit(PlayerQuitEvent event){
+    public static final Component PREFIX = text("[VANISH] ").color(SECONDARY_COLOR);
+
+    @EventHandler(priority = EventPriority.HIGH) public void onPlayerQuit(PlayerQuitEvent event){
         final Player player = event.getPlayer();
         if (VanishCommand.isVanished(player)){
-            VanishCommand.toggleVanish(player);
+            player.getPersistentDataContainer().set(VanishCommand.KEY_VANISHED, PersistentDataType.BOOLEAN, true);
+            VanishCommand.toggleVanishSilent(player, true);
+            Component message = event.quitMessage();
+            event.quitMessage(null);
+            if (message != null){
+                broadcast(message.color(null));
+            }
+        } else {
+            player.getPersistentDataContainer().remove(VanishCommand.KEY_VANISHED);
         }
         for (Player vanishedPlayer : VanishCommand.getVanishedPlayers()) {
             // to clean up visibility status
@@ -29,9 +43,33 @@ public class VanishListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR) public void onPlayerJoin(PlayerJoinEvent event){
+        final Player player = event.getPlayer();
+        if (player.getPersistentDataContainer().has(VanishCommand.KEY_VANISHED)){
+            boolean state = VanishCommand.toggleVanishSilent(player, false);
+            if (state){
+                Component message = event.joinMessage();
+                event.joinMessage(null);
+                if (message != null){
+                    broadcast(message.color(null));
+                }
+                Bukkit.getScheduler().scheduleSyncDelayedTask(SModerationPaper.PLUGIN, () -> {
+                    player.sendMessage(SModerationPaper.CHAT_PREFIX
+                            .decorate(TextDecoration.BOLD)
+                            .append(
+                                    text("You are still vanished!")
+                    ));
+                    player.playSound(Sound.sound(
+                            Key.key("minecraft", "block.beacon.power_select"),
+                            Sound.Source.MASTER,
+                            1f,
+                            1f
+                    ), player);
+                }, 20);
+            } else {
+                player.getPersistentDataContainer().remove(VanishCommand.KEY_VANISHED);
+            }
+        }
         Bukkit.getScheduler().scheduleSyncDelayedTask(SModerationPaper.PLUGIN, () -> {
-            final Player player = event.getPlayer().getPlayer();
-            assert player != null;
             if (player.hasPermission("smod.vanish.see")){
                 for (Player vanishedPlayer : VanishCommand.getVanishedPlayers()) {
                     // to show visible vanished players
@@ -47,10 +85,16 @@ public class VanishListener implements Listener {
         final Component message = event.deathMessage();
         if (VanishCommand.isVanished(event.getPlayer()) && message != null){
             event.deathMessage(null);
-            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (onlinePlayer.hasPermission("smod.vanish.see")){
-                    onlinePlayer.sendMessage(text("[VANISH] ").color(SECONDARY_COLOR).append(message));
-                }
+            broadcast(message);
+        }
+    }
+
+    private static void broadcast(Component message) {
+        Component result = PREFIX.append(message);
+        SModerationPaper.LOGGER.info(result);
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (onlinePlayer.hasPermission("smod.vanish.see")){
+                onlinePlayer.sendMessage(result);
             }
         }
     }

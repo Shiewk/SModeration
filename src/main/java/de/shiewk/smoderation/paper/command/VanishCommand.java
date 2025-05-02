@@ -14,6 +14,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -26,6 +27,8 @@ import static io.papermc.paper.command.brigadier.Commands.literal;
 import static net.kyori.adventure.text.Component.text;
 
 public final class VanishCommand implements CommandProvider {
+
+    public static final NamespacedKey KEY_VANISHED = new NamespacedKey("smoderation", "vanished");
 
     @Override
     public LiteralCommandNode<CommandSourceStack> getCommandNode() {
@@ -116,6 +119,28 @@ public final class VanishCommand implements CommandProvider {
             player.sendMessage(CHAT_PREFIX.append(text("You are no longer vanished.").color(PRIMARY_COLOR)));
             player.setVisibleByDefault(true);
         }
+    }
+
+    public static boolean toggleVanishSilent(Player player, boolean force){
+        final boolean newStatus = !isVanished(player);
+        VanishToggleEvent event = new VanishToggleEvent(player, newStatus);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled() && !force){
+            return false;
+        }
+        if (newStatus){
+            vanishedPlayers.add(player);
+            player.setVisibleByDefault(false);
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                if (onlinePlayer.hasPermission("smod.vanish.see")){
+                    onlinePlayer.showEntity(PLUGIN, player);
+                }
+            }
+        } else {
+            vanishedPlayers.remove(player);
+            player.setVisibleByDefault(true);
+        }
+        return true;
     }
 
     public static boolean isVanished(Player player){
