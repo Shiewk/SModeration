@@ -13,6 +13,6 @@
 | /invsee \<player> equipment            | Views another player's equipment (armor and offhand).                        | smod.invsee        |
 | /enderchestsee <player>                | Views another player's ender chest.                                          | smod.enderchestsee |
 | /vanish                                | Toggles vanish mode so that other players can't see you're online.           | smod.vanish        |
-| /vanish toggle \<player>               | Toggles vanish mode for another player.                                      | smod.vanish        |
+| /vanish toggle \<players>              | Toggles vanish mode for other players.                                       | smod.vanish        |
 | /vanish list                           | Lists all vanished players.                                                  | smod.vanish.see    |
 | /socialspy                             | Enables SocialSpy mode where you can see other player's private messages.    | smod.socialspy     |
