@@ -46,6 +46,8 @@ public final class SModerationPaper extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        CONFIG.reload();
+
         getPluginManager().registerEvents(new PunishmentListener(), this);
         getPluginManager().registerEvents(new CustomInventoryListener(), this);
         getPluginManager().registerEvents(new InvSeeListener(), this);

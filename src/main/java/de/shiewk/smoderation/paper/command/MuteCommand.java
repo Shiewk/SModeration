@@ -39,6 +39,9 @@ public final class MuteCommand implements CommandProvider {
     }
 
     private int muteWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        if (SModerationPaper.CONFIG.shouldForceReason()){
+            CommandUtil.error("Please provide a reason.");
+        }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
         long duration = context.getArgument("duration", Long.class);

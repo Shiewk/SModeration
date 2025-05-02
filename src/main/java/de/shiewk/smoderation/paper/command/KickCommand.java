@@ -43,6 +43,9 @@ public final class KickCommand implements CommandProvider {
     }
 
     private int kickWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        if (SModerationPaper.CONFIG.shouldForceReason()){
+            CommandUtil.error("Please provide a reason.");
+        }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         Player target = CommandUtil.getPlayerSingle(context, "player");
         executeKick(sender, target, Punishment.DEFAULT_REASON);

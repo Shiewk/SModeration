@@ -22,19 +22,6 @@ import static net.kyori.adventure.text.Component.text;
 
 public class SocialSpyListener implements Listener {
 
-    private static final List<String> defaultCommands = List.of(
-            "w",
-            "tell",
-            "msg",
-            "teammsg",
-            "tm",
-            "minecraft:w",
-            "minecraft:tell",
-            "minecraft:msg",
-            "minecraft:teammsg",
-            "minecraft:tm"
-    );
-
     private static final NamespacedKey SAVE_KEY = new NamespacedKey("smoderation", "socialspy");
     private static final ObjectArrayList<CommandSender> targets = new ObjectArrayList<>();
 
@@ -72,9 +59,9 @@ public class SocialSpyListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
     public void onPlayerSendCommand(PlayerCommandPreprocessEvent event){
-        List<String> ssCommands = SModerationPaper.CONFIG.getSocialSpyCommands(defaultCommands);
+        List<String> socialSpyCommands = SModerationPaper.CONFIG.getSocialSpyCommands();
         final String message = event.getMessage();
-        if (ssCommands.stream().anyMatch(str ->
+        if (socialSpyCommands.stream().anyMatch(str ->
                 message.startsWith("/"+str+" ")
                 || message.startsWith(str+" ")
         )){
