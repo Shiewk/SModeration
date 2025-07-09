@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 
 import static de.shiewk.smoderation.paper.SModerationPaper.CHAT_PREFIX;
@@ -19,13 +19,16 @@ import static de.shiewk.smoderation.paper.SModerationPaper.CHAT_PREFIX;
 public class PunishmentListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW)
-    public void onPlayerLogin(PlayerLoginEvent event){
+    public void onPlayerLogin(AsyncPlayerPreLoginEvent event){
+        // Have to use AsyncPlayerPreLoginEvent since PlayerLoginEvent is deprecated in newer versions
+        // I would use the new PlayerConnectionValidateLoginEvent but there is literally no API available
+        // there to get player's UUIDs
         Punishment punishment = SModerationPaper.container.find(p ->
                 p.type == PunishmentType.BAN
-                && p.to.equals(event.getPlayer().getUniqueId())
+                && p.to.equals(event.getUniqueId())
                 && p.isActive());
         if (punishment != null){
-            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, CHAT_PREFIX.append(punishment.playerMessage()));
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, CHAT_PREFIX.append(punishment.playerMessage()));
         }
     }
 
@@ -63,7 +66,7 @@ public class PunishmentListener implements Listener {
 
     @EventHandler
     public void onWorldSave(WorldSaveEvent event){
-        if (event.getWorld().equals(Bukkit.getServer().getWorlds().get(0))){
+        if (event.getWorld().equals(Bukkit.getServer().getWorlds().getFirst())){
             SModerationPaper.container.save(SModerationPaper.SAVE_FILE);
         }
     }
