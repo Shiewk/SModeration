@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.inventory.InvSeeEquipmentInventory;
+import de.shiewk.smoderation.paper.inventory.InvSeeInventory;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -50,7 +51,7 @@ public final class InvseeCommand implements CommandProvider {
                         .append(target.teamDisplayName().colorIfAbsent(SECONDARY_COLOR))
                         .append(text("."))
         ));
-        sender.openInventory(target.getInventory());
+        new InvSeeInventory(sender, target).open();
         return Command.SINGLE_SUCCESS;
     }
 

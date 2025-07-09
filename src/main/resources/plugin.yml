@@ -1,7 +1,7 @@
 name: SModeration
 version: '${version}'
 main: de.shiewk.smoderation.paper.SModerationPaper
-api-version: '1.21'
+api-version: '1.21.3'
 load: STARTUP
 authors:
   - Shiewk

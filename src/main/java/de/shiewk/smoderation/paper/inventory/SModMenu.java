@@ -9,6 +9,7 @@ import de.shiewk.smoderation.paper.punishments.PunishmentType;
 import de.shiewk.smoderation.paper.storage.PunishmentContainer;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
 import de.shiewk.smoderation.paper.util.TimeUtil;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -20,7 +21,6 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -257,7 +257,7 @@ public class SModMenu extends PageableCustomInventory {
     private ItemStack createSearchItem(){
         final ItemStack stack = new ItemStack(Material.FLOWER_BANNER_PATTERN);
         stack.editMeta(meta -> {
-            meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
+            stack.setData(DataComponentTypes.HIDE_ADDITIONAL_TOOLTIP);
             meta.displayName(applyFormatting(text("Search").color(PRIMARY_COLOR)));
             final ArrayList<Component> lore = new ArrayList<>(List.of(
                     Component.empty(),
