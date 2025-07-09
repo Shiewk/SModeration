@@ -18,6 +18,7 @@ public class ChatInputListener implements Listener {
         if (input != null){
             event.setCancelled(true);
             input.getAction().accept(event.message());
+            event.getPlayer().clearTitle();
         }
     }
 
