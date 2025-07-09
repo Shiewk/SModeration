@@ -8,6 +8,7 @@ import de.shiewk.smoderation.paper.punishments.Punishment;
 import de.shiewk.smoderation.paper.punishments.PunishmentType;
 import de.shiewk.smoderation.paper.storage.PunishmentContainer;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
+import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import de.shiewk.smoderation.paper.util.TimeUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.Component;
@@ -114,12 +115,12 @@ public class SModMenu extends PageableCustomInventory {
     }
 
     public void promptSearchQuery(){
-        Bukkit.getScheduler().scheduleSyncDelayedTask(PLUGIN, player::closeInventory);
+        SchedulerUtil.scheduleForEntity(PLUGIN, player, player::closeInventory);
         ChatInput.prompt(player, component -> {
             if (component instanceof TextComponent text){
                 this.searchQuery = text.content();
                 // chat event is async
-                Bukkit.getScheduler().scheduleSyncDelayedTask(PLUGIN, this::open);
+                SchedulerUtil.scheduleForEntity(PLUGIN, player, this::open);
             }
         }, text("Enter your search query in chat").color(SECONDARY_COLOR), 30);
     }

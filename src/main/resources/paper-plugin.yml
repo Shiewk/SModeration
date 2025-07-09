@@ -1,11 +1,13 @@
 name: SModeration
 version: '${version}'
 main: de.shiewk.smoderation.paper.SModerationPaper
+website: https://github.com/Shiewk/SModeration
 api-version: '1.21.3'
 load: STARTUP
 authors:
   - Shiewk
 description: "SModeration is an easy-to-use minecraft plugin for moderating your server."
+folia-supported: true
 permissions:
   smod.mute:
     default: op

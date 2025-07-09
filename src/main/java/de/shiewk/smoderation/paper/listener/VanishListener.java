@@ -2,6 +2,7 @@ package de.shiewk.smoderation.paper.listener;
 
 import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.command.VanishCommand;
+import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -52,7 +53,7 @@ public class VanishListener implements Listener {
                 if (message != null){
                     broadcast(message.color(null));
                 }
-                Bukkit.getScheduler().scheduleSyncDelayedTask(SModerationPaper.PLUGIN, () -> {
+                SchedulerUtil.scheduleForEntity(SModerationPaper.PLUGIN, player, () -> {
                     player.sendMessage(SModerationPaper.CHAT_PREFIX
                             .decorate(TextDecoration.BOLD)
                             .append(
@@ -69,7 +70,7 @@ public class VanishListener implements Listener {
                 player.getPersistentDataContainer().remove(VanishCommand.KEY_VANISHED);
             }
         }
-        Bukkit.getScheduler().scheduleSyncDelayedTask(SModerationPaper.PLUGIN, () -> {
+        SchedulerUtil.scheduleForEntity(SModerationPaper.PLUGIN, player, () -> {
             if (player.hasPermission("smod.vanish.see")){
                 for (Player vanishedPlayer : VanishCommand.getVanishedPlayers()) {
                     // to show visible vanished players

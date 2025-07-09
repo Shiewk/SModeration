@@ -2,9 +2,11 @@ package de.shiewk.smoderation.paper;
 
 import de.shiewk.smoderation.paper.command.*;
 import de.shiewk.smoderation.paper.config.SModerationConfig;
+import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.input.ChatInputListener;
 import de.shiewk.smoderation.paper.listener.*;
 import de.shiewk.smoderation.paper.storage.PunishmentContainer;
+import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.TextComponent;
@@ -72,7 +74,12 @@ public final class SModerationPaper extends JavaPlugin {
             registerCommand(commands, new BanCommand());
         });
 
+        SchedulerUtil.scheduleGlobalRepeating(PLUGIN, CustomInventoryListener::onTick, 1, 1);
+        SchedulerUtil.scheduleGlobalRepeating(PLUGIN, ChatInput::tickAll, 1, 1);
+
         container.load(SAVE_FILE);
+
+        LOGGER.info("Folia: {}", SchedulerUtil.isFolia ? "yes" : "no");
     }
 
     private void registerCommand(Commands commands, CommandProvider provider){

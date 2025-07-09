@@ -30,7 +30,7 @@ public class ChatInput {
         this.remainingTicks = remainingSeconds * 20 + 1;
     }
 
-    static void tickAll() {
+    public static void tickAll() {
         runningInputs.values().forEach(ChatInput::tick);
     }
 

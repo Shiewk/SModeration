@@ -18,8 +18,14 @@ processResources {
     def props = [version: version]
     inputs.properties props
     filteringCharset 'UTF-8'
-    filesMatching('plugin.yml') {
+    filesMatching('paper-plugin.yml') {
         expand props
+    }
+}
+
+runPaper {
+    folia {
+        registerTask()
     }
 }
 
@@ -33,7 +39,8 @@ runServer {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.3-R0.1-SNAPSHOT")
+    //compileOnly "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT"
+    compileOnly 'dev.folia:folia-api:1.21.4-R0.1-SNAPSHOT'
 }
 
 jar {

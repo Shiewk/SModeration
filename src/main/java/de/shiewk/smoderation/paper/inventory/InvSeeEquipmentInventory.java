@@ -1,6 +1,7 @@
 package de.shiewk.smoderation.paper.inventory;
 
 import de.shiewk.smoderation.paper.SModerationPaper;
+import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -47,7 +48,7 @@ public class InvSeeEquipmentInventory implements AutoUpdatingCustomInventory {
         if (viewer.hasPermission("smod.invsee.modify") && !subject.hasPermission("smod.invsee.preventmodify")){
             event.setCancelled(false);
             changing = true;
-            Bukkit.getScheduler().scheduleSyncDelayedTask(SModerationPaper.PLUGIN, () -> {
+            SchedulerUtil.scheduleGlobal(SModerationPaper.PLUGIN, () -> {
                 changing = false;
                 final EntityEquipment equipment = subject.getEquipment();
                 equipment.setHelmet(inventory.getItem(0));

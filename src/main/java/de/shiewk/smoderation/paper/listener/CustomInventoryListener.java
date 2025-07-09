@@ -1,6 +1,5 @@
 package de.shiewk.smoderation.paper.listener;
 
-import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import de.shiewk.smoderation.paper.inventory.AutoUpdatingCustomInventory;
 import de.shiewk.smoderation.paper.inventory.CustomInventory;
 import org.bukkit.Bukkit;
@@ -26,8 +25,7 @@ public class CustomInventoryListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onServerTickEnd(ServerTickEndEvent event){
+    public static void onTick(){
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             if (onlinePlayer.getOpenInventory().getTopInventory().getHolder() instanceof AutoUpdatingCustomInventory ci) {
                 ci.refresh();

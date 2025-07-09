@@ -37,7 +37,7 @@ public class PunishmentContainer {
     }
 
     public @Nullable Punishment find(Predicate<Punishment> predicate){
-        for (Punishment punishment : new CopyOnWriteArrayList<>(punishments)) {
+        for (Punishment punishment : punishments) {
             if (predicate.test(punishment)){
                 return punishment;
             }
@@ -47,7 +47,7 @@ public class PunishmentContainer {
 
     public @NotNull List<Punishment> findAll(Predicate<Punishment> predicate){
         List<Punishment> found = new ArrayList<>();
-        for (Punishment punishment : new CopyOnWriteArrayList<>(punishments)) {
+        for (Punishment punishment : punishments) {
             if (predicate.test(punishment)){
                 found.add(punishment);
             }
@@ -74,7 +74,7 @@ public class PunishmentContainer {
         return new ArrayList<>(punishments);
     }
 
-    public void load(File file){
+    public synchronized void load(File file){
         final ComponentLogger logger = SModerationPaper.LOGGER;
         try {
             logger.info("Loading from {}", file.getPath());
@@ -99,7 +99,7 @@ public class PunishmentContainer {
         }
     }
 
-    public void save(File file) {
+    public synchronized void save(File file) {
         final ComponentLogger logger = SModerationPaper.LOGGER;
         try {
             if (!file.isFile()){
