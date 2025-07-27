@@ -72,3 +72,6 @@ permissions:
   smod.socialspy:
     default: op
     description: Allows the player to enable SocialSpy
+  smod.offlinetp:
+    default: op
+    description: Allows the player to teleport themself to offline players

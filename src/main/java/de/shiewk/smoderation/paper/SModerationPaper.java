@@ -72,6 +72,7 @@ public final class SModerationPaper extends JavaPlugin {
             registerCommand(commands, new UnbanCommand());
             registerCommand(commands, new MuteCommand());
             registerCommand(commands, new BanCommand());
+            registerCommand(commands, new OfflineTPCommand());
         });
 
         SchedulerUtil.scheduleGlobalRepeating(PLUGIN, CustomInventoryListener::onTick, 1, 1);
