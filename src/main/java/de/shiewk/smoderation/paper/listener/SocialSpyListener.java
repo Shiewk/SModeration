@@ -16,9 +16,8 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.PRIMARY_COLOR;
-import static de.shiewk.smoderation.paper.SModerationPaper.SECONDARY_COLOR;
 import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
 
 public class SocialSpyListener implements Listener {
 
@@ -71,13 +70,7 @@ public class SocialSpyListener implements Listener {
 
     public static void command(Player player, String command){
         for (CommandSender target : targets) {
-            target.sendMessage(text("[", PRIMARY_COLOR)
-                    .append(text("SocialSpy", SECONDARY_COLOR))
-                    .append(text("] "))
-                    .append(player.displayName().colorIfAbsent(PRIMARY_COLOR))
-                    .append(text(": ", PRIMARY_COLOR))
-                    .append(text(command, SECONDARY_COLOR))
-            );
+            target.sendMessage(translatable("smod.socialspy.command", player.teamDisplayName(), text(command)));
         }
     }
 

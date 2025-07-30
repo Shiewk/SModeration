@@ -40,7 +40,7 @@ public final class BanCommand implements CommandProvider {
 
     private int banWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         if (SModerationPaper.CONFIG.shouldForceReason()){
-            CommandUtil.error("Please provide a reason.");
+            CommandUtil.errorTranslatable("smod.command.ban.fail.forceReason");
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
@@ -62,17 +62,17 @@ public final class BanCommand implements CommandProvider {
         Player targetPlayer = Bukkit.getPlayer(target);
         if (duration == 0){
             if (targetPlayer == null){
-                CommandUtil.error("You can't ban an offline player for less than 1ms.");
+                CommandUtil.errorTranslatable("smod.command.ban.fail.tooShort");
             } else {
                 KickCommand.executeKick(sender, targetPlayer, reason);
             }
             return;
         }
         if (sender.equals(target)) {
-            CommandUtil.error("You can't ban yourself.");
+            CommandUtil.errorTranslatable("smod.command.ban.fail.self");
         } else {
             if (targetPlayer != null && targetPlayer.hasPermission("smod.preventban")){
-                CommandUtil.error("This player can't be banned.");
+                CommandUtil.errorTranslatable("smod.command.ban.fail.protect");
             } else {
                 final Punishment punishment = Punishment.ban(
                         System.currentTimeMillis(),

@@ -1,13 +1,17 @@
 package de.shiewk.smoderation.paper.punishments;
 
+import net.kyori.adventure.text.Component;
+
+import static net.kyori.adventure.text.Component.translatable;
+
 public enum PunishmentType {
-    MUTE("Mute"),
-    KICK("Kick"),
-    BAN("Ban");
+    MUTE(translatable("smod.punishment.name.mute")),
+    KICK(translatable("smod.punishment.name.kick")),
+    BAN(translatable("smod.punishment.name.ban"));
 
-    public final String name;
+    public final Component name;
 
-    PunishmentType(String name) {
+    PunishmentType(Component name) {
         this.name = name;
     }
 }

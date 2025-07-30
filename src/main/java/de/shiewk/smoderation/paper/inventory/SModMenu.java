@@ -11,6 +11,7 @@ import de.shiewk.smoderation.paper.util.PlayerUtil;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import de.shiewk.smoderation.paper.util.TimeUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemLore;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -29,7 +30,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -37,37 +37,38 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static de.shiewk.smoderation.paper.SModerationPaper.*;
-import static net.kyori.adventure.text.Component.text;
+import static de.shiewk.smoderation.paper.inventory.CustomInventory.renderComponent;
+import static net.kyori.adventure.text.Component.*;
 
 public class SModMenu extends PageableCustomInventory {
 
     public enum Filter {
-        ACTIVE("Active punishments", Punishment::isActive),
-        OLD("Old punishments", p -> !p.isActive()),
-        ALL("All punishments", p -> true);
+        ACTIVE(translatable("smod.menu.filter.active"), Punishment::isActive),
+        OLD(translatable("smod.menu.filter.expired"), p -> !p.isActive()),
+        ALL(translatable("smod.menu.filter.all"), p -> true);
 
         public static final Material ICON = Material.HOPPER;
 
-        public final String name;
+        public final Component name;
         public final Predicate<Punishment> filter;
-        Filter(String name, Predicate<Punishment> filter) {
+        Filter(Component name, Predicate<Punishment> filter) {
             this.name = name;
             this.filter = filter;
         }
     }
 
     public enum Sort {
-        EXPIRY("Expiry", Comparator.comparingLong(p -> p.until)),
-        TIME("Date", Comparator.comparingLong(p -> p.time)),
-        PLAYER_NAME("Player name", (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.to), PlayerUtil.offlinePlayerName(p2.to))),
-        MODERATOR_NAME("Moderator name", (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.by), PlayerUtil.offlinePlayerName(p2.by)));
+        EXPIRY(translatable("smod.menu.sort.expiry"), Comparator.comparingLong(p -> p.until)),
+        TIME(translatable("smod.menu.sort.time"), Comparator.comparingLong(p -> p.time)),
+        PLAYER_NAME(translatable("smod.menu.sort.playerName"), (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.to), PlayerUtil.offlinePlayerName(p2.to))),
+        MODERATOR_NAME(translatable("smod.menu.sort.moderatorName"), (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.by), PlayerUtil.offlinePlayerName(p2.by)));
 
         public static final Material ICON = Material.COMPARATOR;
 
-        public final String name;
+        public final Component name;
         public final Comparator<Punishment> comparator;
 
-        Sort(String name, Comparator<Punishment> comparator) {
+        Sort(Component name, Comparator<Punishment> comparator) {
             this.name = name;
             this.comparator = comparator;
         }
@@ -90,7 +91,7 @@ public class SModMenu extends PageableCustomInventory {
     public SModMenu(Player player, PunishmentContainer container) {
         this.player = player;
         this.container = container;
-        this.inventory = Bukkit.createInventory(this, 54, text("SMod Menu"));
+        this.inventory = Bukkit.createInventory(this, 54, translatable("smod.menu"));
         reload();
     }
 
@@ -122,7 +123,7 @@ public class SModMenu extends PageableCustomInventory {
                 // chat event is async
                 SchedulerUtil.scheduleForEntity(PLUGIN, player, this::open);
             }
-        }, text("Enter your search query in chat").color(SECONDARY_COLOR), 30);
+        }, translatable("smod.menu.search.query").color(SECONDARY_COLOR), 30);
     }
 
     @Override
@@ -195,87 +196,90 @@ public class SModMenu extends PageableCustomInventory {
     private ItemStack createFilterItem(){
         final Filter filter = getFilter();
         final ItemStack stack = new ItemStack(Filter.ICON);
-        stack.editMeta(meta -> {
-            meta.displayName(applyFormatting(text("Filter: " + filter.name).color(PRIMARY_COLOR)));
-            ArrayList<Component> lore = new ArrayList<>();
-            lore.add(Component.empty());
-            for (Filter value : Filter.values()) {
-                final boolean selected = filter == value;
-                Component filterText = applyFormatting(text((selected ? "\u00BB " : "") + value.name).color(selected ? SECONDARY_COLOR : INACTIVE_COLOR));
-                lore.add(filterText);
-            }
-            lore.add(Component.empty());
-            lore.add(applyFormatting(text("\u00BB Click to switch filter").color(NamedTextColor.GOLD)));
-            meta.lore(lore);
-        });
-        filterStack = stack;
-        return stack;
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.filter", filter.name).color(PRIMARY_COLOR)));
+        ItemLore.Builder loreBuilder = ItemLore.lore();
+
+        loreBuilder.addLine(empty());
+        for (Filter value : Filter.values()) {
+            final boolean selected = filter == value;
+            Component filterText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SECONDARY_COLOR : INACTIVE_COLOR).append(value.name)));
+            loreBuilder.addLine(filterText);
+        }
+        loreBuilder.addLine(empty());
+        loreBuilder.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.filter.switch", NamedTextColor.GOLD))));
+
+        stack.setData(DataComponentTypes.LORE, loreBuilder.build());
+        return filterStack = stack;
     }
 
     private ItemStack createTypeItem(){
         final PunishmentType type = getType();
         final ItemStack stack = new ItemStack(Material.CHEST);
-        stack.editMeta(meta -> {
-            meta.displayName(applyFormatting(text("Type: " + (type == null ? "All" : type.name)).color(PRIMARY_COLOR)));
-            ArrayList<Component> lore = new ArrayList<>();
-            lore.add(Component.empty());
-            final Consumer<PunishmentType> addToLore = value -> {
-                final boolean selected = type == value;
-                Component typeText = applyFormatting(text((selected ? "\u00BB " : "") + (value == null ? "All" : value.name)).color(selected ? SECONDARY_COLOR : INACTIVE_COLOR));
-                lore.add(typeText);
-            };
-            addToLore.accept(null);
-            for (PunishmentType value : PunishmentType.values()) {
-                addToLore.accept(value);
-            }
-            lore.add(Component.empty());
-            lore.add(applyFormatting(text("\u00BB Click to switch type").color(NamedTextColor.GOLD)));
-            meta.lore(lore);
-        });
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.type", (type == null ? translatable("smod.menu.type.all") : type.name))).color(PRIMARY_COLOR));
+
+        ItemLore.Builder loreBuilder = ItemLore.lore();
+        loreBuilder.addLine(empty());
+        final Consumer<PunishmentType> addToLore = value -> {
+            final boolean selected = type == value;
+            Component typeText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SECONDARY_COLOR : INACTIVE_COLOR).append(value == null ? translatable("smod.menu.type.all") : value.name)));
+            loreBuilder.addLine(typeText);
+        };
+        addToLore.accept(null);
+        for (PunishmentType value : PunishmentType.values()) {
+            addToLore.accept(value);
+        }
+
+        loreBuilder.addLine(empty());
+        loreBuilder.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.type.switch", NamedTextColor.GOLD))));
+
+        stack.setData(DataComponentTypes.LORE, loreBuilder);
         return typeStack = stack;
     }
 
     private ItemStack createSortItem(){
         final Sort sort = getSort();
         final ItemStack stack = new ItemStack(Sort.ICON);
-        stack.editMeta(meta -> {
-            meta.displayName(applyFormatting(text("Sort by: " + sort.name).color(PRIMARY_COLOR)));
-            ArrayList<Component> lore = new ArrayList<>();
-            lore.add(Component.empty());
-            for (Sort value : Sort.values()) {
-                final boolean selected = sort == value;
-                Component sortText = applyFormatting(text((selected ? "\u00BB " : "") + value.name).color(selected ? SECONDARY_COLOR : INACTIVE_COLOR));
-                lore.add(sortText);
-            }
-            lore.add(Component.empty());
-            lore.add(applyFormatting(text("\u00BB Click to switch sorting option").color(NamedTextColor.GOLD)));
-            meta.lore(lore);
-        });
-        sortStack = stack;
-        return stack;
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.sort", sort.name).color(PRIMARY_COLOR)));
+
+        ItemLore.Builder loreBuilder = ItemLore.lore();
+        loreBuilder.addLine(empty());
+
+        for (Sort value : Sort.values()) {
+            final boolean selected = sort == value;
+            Component sortText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SECONDARY_COLOR : INACTIVE_COLOR).append(value.name)));
+            loreBuilder.addLine(sortText);
+        }
+
+        loreBuilder.addLine(empty());
+        loreBuilder.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.sort.switch", NamedTextColor.GOLD))));
+
+        stack.setData(DataComponentTypes.LORE, loreBuilder);
+        return sortStack = stack;
     }
 
     private ItemStack createSearchItem(){
         final ItemStack stack = new ItemStack(Material.FLOWER_BANNER_PATTERN);
-        stack.editMeta(meta -> {
-            try {
-                stack.setData(DataComponentTypes.HIDE_ADDITIONAL_TOOLTIP);
-            } catch (NoSuchFieldError e) {
-                // that component is no longer present under that name,
-                // we just create the stack without it instead of throwing
-            }
-            meta.displayName(applyFormatting(text("Search").color(PRIMARY_COLOR)));
-            final ArrayList<Component> lore = new ArrayList<>(List.of(
-                    Component.empty(),
-                    applyFormatting(text("Current search query: %s".formatted(searchQuery == null ? "None" : "\"" + searchQuery + "\"")).color(SECONDARY_COLOR)),
-                    Component.empty(),
-                    applyFormatting(text("\u00BB Click to enter new search query").color(NamedTextColor.GOLD))
-            ));
-            if (searchQuery != null){
-                lore.add(applyFormatting(text("\u00BB Right click to remove search query").color(NamedTextColor.GOLD)));
-            }
-            meta.lore(lore);
-        });
+
+        try {
+            stack.setData(DataComponentTypes.HIDE_ADDITIONAL_TOOLTIP);
+        } catch (NoSuchFieldError e) {
+            // that component is no longer present under that name,
+            // we just create the stack without it instead of throwing
+        }
+
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.search", PRIMARY_COLOR)));
+
+        ItemLore.Builder loreBuilder = ItemLore.lore();
+        loreBuilder.addLines(List.of(
+                empty(),
+                renderComponent(player, applyFormatting(translatable("smod.menu.search.current", searchQuery == null ? translatable("smod.menu.search.none") : text('"' + searchQuery + '"'))).color(SECONDARY_COLOR)),
+                empty(),
+                renderComponent(player, applyFormatting(translatable("smod.menu.search.new", NamedTextColor.GOLD)))
+        ));
+        if (searchQuery != null){
+            loreBuilder.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.search.remove", NamedTextColor.GOLD))));
+        }
+        stack.setData(DataComponentTypes.LORE, loreBuilder);
         return searchStack = stack;
     }
 
@@ -294,8 +298,8 @@ public class SModMenu extends PageableCustomInventory {
                                 ));
                                 skullMeta.setPlayerProfile(profile);
                             }
-                            addPunishmentInfo(punishment, meta);
                         });
+                        addPunishmentInfo(punishment, stack);
                         return stack;
                     });
         } else {
@@ -308,40 +312,41 @@ public class SModMenu extends PageableCustomInventory {
                         LOGGER.warn("Player {} has a punishment but was never on this server!", punishment.to);
                     }
                 }
-                addPunishmentInfo(punishment, meta);
             });
+            addPunishmentInfo(punishment, stack);
             return CompletableFuture.completedFuture(stack);
         }
     }
 
-    private void addPunishmentInfo(Punishment punishment, ItemMeta meta) {
-        meta.displayName(applyFormatting(text(punishment.type.name).color(NamedTextColor.RED).decorate(TextDecoration.BOLD)));
-        ArrayList<Component> lore = new ArrayList<>();
-        lore.add(applyFormatting(text("Player: ").color(SECONDARY_COLOR).append(text(PlayerUtil.offlinePlayerName(punishment.to)).color(PRIMARY_COLOR))));
-        lore.add(applyFormatting(text("Punished by: ").color(SECONDARY_COLOR).append(text(PlayerUtil.offlinePlayerName(punishment.by)).color(PRIMARY_COLOR))));
-        lore.add(applyFormatting(text("Timestamp: ").color(SECONDARY_COLOR).append(text(TimeUtil.calendarTimestamp(punishment.time)).color(PRIMARY_COLOR))));
+    private void addPunishmentInfo(Punishment punishment, ItemStack stack) {
+        stack.setData(DataComponentTypes.CUSTOM_NAME, renderComponent(player, applyFormatting(punishment.type.name.color(NamedTextColor.RED).decorate(TextDecoration.BOLD))));
+        ItemLore.Builder lore = ItemLore.lore();
+
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.player", text(PlayerUtil.offlinePlayerName(punishment.to))))));
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.punishedBy", text(PlayerUtil.offlinePlayerName(punishment.by))))));
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.timestamp", TimeUtil.formatTimeLong(punishment.time)))));
+
         if (punishment.type != PunishmentType.KICK){
-            lore.add(applyFormatting(text("Duration: ").color(SECONDARY_COLOR).append(text(TimeUtil.formatTimeLong(punishment.until - punishment.time)).color(PRIMARY_COLOR))));
+            lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.duration", TimeUtil.formatTimeLong(punishment.until - punishment.time)))));
             long remainingTime = punishment.until - System.currentTimeMillis();
-            final String expires;
             if (remainingTime > 0){
-                expires = "in " + TimeUtil.formatTimeLong(remainingTime);
+                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.expiry.future", TimeUtil.formatTimeLong(remainingTime)))));
             } else {
-                remainingTime *= -1;
-                expires = TimeUtil.formatTimeLong(remainingTime) + " ago";
+                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.expiry.past", TimeUtil.formatTimeLong(-remainingTime)))));
             }
-            lore.add(applyFormatting(text("Expires: ").color(SECONDARY_COLOR).append(text(expires).color(PRIMARY_COLOR))));
         }
-        lore.add(applyFormatting(text("Reason: ").color(SECONDARY_COLOR).append(text(punishment.reason).color(PRIMARY_COLOR))));
+
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.reason", text(punishment.reason)))));
+
         if (punishment.wasUndone()){
-            lore.add(applyFormatting(text("Undone by: ").color(NamedTextColor.RED).append(text(PlayerUtil.offlinePlayerName(punishment.undoneBy())).color(NamedTextColor.GOLD))));
+            lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.undone", text(PlayerUtil.offlinePlayerName(punishment.undoneBy()))))));
         } else if (punishment.isActive()) {
             if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))){
-                lore.add(Component.empty());
-                lore.add(applyFormatting(text("\u00BB Click to undo punishment").color(NamedTextColor.GOLD)));
+                lore.addLine(empty());
+                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.click", NamedTextColor.GOLD))));
             }
         }
-        meta.lore(lore);
+        stack.setData(DataComponentTypes.LORE, lore);
     }
 
     private int rfId = 0;
@@ -413,7 +418,7 @@ public class SModMenu extends PageableCustomInventory {
                 if (timestamp != null) {
                     final Punishment punishment = container.findByTimestamp(timestamp);
                     if (punishment != null) {
-                        new ConfirmationInventory(player, "Do you want to undo this punishment?", () -> {
+                        new ConfirmationInventory(player, translatable("smod.menu.undoConfirmation"), () -> {
                             punishment.undo(player.getUniqueId());
                             punishment.broadcastUndo(container);
                             player.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);

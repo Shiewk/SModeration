@@ -1,15 +1,19 @@
 package de.shiewk.smoderation.paper.util;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.jetbrains.annotations.Range;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-public abstract class TimeUtil {
+import static net.kyori.adventure.text.Component.*;
+
+public final class TimeUtil {
     private TimeUtil(){}
 
-    public static String formatTimeLong(long millis){
+    public static Component formatTimeLong(long millis){
         long seconds = millis / 1000;
         millis -= seconds * 1000;
 
@@ -31,95 +35,65 @@ public abstract class TimeUtil {
         long weeks = days / 7;
         days -= weeks * 7;
 
-        StringBuilder builder = new StringBuilder();
+        TextComponent.Builder builder = empty().toBuilder();
 
         if (years > 0){
-            if (!builder.isEmpty()){
-                builder.append(" ");
+            if (!builder.children().isEmpty()){
+                builder.appendSpace();
             }
-            builder.append("%s years".formatted(years));
+            builder.append(translatable("smod.time.years", text(years)));
         }
 
         if (months > 0){
-            if (!builder.isEmpty()){
-                builder.append(" ");
+            if (!builder.children().isEmpty()){
+                builder.appendSpace();
             }
-            builder.append("%s months".formatted(months));
+            builder.append(translatable("smod.time.months", text(months)));
         }
 
         if (weeks > 0){
-            if (!builder.isEmpty()){
-                builder.append(" ");
+            if (!builder.children().isEmpty()){
+                builder.appendSpace();
             }
-            builder.append("%s weeks".formatted(weeks));
+            builder.append(translatable("smod.time.weeks", text(weeks)));
         }
 
         if (days > 0){
-            if (!builder.isEmpty()){
-                builder.append(" ");
+            if (!builder.children().isEmpty()){
+                builder.appendSpace();
             }
-            builder.append("%s days".formatted(days));
+            builder.append(translatable("smod.time.days", text(days)));
         }
 
         if (hours > 0){
-            if (!builder.isEmpty()){
-                builder.append(" ");
+            if (!builder.children().isEmpty()){
+                builder.appendSpace();
             }
-            builder.append("%s hours".formatted(hours));
+            builder.append(translatable("smod.time.hours", text(hours)));
         }
 
         if (minutes > 0){
-            if (!builder.isEmpty()){
-                builder.append(" ");
+            if (!builder.children().isEmpty()){
+                builder.appendSpace();
             }
-            builder.append("%s minutes".formatted(minutes));
+            builder.append(translatable("smod.time.minutes", text(minutes)));
         }
 
         if (seconds > 0){
-            if (!builder.isEmpty()){
-                builder.append(" ");
+            if (!builder.children().isEmpty()){
+                builder.appendSpace();
             }
-            builder.append("%s seconds".formatted(seconds));
+            builder.append(translatable("smod.time.seconds", text(seconds)));
         }
 
-        if (builder.isEmpty()){
-            builder.append("%s ms".formatted(millis));
+        if (builder.children().isEmpty()){
+            builder.append(translatable("smod.time.milliseconds", text(millis)));
         }
 
-        return builder.toString();
+        return builder.build();
     }
 
-    public static long parseDurationMillisSafely(String in){
-        try {
-            return parseDurationMillis(in);
-        } catch (Throwable e){
-            return -1;
-        }
-    }
-
-    public static long parseDurationMillis(String in){
-        if (in.endsWith("ms")){
-            return Long.parseLong(in.substring(0, in.length()-2));
-        } else if (in.endsWith("s")){
-            return Long.parseLong(in.substring(0, in.length()-1)) * 1000L;
-        } else if (in.endsWith("min")){
-            return Long.parseLong(in.substring(0, in.length()-3)) * 60000L;
-        } else if (in.endsWith("h")){
-            return Long.parseLong(in.substring(0, in.length()-1)) * 3600000L;
-        } else if (in.endsWith("d")){
-            return Long.parseLong(in.substring(0, in.length()-1)) * 86400000L;
-        } else if (in.endsWith("w")){
-            return Long.parseLong(in.substring(0, in.length()-1)) * 604800000L;
-        } else if (in.endsWith("mo")){
-            return Long.parseLong(in.substring(0, in.length()-2)) * 2592000000L;
-        } else if (in.endsWith("y")){
-            return Long.parseLong(in.substring(0, in.length()-1)) * 31536000000L;
-        } else {
-            return -1;
-        }
-    }
-
-    public static String calendarTimestamp(long time){
+    public static Component calendarTimestamp(long time){
         Date date = new Date(time);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -129,73 +103,22 @@ public abstract class TimeUtil {
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int year = calendar.get(Calendar.YEAR);
 
-        String day = numberWithSuffix(calendar.get(Calendar.DAY_OF_MONTH));
-        String month = monthName(calendar.get(Calendar.MONTH));
-        return "%s %s %s, %s:%s:%s %s".formatted(
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        Component month = monthName(calendar.get(Calendar.MONTH));
+        return translatable(
+                "smod.time.timestamp",
+                text(year),
                 month,
-                day,
-                year,
-                hour < 10 ? "0" + hour : hour,
-                minute < 10 ? "0" + minute : minute,
-                second < 10 ? "0" + second : second,
-                zone.getDisplayName(false, TimeZone.SHORT)
+                text(day),
+                text((hour < 10 ? "0" : "") + hour),
+                text((minute < 10 ? "0" : "") + minute),
+                text((second < 10 ? "0" : "") + second),
+                text(zone.getDisplayName(zone.inDaylightTime(calendar.getTime()), TimeZone.SHORT))
         );
     }
 
-    private static String numberWithSuffix(int i){
-        return i + numberSuffix(i);
+    public static Component monthName(@Range(from = 0, to = 11) int m){
+        return translatable("smod.time.month." + m);
     }
 
-    private static String numberSuffix(int i){
-        if ((i % 10) == 1 && i != 11){
-            return "st";
-        } else if ((i % 10) == 2 && i != 12){
-            return "nd";
-        } else if ((i % 10) == 3 && i != 13){
-            return "rd";
-        }
-        return "th";
-    }
-
-    public static String monthName(@Range(from = 0, to = 11) int m){
-        switch (m){
-            case 0 -> {
-                return "January";
-            }
-            case 1 -> {
-                return "February";
-            }
-            case 2 -> {
-                return "March";
-            }
-            case 3 -> {
-                return "April";
-            }
-            case 4 -> {
-                return "May";
-            }
-            case 5 -> {
-                return "June";
-            }
-            case 6 -> {
-                return "July";
-            }
-            case 7 -> {
-                return "August";
-            }
-            case 8 -> {
-                return "September";
-            }
-            case 9 -> {
-                return "October";
-            }
-            case 10 -> {
-                return "November";
-            }
-            case 11 -> {
-                return "December";
-            }
-        }
-        return "Unknown Month";
-    }
 }

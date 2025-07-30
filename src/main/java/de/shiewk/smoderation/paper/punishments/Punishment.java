@@ -16,6 +16,8 @@ import java.io.OutputStream;
 import java.util.UUID;
 
 import static de.shiewk.smoderation.paper.SModerationPaper.*;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
 
 public class Punishment {
     public static final String DEFAULT_REASON = "No reason provided.";
@@ -96,8 +98,6 @@ public class Punishment {
         return new Punishment(PunishmentType.KICK, time, time, by, to, reason);
     }
 
-    private static final int BUFFER_LENGTH = 56;
-
     public void writeBytes(OutputStream stream) throws IOException {
         stream.write(ByteUtil.intToBytes(type.ordinal()));
         stream.write(ByteUtil.longToBytes(time));
@@ -114,18 +114,8 @@ public class Punishment {
     }
 
     private Component undoMessage(){
-        String msg = "";
-        switch (type){
-            case MUTE -> msg = "unmuted";
-            case KICK -> msg = "unkicked??";
-            case BAN -> msg = "unbanned";
-        }
-        return Component.text(PlayerUtil.offlinePlayerName(to)).color(SECONDARY_COLOR)
-                .append(Component.text(" was ").color(PRIMARY_COLOR))
-                .append(Component.text(msg))
-                .append(Component.text(" by ").color(PRIMARY_COLOR))
-                .append(Component.text(PlayerUtil.offlinePlayerName(undoneBy)))
-                .append(Component.text(".").color(PRIMARY_COLOR));
+        String key = "smod.punishment.undo." + type.name().toLowerCase();
+        return translatable(key, text(PlayerUtil.offlinePlayerName(to)), text(PlayerUtil.offlinePlayerName(undoneBy)));
     }
 
     public void broadcastUndo(PunishmentContainer container){
@@ -156,37 +146,14 @@ public class Punishment {
     }
 
     private Component broadcastMessage(){
-        final String toName = PlayerUtil.offlinePlayerName(to);
-        switch (type) {
-            case MUTE -> {
-                return Component.text(toName).color(SECONDARY_COLOR).append(
-                        Component.text(" has been muted by ").color(PRIMARY_COLOR)
-                        .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                        .append(Component.text(" for "))
-                        .append(Component.text(TimeUtil.formatTimeLong(this.until - this.time)).color(SECONDARY_COLOR))
-                        .append(Component.text(".\nReason: "))
-                        .append(Component.text(reason).color(SECONDARY_COLOR)));
-            }
-            case KICK -> {
-                return Component.text(toName).color(SECONDARY_COLOR).append(
-                        Component.text(" has been kicked by ").color(PRIMARY_COLOR)
-                        .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                        .append(Component.text(".\nReason: "))
-                        .append(Component.text(reason).color(SECONDARY_COLOR))
-                        .color(PRIMARY_COLOR));
-            }
-            case BAN -> {
-                return Component.text(toName).color(SECONDARY_COLOR).append(
-                        Component.text(" has been banned by ").color(PRIMARY_COLOR)
-                        .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                        .append(Component.text(" for "))
-                        .append(Component.text(TimeUtil.formatTimeLong(this.until - this.time)).color(SECONDARY_COLOR))
-                        .append(Component.text(".\nReason: "))
-                        .append(Component.text(reason).color(SECONDARY_COLOR))
-                        .color(PRIMARY_COLOR));
-            }
-            default -> throw new IllegalStateException("Unknown punishment type " + type);
-        }
+        String key = "smod.punishment.broadcast." + type.name().toLowerCase();
+        return translatable(
+                key,
+                text(PlayerUtil.offlinePlayerName(to)),
+                text(PlayerUtil.offlinePlayerName(by)),
+                TimeUtil.formatTimeLong(this.until - this.time),
+                text(reason)
+        );
     }
 
     private void broadcastIssue(PunishmentContainer container){
@@ -208,36 +175,13 @@ public class Punishment {
     }
 
     public Component playerMessage(){
-        switch (type) {
-            case MUTE -> {
-                return Component.text("You have been muted by ")
-                    .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                    .append(Component.text(".\nReason: "))
-                    .append(Component.text(reason).color(SECONDARY_COLOR))
-                    .append(Component.text("\nYour mute expires in "))
-                    .append(Component.text(TimeUtil.formatTimeLong(this.until - System.currentTimeMillis())).color(SECONDARY_COLOR))
-                    .append(Component.text("."))
-                    .color(PRIMARY_COLOR);
-            }
-            case KICK -> {
-                return Component.text("You have been kicked by ")
-                    .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                    .append(Component.text(".\nReason: "))
-                    .append(Component.text(reason).color(SECONDARY_COLOR))
-                    .color(PRIMARY_COLOR);
-            }
-            case BAN -> {
-                return Component.text("You have been banned from this server by ")
-                        .append(Component.text(PlayerUtil.offlinePlayerName(this.by)).color(SECONDARY_COLOR))
-                        .append(Component.text(".\nReason: "))
-                        .append(Component.text(reason).color(SECONDARY_COLOR))
-                        .append(Component.text("\nYour ban expires in "))
-                        .append(Component.text(TimeUtil.formatTimeLong(this.until - System.currentTimeMillis())).color(SECONDARY_COLOR))
-                        .append(Component.text("."))
-                        .color(PRIMARY_COLOR);
-            }
-            default -> throw new IllegalStateException("Unknown punishment type " + type);
-        }
+        String key = "smod.punishment.playerMessage." + type.name().toLowerCase();
+        return translatable(
+                key,
+                text(PlayerUtil.offlinePlayerName(this.by)),
+                text(reason),
+                TimeUtil.formatTimeLong(this.until - System.currentTimeMillis())
+        );
     }
 
     public boolean matchesSearchQuery(String searchQuery) {

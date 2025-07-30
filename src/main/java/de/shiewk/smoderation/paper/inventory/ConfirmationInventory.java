@@ -1,5 +1,6 @@
 package de.shiewk.smoderation.paper.inventory;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -11,33 +12,36 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import static de.shiewk.smoderation.paper.inventory.CustomInventory.renderComponent;
+import static net.kyori.adventure.text.Component.translatable;
+
 public class ConfirmationInventory implements CustomInventory {
     private final Inventory inventory;
     private final Player player;
-    private final String prompt;
+    private final Component prompt;
     private final ItemStack yesStack;
     private final ItemStack noStack;
     private final Runnable onAccept;
     private final Runnable onReject;
     private final boolean reversed;
 
-    public ConfirmationInventory(Player player, String prompt, Runnable onAccept, Runnable onReject, boolean reversed) {
+    public ConfirmationInventory(Player player, Component prompt, Runnable onAccept, Runnable onReject, boolean reversed) {
         this.player = player;
         this.prompt = prompt;
         this.onAccept = onAccept;
         this.onReject = onReject;
         this.reversed = reversed;
-        inventory = Bukkit.createInventory(this, InventoryType.HOPPER, Component.text(this.prompt));
+        inventory = Bukkit.createInventory(this, InventoryType.HOPPER, this.prompt);
         yesStack = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
         noStack = new ItemStack(Material.RED_STAINED_GLASS_PANE);
     }
 
     @Override
     public void refresh() {
-        yesStack.editMeta(meta -> meta.displayName(applyFormatting(Component.text("Yes").color(NamedTextColor.GREEN))));
-        noStack.editMeta(meta -> meta.displayName(applyFormatting(Component.text("No").color(NamedTextColor.RED))));
+        yesStack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, applyFormatting(translatable("smod.confirm.yes"))));
+        noStack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, applyFormatting(translatable("smod.confirm.no"))));
         ItemStack confirmation = new ItemStack(Material.PAPER);
-        confirmation.editMeta(meta -> meta.displayName(applyFormatting(Component.text(prompt).color(NamedTextColor.GOLD))));
+        confirmation.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, prompt.colorIfAbsent(NamedTextColor.GOLD)));
 
         inventory.setItem(reversed ? 4 : 0, noStack);
         inventory.setItem(2, confirmation);

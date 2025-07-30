@@ -24,7 +24,7 @@ import java.util.List;
 import static de.shiewk.smoderation.paper.SModerationPaper.*;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
-import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.*;
 
 public final class VanishCommand implements CommandProvider {
 
@@ -51,7 +51,7 @@ public final class VanishCommand implements CommandProvider {
     private int toggleVanishForTargets(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         List<Player> targets = context.getArgument("targets", PlayerSelectorArgumentResolver.class).resolve(context.getSource());
         if (targets.isEmpty()){
-            CommandUtil.error("No player was found.");
+            CommandUtil.errorTranslatable("smod.command.vanish.fail.noPlayersFound");
         } else {
             for (Player target : targets) {
                 toggleVanish(target);
@@ -72,7 +72,7 @@ public final class VanishCommand implements CommandProvider {
 
     @Override
     public String getCommandDescription() {
-        return "Toggles vanish mode which prevents other players from seeing you're online";
+        return "Toggles vanish mode which prevents other players from seeing you're online.";
     }
 
     @Override
@@ -80,7 +80,7 @@ public final class VanishCommand implements CommandProvider {
         return List.of("smvanish", "smodvanish", "v", "smv");
     }
 
-    private static final ObjectArrayList<Player> vanishedPlayers = new ObjectArrayList<>(1);
+    private static final ObjectArrayList<Player> vanishedPlayers = new ObjectArrayList<>(0);
 
     public static void toggleVanish(Player player){
         final boolean newStatus = !isVanished(player);
@@ -92,14 +92,9 @@ public final class VanishCommand implements CommandProvider {
         if (newStatus){
             vanishedPlayers.add(player);
             for (CommandSender sender : SModerationPaper.container.collectBroadcastTargets()) {
-                sender.sendMessage(CHAT_PREFIX.append(
-                        player.displayName().colorIfAbsent(SECONDARY_COLOR)
-                ).append(text()
-                        .content(" vanished.")
-                        .color(PRIMARY_COLOR)
-                ));
+                sender.sendMessage(translatable("smod.command.vanish.broadcast.on", player.teamDisplayName()));
             }
-            player.sendMessage(CHAT_PREFIX.append(text("You are now vanished.").color(PRIMARY_COLOR)));
+            player.sendMessage(translatable("smod.command.vanish.toggle.on"));
             player.setVisibleByDefault(false);
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                 if (onlinePlayer.hasPermission("smod.vanish.see")){
@@ -109,14 +104,9 @@ public final class VanishCommand implements CommandProvider {
         } else {
             vanishedPlayers.remove(player);
             for (CommandSender sender : container.collectBroadcastTargets()) {
-                sender.sendMessage(CHAT_PREFIX.append(
-                        player.displayName().colorIfAbsent(SECONDARY_COLOR)
-                ).append(text()
-                        .content(" re-appeared.")
-                        .color(PRIMARY_COLOR)
-                ));
+                sender.sendMessage(translatable("smod.command.vanish.broadcast.off", player.teamDisplayName()));
             }
-            player.sendMessage(CHAT_PREFIX.append(text("You are no longer vanished.").color(PRIMARY_COLOR)));
+            player.sendMessage(translatable("smod.command.vanish.toggle.off"));
             player.setVisibleByDefault(true);
         }
     }
@@ -153,17 +143,13 @@ public final class VanishCommand implements CommandProvider {
 
     public static void listVanishedPlayersTo(CommandSender receiver){
         if (vanishedPlayers.isEmpty()){
-            receiver.sendMessage(CHAT_PREFIX.append(
-                    text().content("No players are currently vanished.").color(PRIMARY_COLOR)
-            ));
+            receiver.sendMessage(translatable("smod.command.vanish.list.none"));
         } else {
-            Component vanishList = CHAT_PREFIX.append(
-                    text().content("The following players are currently vanished: ").color(PRIMARY_COLOR)
-            );
+            Component vanishList = empty();
             for (ObjectListIterator<Player> iterator = vanishedPlayers.iterator(); iterator.hasNext(); ) {
                 Player vanishedPlayer = iterator.next();
                 vanishList = vanishList.append(
-                        vanishedPlayer.displayName().colorIfAbsent(SECONDARY_COLOR)
+                        vanishedPlayer.teamDisplayName().colorIfAbsent(SECONDARY_COLOR)
                 );
                 if (iterator.hasNext()){
                     vanishList = vanishList.append(
@@ -171,7 +157,7 @@ public final class VanishCommand implements CommandProvider {
                     );
                 }
             }
-            receiver.sendMessage(vanishList);
+            receiver.sendMessage(translatable("smod.command.vanish.list", vanishList));
         }
     }
 }

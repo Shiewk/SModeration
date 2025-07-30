@@ -16,10 +16,10 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import java.util.Collection;
 import java.util.List;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.*;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
 
 public final class OfflineTPCommand implements CommandProvider {
 
@@ -40,15 +40,11 @@ public final class OfflineTPCommand implements CommandProvider {
         Location location = player.getLocation();
 
         if (location == null) {
-            CommandUtil.error("This player's location is unknown.");
+            CommandUtil.errorTranslatable("smod.command.offlinetp.fail.unknown");
         }
 
         sender.teleportAsync(location, PlayerTeleportEvent.TeleportCause.COMMAND);
-        sender.sendMessage(CHAT_PREFIX.append(
-                text("Teleporting you to ").color(PRIMARY_COLOR)
-                        .append(text(PlayerUtil.offlinePlayerName(player.getUniqueId())).colorIfAbsent(SECONDARY_COLOR))
-                        .append(text("."))
-        ));
+        sender.sendMessage(translatable("smod.command.offlinetp.teleporting", text(PlayerUtil.offlinePlayerName(player.getUniqueId()))));
 
         return Command.SINGLE_SUCCESS;
     }

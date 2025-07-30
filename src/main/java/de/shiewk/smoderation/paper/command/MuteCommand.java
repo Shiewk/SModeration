@@ -40,7 +40,7 @@ public final class MuteCommand implements CommandProvider {
 
     private int muteWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         if (SModerationPaper.CONFIG.shouldForceReason()){
-            CommandUtil.error("Please provide a reason.");
+            CommandUtil.errorTranslatable("smod.command.mute.fail.forceReason");
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
@@ -60,11 +60,11 @@ public final class MuteCommand implements CommandProvider {
 
     public static void executeMute(UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
         if (sender.equals(target)) {
-            CommandUtil.error("You can't mute yourself.");
+            CommandUtil.errorTranslatable("smod.command.mute.fail.self");
         } else {
             Player targetPlayer = Bukkit.getPlayer(target);
             if (targetPlayer != null && targetPlayer.hasPermission("smod.preventmute")){
-                CommandUtil.error("This player can't be muted.");
+                CommandUtil.errorTranslatable("smod.command.mute.fail.protect");
             } else {
                 final Punishment punishment = Punishment.mute(
                         System.currentTimeMillis(),

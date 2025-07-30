@@ -14,10 +14,9 @@ import org.bukkit.entity.Player;
 import java.util.Collection;
 import java.util.List;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.*;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
-import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
 
 public final class InvseeCommand implements CommandProvider {
 
@@ -44,13 +43,9 @@ public final class InvseeCommand implements CommandProvider {
         Player sender = CommandUtil.getExecutingPlayer(context.getSource());
         Player target = CommandUtil.getPlayerSingle(context, "player");
         if (sender.equals(target)){
-            CommandUtil.error("You can't open your own inventory.");
+            CommandUtil.errorTranslatable("smod.command.invsee.fail.self");
         }
-        sender.sendMessage(CHAT_PREFIX.append(
-                text("Opening inventory of ").color(PRIMARY_COLOR)
-                        .append(target.teamDisplayName().colorIfAbsent(SECONDARY_COLOR))
-                        .append(text("."))
-        ));
+        sender.sendMessage(translatable("smod.command.invsee.opening", target.teamDisplayName()));
         new InvSeeInventory(sender, target).open();
         return Command.SINGLE_SUCCESS;
     }
@@ -59,13 +54,9 @@ public final class InvseeCommand implements CommandProvider {
         Player sender = CommandUtil.getExecutingPlayer(context.getSource());
         Player target = CommandUtil.getPlayerSingle(context, "player");
         if (sender.equals(target)){
-            CommandUtil.error("You can't open your own inventory.");
+            CommandUtil.errorTranslatable("smod.command.invsee.fail.self");
         }
-        sender.sendMessage(CHAT_PREFIX.append(
-                text("Opening inventory of ").color(PRIMARY_COLOR)
-                        .append(target.teamDisplayName().colorIfAbsent(SECONDARY_COLOR))
-                        .append(text("."))
-        ));
+        sender.sendMessage(translatable("smod.command.invsee.opening", target.teamDisplayName()));
         new InvSeeEquipmentInventory(sender, target).open();
         return Command.SINGLE_SUCCESS;
     }

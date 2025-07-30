@@ -7,7 +7,7 @@ import java.util.UUID;
 /**
  * Utility class for byte-based saving of integers, longs and UUIDs
  */
-public abstract class ByteUtil {
+public final class ByteUtil {
     private ByteUtil(){}
 
     public static byte[] longToBytes(long v){

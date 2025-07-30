@@ -1,23 +1,30 @@
 package de.shiewk.smoderation.paper;
 
+import com.google.gson.Gson;
 import de.shiewk.smoderation.paper.command.*;
 import de.shiewk.smoderation.paper.config.SModerationConfig;
 import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.input.ChatInputListener;
 import de.shiewk.smoderation.paper.listener.*;
 import de.shiewk.smoderation.paper.storage.PunishmentContainer;
+import de.shiewk.smoderation.paper.translation.TranslatorManager;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.Locale;
 
 import static de.shiewk.smoderation.paper.command.VanishCommand.isVanished;
 import static de.shiewk.smoderation.paper.command.VanishCommand.toggleVanish;
@@ -26,6 +33,7 @@ import static org.bukkit.Bukkit.getPluginManager;
 
 public final class SModerationPaper extends JavaPlugin {
 
+    public static final Gson gson = new Gson();
     public static final PunishmentContainer container = new PunishmentContainer();
     public static ComponentLogger LOGGER = null;
     public static SModerationPaper PLUGIN = null;
@@ -38,12 +46,23 @@ public final class SModerationPaper extends JavaPlugin {
     public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
     public static final TextComponent CHAT_PREFIX = text("SM \u00BB ").color(PRIMARY_COLOR);
 
+    private final TranslatorManager translatorManager = new TranslatorManager(
+            Key.key("smoderation", "translations"),
+            createMiniMessage(),
+            "smoderation/translations/",
+            new Locale[] {
+                    Locale.forLanguageTag("en-US")
+            }
+    );
+
     @Override
     public void onLoad() {
         LOGGER = getComponentLogger();
         PLUGIN = this;
         CONFIG = new SModerationConfig(this.getConfig(), this);
         SAVE_FILE = new File(this.getDataFolder().getAbsolutePath() + "/container.gz");
+        LOGGER.info("Loading translations");
+        translatorManager.load();
     }
 
     @Override
@@ -108,5 +127,17 @@ public final class SModerationPaper extends JavaPlugin {
 
     public static void setTextureProvider(SkinTextureProvider textureProvider) {
         SModerationPaper.textureProvider = textureProvider;
+    }
+
+    private MiniMessage createMiniMessage() {
+        return MiniMessage.builder()
+                .tags(TagResolver.builder()
+                        .resolver(TagResolver.resolver("prefix", Tag.inserting(CHAT_PREFIX)))
+                        .resolver(TagResolver.resolver("primary", Tag.styling(style -> style.color(PRIMARY_COLOR))))
+                        .resolver(TagResolver.resolver("secondary", Tag.styling(style -> style.color(SECONDARY_COLOR))))
+                        .resolver(TagResolver.standard())
+                        .build()
+                )
+                .build();
     }
 }

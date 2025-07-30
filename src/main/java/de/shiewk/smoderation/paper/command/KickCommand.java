@@ -44,7 +44,7 @@ public final class KickCommand implements CommandProvider {
 
     private int kickWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         if (SModerationPaper.CONFIG.shouldForceReason()){
-            CommandUtil.error("Please provide a reason.");
+            CommandUtil.errorTranslatable("smod.command.kick.fail.forceReason");
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         Player target = CommandUtil.getPlayerSingle(context, "player");
@@ -55,9 +55,9 @@ public final class KickCommand implements CommandProvider {
     public static void executeKick(UUID sender, Player target, String reason) throws CommandSyntaxException {
         UUID targetId = target.getUniqueId();
         if (sender.equals(targetId)) {
-            CommandUtil.error("You can't kick yourself.");
+            CommandUtil.errorTranslatable("smod.command.kick.fail.self");
         } else if (target.hasPermission("smod.preventkick")){
-            CommandUtil.error("This player can't be kicked.");
+            CommandUtil.errorTranslatable("smod.command.kick.fail.protect");
         }
         final Punishment punishment = Punishment.kick(
                 System.currentTimeMillis(),

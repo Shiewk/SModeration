@@ -7,15 +7,14 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
 import java.util.List;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.*;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
+import static net.kyori.adventure.text.Component.translatable;
 
 public final class EnderchestSeeCommand implements CommandProvider {
 
@@ -32,11 +31,7 @@ public final class EnderchestSeeCommand implements CommandProvider {
     private int openEnderChest(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         Player sender = CommandUtil.getExecutingPlayer(context.getSource());
         Player target = CommandUtil.getPlayerSingle(context, "player");
-        sender.sendMessage(CHAT_PREFIX.append(
-                Component.text("Opening ender chest of ").color(PRIMARY_COLOR)
-                        .append(target.teamDisplayName().colorIfAbsent(SECONDARY_COLOR))
-                        .append(Component.text("."))
-        ));
+        sender.sendMessage(translatable("smod.command.ecsee.opening", target.teamDisplayName()));
         sender.openInventory(target.getEnderChest());
         return Command.SINGLE_SUCCESS;
     }

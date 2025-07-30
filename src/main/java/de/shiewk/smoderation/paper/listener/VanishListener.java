@@ -6,7 +6,6 @@ import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,6 +18,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import static de.shiewk.smoderation.paper.SModerationPaper.SECONDARY_COLOR;
 import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
 
 public class VanishListener implements Listener {
 
@@ -54,11 +54,7 @@ public class VanishListener implements Listener {
                     broadcast(message.color(null));
                 }
                 SchedulerUtil.scheduleForEntity(SModerationPaper.PLUGIN, player, () -> {
-                    player.sendMessage(SModerationPaper.CHAT_PREFIX
-                            .decorate(TextDecoration.BOLD)
-                            .append(
-                                    text("You are still vanished!")
-                    ));
+                    player.sendMessage(translatable("smod.vanish.stillEnabled"));
                     player.playSound(Sound.sound(
                             Key.key("minecraft", "block.beacon.power_select"),
                             Sound.Source.MASTER,
@@ -92,7 +88,7 @@ public class VanishListener implements Listener {
 
     private static void broadcast(Component message) {
         Component result = PREFIX.append(message);
-        SModerationPaper.LOGGER.info(result);
+        Bukkit.getConsoleSender().sendMessage(result);
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             if (onlinePlayer.hasPermission("smod.vanish.see")){
                 onlinePlayer.sendMessage(result);

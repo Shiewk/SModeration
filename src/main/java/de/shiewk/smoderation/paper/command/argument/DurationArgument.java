@@ -24,7 +24,7 @@ public final class DurationArgument implements CustomArgumentType.Converted<Long
     @Override
     public @NotNull Long convert(@NotNull String nativeType) throws CommandSyntaxException {
         if (!VALIDATION_PATTERN.matcher(nativeType).matches()){
-            CommandUtil.error("Please provide a valid duration, e.g. '1d6h30min'");
+            CommandUtil.errorTranslatable("smod.argument.duration.fail.pattern");
         }
         AtomicLong totalDuration = new AtomicLong();
         for (MatchResult result : DURATION_PATTERN.matcher(nativeType).results().toList()) {
@@ -39,7 +39,7 @@ public final class DurationArgument implements CustomArgumentType.Converted<Long
                 case "mo" -> 2_592_000_000L;
                 case "y" -> 31_536_000_000L;
                 default -> {
-                    CommandUtil.error("Invalid time span '%s'".formatted(result.group(2)));
+                    CommandUtil.errorTranslatable("smod.argument.duration.fail.invalid", result.group(2));
                     throw new UnknownError(); // can't happen
                 }
             };

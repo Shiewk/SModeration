@@ -30,7 +30,7 @@ runPaper {
 }
 
 runServer {
-    minecraftVersion("1.21.7")
+    minecraftVersion("1.21.8")
     downloadPlugins {
         // for testing from other client versions
         modrinth("ViaVersion", "5.4.1")

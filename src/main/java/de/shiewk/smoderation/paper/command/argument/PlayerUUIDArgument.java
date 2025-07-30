@@ -27,7 +27,7 @@ public final class PlayerUUIDArgument implements CustomArgumentType.Converted<UU
             if (player != null){
                 return player.getUniqueId();
             } else {
-                CommandUtil.error("This player is not cached. Try providing an UUID instead.");
+                CommandUtil.errorTranslatable("smod.argument.uuid.fail.notCached");
                 throw new UnknownError(); // can't happen
             }
         }

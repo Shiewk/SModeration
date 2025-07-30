@@ -12,13 +12,15 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 
 import static de.shiewk.smoderation.paper.util.PlayerUtil.UUID_CONSOLE;
+import static net.kyori.adventure.text.Component.translatable;
 
-public abstract class CommandUtil {
+public final class CommandUtil {
     private CommandUtil(){}
 
     public static Predicate<CommandSourceStack> requirePermission(String permission) {
@@ -30,7 +32,7 @@ public abstract class CommandUtil {
         if (sender instanceof Player player) {
             return player;
         } else {
-            error("Only players can execute this command.");
+            errorTranslatable("smod.command.fail.players");
             throw new UnknownError(); // can't happen
         }
     }
@@ -42,7 +44,7 @@ public abstract class CommandUtil {
         } else if (sender instanceof ConsoleCommandSender){
             return UUID_CONSOLE;
         } else {
-            error("Only players and the console can execute this command.");
+            errorTranslatable("smod.command.fail.playersConsole");
             throw new UnknownError(); // can't happen
         }
     }
@@ -50,17 +52,27 @@ public abstract class CommandUtil {
     public static Player getPlayerSingle(CommandContext<CommandSourceStack> context, String name) throws CommandSyntaxException {
         @NotNull List<Player> players = context.getArgument(name, PlayerSelectorArgumentResolver.class).resolve(context.getSource());
         if (players.isEmpty()){
-            CommandUtil.error("Please provide a valid player.");
+            errorTranslatable("smod.command.fail.invalidPlayer");
         }
         return players.getFirst();
     }
 
-    public static void error(String message) throws CommandSyntaxException {
+    public static void error(Component message) throws CommandSyntaxException {
         throw new CommandSyntaxException(
                 new SimpleCommandExceptionType(null),
-                MessageComponentSerializer.message().serialize(
-                        Component.text(message)
-                )
+                MessageComponentSerializer.message().serialize(message)
         );
+    }
+
+    public static void errorTranslatable(String key) throws CommandSyntaxException {
+        error(translatable(key));
+    }
+
+    public static void errorTranslatable(String key, Component...args) throws CommandSyntaxException {
+        error(translatable(key, args));
+    }
+
+    public static void errorTranslatable(String key, String...args) throws CommandSyntaxException {
+        errorTranslatable(key, Arrays.stream(args).map(Component::text).toArray(Component[]::new));
     }
 }

@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 import static de.shiewk.smoderation.paper.SModerationPaper.CHAT_PREFIX;
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
+import static net.kyori.adventure.text.Component.translatable;
 
 public class ChatInput {
     private final Player player;
@@ -42,7 +42,7 @@ public class ChatInput {
         }
         if (remainingTicks % 20 == 0){
             player.showTitle(Title.title(
-                    text().content(getRemainingTicks() / 20 + " seconds").color(GRAY).build(),
+                    translatable("smod.chatInput.remainingTime", text(getRemainingTicks() / 20)),
                     getPrompt(),
                     Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ZERO)
             ));

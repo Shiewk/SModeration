@@ -40,7 +40,7 @@ public final class UnmuteCommand implements CommandProvider {
             punishment.undo(senderUUID);
             punishment.broadcastUndo(SModerationPaper.container);
         } else {
-            CommandUtil.error("This player is not muted.");
+            CommandUtil.errorTranslatable("smod.command.unmute.fail.notMuted");
         }
         return Command.SINGLE_SUCCESS;
     }

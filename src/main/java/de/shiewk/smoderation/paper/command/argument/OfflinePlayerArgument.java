@@ -22,7 +22,7 @@ public final class OfflinePlayerArgument implements CustomArgumentType.Converted
         if (player != null){
             return player;
         } else {
-            CommandUtil.error("That player is not cached.");
+            CommandUtil.errorTranslatable("smod.argument.offlinePlayer.fail.notCached");
             throw new AssertionError(); // can't happen
         }
     }

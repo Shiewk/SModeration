@@ -1,5 +1,6 @@
 package de.shiewk.smoderation.paper.command;
 
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -39,9 +40,9 @@ public final class UnbanCommand implements CommandProvider {
             punishment.undo(senderUUID);
             punishment.broadcastUndo(SModerationPaper.container);
         } else {
-            CommandUtil.error("This player is not banned.");
+            CommandUtil.errorTranslatable("smod.command.unban.fail.notBanned");
         }
-        return com.mojang.brigadier.Command.SINGLE_SUCCESS;
+        return Command.SINGLE_SUCCESS;
     }
 
     @Override
