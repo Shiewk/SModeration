@@ -1,0 +1,12 @@
+socialspy-commands:
+  - w
+  - tell
+  - msg
+  - teammsg
+  - tm
+  - minecraft:w
+  - minecraft:tell
+  - minecraft:msg
+  - minecraft:teammsg
+  - minecraft:tm
+force-reason: false

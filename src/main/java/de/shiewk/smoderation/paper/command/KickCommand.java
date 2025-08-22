@@ -43,7 +43,7 @@ public final class KickCommand implements CommandProvider {
     }
 
     private int kickWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        if (SModerationPaper.CONFIG.shouldForceReason()){
+        if (SModerationPaper.config().getBoolean("force-reason", false)){
             CommandUtil.errorTranslatable("smod.command.kick.fail.forceReason");
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());

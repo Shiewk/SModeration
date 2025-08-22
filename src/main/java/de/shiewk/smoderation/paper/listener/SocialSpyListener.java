@@ -58,7 +58,7 @@ public class SocialSpyListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
     public void onPlayerSendCommand(PlayerCommandPreprocessEvent event){
-        List<String> socialSpyCommands = SModerationPaper.CONFIG.getSocialSpyCommands();
+        List<String> socialSpyCommands = SModerationPaper.config().getStringList("socialspy-commands");
         final String message = event.getMessage();
         if (socialSpyCommands.stream().anyMatch(str ->
                 message.startsWith("/"+str+" ")

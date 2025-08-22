@@ -2,7 +2,6 @@ package de.shiewk.smoderation.paper;
 
 import com.google.gson.Gson;
 import de.shiewk.smoderation.paper.command.*;
-import de.shiewk.smoderation.paper.config.SModerationConfig;
 import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.input.ChatInputListener;
 import de.shiewk.smoderation.paper.listener.*;
@@ -20,10 +19,14 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Locale;
 
 import static de.shiewk.smoderation.paper.command.VanishCommand.isVanished;
@@ -37,7 +40,6 @@ public final class SModerationPaper extends JavaPlugin {
     public static final PunishmentContainer container = new PunishmentContainer();
     public static ComponentLogger LOGGER = null;
     public static SModerationPaper PLUGIN = null;
-    public static SModerationConfig CONFIG = null;
     public static File SAVE_FILE = null;
     private static SkinTextureProvider textureProvider = null;
 
@@ -55,20 +57,22 @@ public final class SModerationPaper extends JavaPlugin {
             }
     );
 
+    public static FileConfiguration config() {
+        return PLUGIN.getConfig();
+    }
+
     @Override
     public void onLoad() {
         LOGGER = getComponentLogger();
         PLUGIN = this;
-        CONFIG = new SModerationConfig(this.getConfig(), this);
         SAVE_FILE = new File(this.getDataFolder().getAbsolutePath() + "/container.gz");
         LOGGER.info("Loading translations");
         translatorManager.load();
+        updateConfig();
     }
 
     @Override
     public void onEnable() {
-        CONFIG.reload();
-
         getPluginManager().registerEvents(new PunishmentListener(), this);
         getPluginManager().registerEvents(new CustomInventoryListener(), this);
         getPluginManager().registerEvents(new InvSeeListener(), this);
@@ -139,5 +143,33 @@ public final class SModerationPaper extends JavaPlugin {
                         .build()
                 )
                 .build();
+    }
+
+    private void updateConfig() {
+        LOGGER.info("Updating config");
+        try {
+            FileConfiguration config = getConfig();
+
+            InputStream defaultConfigStream = getResource("default-config.yml");
+            if (defaultConfigStream == null) {
+                throw new IllegalStateException("Default config not found in JAR; could not load");
+            }
+
+            YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultConfigStream));
+
+            boolean changedSomething = false;
+            for (String key : defaultConfig.getKeys(true)) {
+                if (!config.contains(key)) { // There's a new key in the default config
+                    config.set(key, defaultConfig.get(key));
+                    changedSomething = true;
+                }
+            }
+
+            // Save the updated configuration file
+            if (changedSomething) saveConfig();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Could not update config", e);
+        }
     }
 }

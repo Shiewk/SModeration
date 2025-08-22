@@ -39,7 +39,7 @@ public final class MuteCommand implements CommandProvider {
     }
 
     private int muteWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        if (SModerationPaper.CONFIG.shouldForceReason()){
+        if (SModerationPaper.config().getBoolean("force-reason", false)){
             CommandUtil.errorTranslatable("smod.command.mute.fail.forceReason");
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());

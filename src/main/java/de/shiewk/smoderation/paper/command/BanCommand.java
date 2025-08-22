@@ -39,7 +39,7 @@ public final class BanCommand implements CommandProvider {
     }
 
     private int banWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        if (SModerationPaper.CONFIG.shouldForceReason()){
+        if (SModerationPaper.config().getBoolean("force-reason", false)){
             CommandUtil.errorTranslatable("smod.command.ban.fail.forceReason");
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
