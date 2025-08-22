@@ -10,3 +10,16 @@ socialspy-commands:
   - minecraft:teammsg
   - minecraft:tm
 force-reason: false
+muted-forbidden-commands:
+  - w
+  - tell
+  - msg
+  - teammsg
+  - tm
+  - me
+  - minecraft:w
+  - minecraft:tell
+  - minecraft:msg
+  - minecraft:teammsg
+  - minecraft:tm
+  - minecraft:me

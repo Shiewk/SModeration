@@ -61,8 +61,8 @@ public class SocialSpyListener implements Listener {
         List<String> socialSpyCommands = SModerationPaper.config().getStringList("socialspy-commands");
         final String message = event.getMessage();
         if (socialSpyCommands.stream().anyMatch(str ->
-                message.startsWith("/"+str+" ")
-                || message.startsWith(str+" ")
+                message.toLowerCase().startsWith("/"+str.toLowerCase()+" ")
+                        || message.toLowerCase().startsWith(str.toLowerCase()+" ")
         )){
             SocialSpyListener.command(event.getPlayer(), message);
         }

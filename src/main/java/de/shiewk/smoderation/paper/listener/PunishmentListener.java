@@ -12,9 +12,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 
+import java.util.List;
+
 import static de.shiewk.smoderation.paper.SModerationPaper.CHAT_PREFIX;
+import static net.kyori.adventure.text.Component.translatable;
 
 public class PunishmentListener implements Listener {
 
@@ -43,6 +47,29 @@ public class PunishmentListener implements Listener {
             event.setCancelled(true);
             player.sendMessage(CHAT_PREFIX.append(punishment.playerMessage()));
         }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event){
+        Player player = event.getPlayer();
+        final Punishment mute = SModerationPaper.container.find(p ->
+                p.type == PunishmentType.MUTE
+                        && p.to.equals(player.getUniqueId())
+                        && p.isActive());
+
+        if (mute != null) { // Player is muted
+            List<String> forbiddenCommands = SModerationPaper.config().getStringList("muted-forbidden-commands");
+            final String message = event.getMessage();
+            if (forbiddenCommands.stream().anyMatch(str ->
+                    message.toLowerCase().startsWith("/"+str.toLowerCase()+" ")
+                            || message.toLowerCase().startsWith(str.toLowerCase()+" ")
+            )){
+                Bukkit.getConsoleSender().sendMessage(player.getName() + " tried to run forbidden command while muted");
+                player.sendMessage(CHAT_PREFIX.append(translatable("smod.punishment.playerMessage.mute.chat")));
+                event.setCancelled(true);
+            }
+        }
+
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
