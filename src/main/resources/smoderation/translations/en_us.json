@@ -24,6 +24,7 @@
   "smod.command.mute.fail.forceReason": "Please provide a reason.",
   "smod.command.mute.fail.protect": "This player can't be muted.",
   "smod.command.mute.fail.self": "You can't mute yourself.",
+  "smod.command.mute.fail.tooShort": "You can't mute a player for less than 1ms.",
   "smod.command.offlinetp.fail.unknown": "This player's location is unknown.",
   "smod.command.offlinetp.teleporting": "<prefix>Teleporting you to <secondary><arg:0></secondary>.",
   "smod.command.socialspy.disabled": "<prefix>SocialSpy <red>disabled</red>.",

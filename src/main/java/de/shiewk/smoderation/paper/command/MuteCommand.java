@@ -59,6 +59,9 @@ public final class MuteCommand implements CommandProvider {
     }
 
     public static void executeMute(UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
+        if (duration == 0){
+            CommandUtil.errorTranslatable("smod.command.mute.fail.tooShort");
+        }
         if (sender.equals(target)) {
             CommandUtil.errorTranslatable("smod.command.mute.fail.self");
         } else {
