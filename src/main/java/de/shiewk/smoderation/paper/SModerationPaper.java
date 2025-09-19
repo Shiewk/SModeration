@@ -22,6 +22,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -73,13 +74,13 @@ public final class SModerationPaper extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getPluginManager().registerEvents(new PunishmentListener(), this);
-        getPluginManager().registerEvents(new CustomInventoryListener(), this);
-        getPluginManager().registerEvents(new InvSeeListener(), this);
-        getPluginManager().registerEvents(new EnderchestSeeListener(), this);
-        getPluginManager().registerEvents(new VanishListener(), this);
-        getPluginManager().registerEvents(new ChatInputListener(), this);
-        getPluginManager().registerEvents(new SocialSpyListener(), this);
+        listen(new PunishmentListener());
+        listen(new CustomInventoryListener());
+        listen(new InvSeeListener());
+        listen(new EnderchestSeeListener());
+        listen(new VanishListener());
+        listen(new ChatInputListener());
+        listen(new SocialSpyListener());
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands commands = event.registrar();
@@ -98,12 +99,22 @@ public final class SModerationPaper extends JavaPlugin {
             registerCommand(commands, new OfflineTPCommand());
         });
 
-        SchedulerUtil.scheduleGlobalRepeating(PLUGIN, CustomInventoryListener::onTick, 1, 1);
+        if (SchedulerUtil.isFolia){
+            // Normal ticking logic can cause issues on Folia
+            listen(new FoliaInventoryUpdatingListener());
+        } else {
+            SchedulerUtil.scheduleGlobalRepeating(PLUGIN, CustomInventoryListener::tickAllPaper, 1, 1);
+        }
+
         SchedulerUtil.scheduleGlobalRepeating(PLUGIN, ChatInput::tickAll, 1, 1);
 
         container.load(SAVE_FILE);
 
         LOGGER.info("Folia: {}", SchedulerUtil.isFolia ? "yes" : "no");
+    }
+
+    private void listen(Listener listener) {
+        getPluginManager().registerEvents(listener, this);
     }
 
     private void registerCommand(Commands commands, CommandProvider provider){

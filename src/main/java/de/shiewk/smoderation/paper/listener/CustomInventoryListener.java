@@ -25,11 +25,15 @@ public class CustomInventoryListener implements Listener {
         }
     }
 
-    public static void onTick(){
+    public static void tickAllPaper(){
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            if (onlinePlayer.getOpenInventory().getTopInventory().getHolder() instanceof AutoUpdatingCustomInventory ci) {
-                ci.refresh();
-            }
+            tickForPlayer(onlinePlayer);
+        }
+    }
+
+    public static void tickForPlayer(Player onlinePlayer) {
+        if (onlinePlayer.getOpenInventory().getTopInventory().getHolder() instanceof AutoUpdatingCustomInventory ci) {
+            ci.refresh();
         }
     }
 }
