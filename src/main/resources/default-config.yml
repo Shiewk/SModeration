@@ -23,3 +23,11 @@ muted-forbidden-commands:
   - minecraft:teammsg
   - minecraft:tm
   - minecraft:me
+features:
+  punishments: true
+  smodmenu: true
+  invsee: true
+  enderchestsee: true
+  offlinetp: true
+  socialspy: true
+  vanish: true

@@ -72,31 +72,44 @@ public final class SModerationPaper extends JavaPlugin {
         updateConfig();
     }
 
+    public boolean isFeatureEnabled(String feature){
+        return getConfig().getBoolean("features."+feature, true);
+    }
+
     @Override
     public void onEnable() {
-        listen(new PunishmentListener());
+        LOGGER.info("Folia: {}", SchedulerUtil.isFolia ? "yes" : "no");
+
+        if (isFeatureEnabled("punishments")) listen(new PunishmentListener());
+        if (isFeatureEnabled("invsee")) listen(new InvSeeListener());
+        if (isFeatureEnabled("enderchestsee")) listen(new EnderchestSeeListener());
+        if (isFeatureEnabled("socialspy")) listen(new SocialSpyListener());
+        if (isFeatureEnabled("vanish")) listen(new VanishListener());
+
         listen(new CustomInventoryListener());
-        listen(new InvSeeListener());
-        listen(new EnderchestSeeListener());
-        listen(new VanishListener());
         listen(new ChatInputListener());
-        listen(new SocialSpyListener());
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands commands = event.registrar();
 
-            registerCommand(commands, new KickCommand());
-            registerCommand(commands, new ModLogsCommand());
-            registerCommand(commands, new SModCommand());
-            registerCommand(commands, new InvseeCommand());
-            registerCommand(commands, new EnderchestSeeCommand());
-            registerCommand(commands, new SocialSpyCommand());
-            registerCommand(commands, new VanishCommand());
-            registerCommand(commands, new UnmuteCommand());
-            registerCommand(commands, new UnbanCommand());
-            registerCommand(commands, new MuteCommand());
-            registerCommand(commands, new BanCommand());
-            registerCommand(commands, new OfflineTPCommand());
+            if (isFeatureEnabled("punishments")){
+                registerCommand(commands, new KickCommand());
+                registerCommand(commands, new ModLogsCommand());
+                registerCommand(commands, new UnmuteCommand());
+                registerCommand(commands, new UnbanCommand());
+                registerCommand(commands, new MuteCommand());
+                registerCommand(commands, new BanCommand());
+
+                if (isFeatureEnabled("smodmenu")){
+                    registerCommand(commands, new SModCommand());
+                }
+            }
+
+            if (isFeatureEnabled("invsee")) registerCommand(commands, new InvseeCommand());
+            if (isFeatureEnabled("enderchestsee")) registerCommand(commands, new EnderchestSeeCommand());
+            if (isFeatureEnabled("socialspy")) registerCommand(commands, new SocialSpyCommand());
+            if (isFeatureEnabled("vanish")) registerCommand(commands, new VanishCommand());
+            if (isFeatureEnabled("offlinetp")) registerCommand(commands, new OfflineTPCommand());
         });
 
         if (SchedulerUtil.isFolia){
@@ -109,8 +122,6 @@ public final class SModerationPaper extends JavaPlugin {
         SchedulerUtil.scheduleGlobalRepeating(PLUGIN, ChatInput::tickAll, 1, 1);
 
         container.load(SAVE_FILE);
-
-        LOGGER.info("Folia: {}", SchedulerUtil.isFolia ? "yes" : "no");
     }
 
     private void listen(Listener listener) {
