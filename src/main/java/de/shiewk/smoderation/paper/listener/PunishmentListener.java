@@ -2,6 +2,7 @@ package de.shiewk.smoderation.paper.listener;
 
 import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.event.PunishmentIssueEvent;
+import de.shiewk.smoderation.paper.inventory.CustomInventory;
 import de.shiewk.smoderation.paper.punishments.Punishment;
 import de.shiewk.smoderation.paper.punishments.PunishmentType;
 import de.shiewk.smoderation.paper.storage.PunishmentContainer;
@@ -85,7 +86,7 @@ public class PunishmentListener implements Listener {
             case KICK, BAN -> {
                 final Player player = Bukkit.getPlayer(punishment.to);
                 if (player != null) {
-                    player.kick(CHAT_PREFIX.append(punishment.playerMessage()));
+                    player.kick(CustomInventory.renderComponent(player, CHAT_PREFIX.append(punishment.playerMessage())));
                 }
             }
         }
