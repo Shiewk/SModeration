@@ -324,7 +324,7 @@ public class SModMenu extends PageableCustomInventory {
 
         lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.player", text(PlayerUtil.offlinePlayerName(punishment.to))))));
         lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.punishedBy", text(PlayerUtil.offlinePlayerName(punishment.by))))));
-        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.timestamp", TimeUtil.formatTimeLong(punishment.time)))));
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.timestamp", TimeUtil.calendarTimestamp(punishment.time)))));
 
         if (punishment.type != PunishmentType.KICK){
             lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.duration", TimeUtil.formatTimeLong(punishment.until - punishment.time)))));
