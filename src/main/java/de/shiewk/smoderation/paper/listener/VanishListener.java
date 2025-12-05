@@ -3,6 +3,7 @@ package de.shiewk.smoderation.paper.listener;
 import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.command.VanishCommand;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
+import io.papermc.paper.event.entity.WardenAngerChangeEvent;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -11,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -83,6 +85,20 @@ public class VanishListener implements Listener {
         if (VanishCommand.isVanished(event.getPlayer()) && message != null){
             event.deathMessage(null);
             broadcast(message);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityTarget(EntityTargetEvent event){
+        if (event.getTarget() instanceof Player pl && VanishCommand.isVanished(pl)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityTarget(WardenAngerChangeEvent event){
+        if (event.getTarget() instanceof Player pl && VanishCommand.isVanished(pl)) {
+            event.setCancelled(true);
         }
     }
 
