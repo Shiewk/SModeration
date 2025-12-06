@@ -14,6 +14,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.persistence.PersistentDataType;
@@ -99,6 +100,16 @@ public class VanishListener implements Listener {
     public void onEntityTarget(WardenAngerChangeEvent event){
         if (event.getTarget() instanceof Player pl && VanishCommand.isVanished(pl)) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onAdvancementDone(PlayerAdvancementDoneEvent event){
+        Player pl = event.getPlayer();
+        Component message = event.message();
+        if (VanishCommand.isVanished(pl) && message != null) {
+            broadcast(message);
+            event.message(null);
         }
     }
 
