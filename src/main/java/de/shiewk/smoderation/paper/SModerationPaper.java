@@ -28,7 +28,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import static de.shiewk.smoderation.paper.command.VanishCommand.isVanished;
 import static de.shiewk.smoderation.paper.command.VanishCommand.toggleVanish;
@@ -181,14 +184,29 @@ public final class SModerationPaper extends JavaPlugin {
 
             boolean changedSomething = false;
             for (String key : defaultConfig.getKeys(true)) {
-                if (!config.contains(key)) { // There's a new key in the default config
+                if (!config.contains(key)) {
+                    // There's a new key in the default config
                     config.set(key, defaultConfig.get(key));
+                    changedSomething = true;
+                }
+
+                List<String> defaultComments = new ArrayList<>(defaultConfig.getComments(key));
+                List<String> comments = new ArrayList<>(config.getComments(key));
+                defaultComments.removeIf(Objects::isNull);
+                comments.removeIf(Objects::isNull);
+
+                if (!defaultComments.equals(comments)) {
+                    // Comments changed
+                    config.setComments(key, defaultConfig.getComments(key));
                     changedSomething = true;
                 }
             }
 
             // Save the updated configuration file
-            if (changedSomething) saveConfig();
+            if (changedSomething){
+                LOGGER.info("Changing config file to add new options/documentation");
+                saveConfig();
+            }
 
         } catch (Exception e) {
             throw new RuntimeException("Could not update config", e);

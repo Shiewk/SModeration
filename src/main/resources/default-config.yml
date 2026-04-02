@@ -1,3 +1,27 @@
+# If enabled, punishments can no longer be issued without providing a reason.
+force-reason: false
+
+# Allows you to toggle specific plugin features.
+features:
+  # Should punishments be tracked and executed?
+  # Note that disabling this will also disable the SMod menu and
+  # /modlogs command since their only use is viewing punishments
+  punishments: true
+  # Should commands for opening the SMod menu be registered?
+  smodmenu: true
+  # Should commands for viewing player inventories be registered?
+  invsee: true
+  # Should commands for viewing player ender chests be registered?
+  enderchestsee: true
+  # Should commands for teleporting to offline players be registered?
+  offlinetp: true
+  # Should commands for viewing other players' messaging commands be registered?
+  socialspy: true
+  # Should players be able to enable vanish mode?
+  vanish: true
+
+# A list of commands which will be captured and broadcast
+# to players which have SocialSpy enabled (/socialspy).
 socialspy-commands:
   - w
   - tell
@@ -9,7 +33,8 @@ socialspy-commands:
   - minecraft:msg
   - minecraft:teammsg
   - minecraft:tm
-force-reason: false
+
+# A list of commands which muted players will not be able to run.
 muted-forbidden-commands:
   - w
   - tell
@@ -23,11 +48,3 @@ muted-forbidden-commands:
   - minecraft:teammsg
   - minecraft:tm
   - minecraft:me
-features:
-  punishments: true
-  smodmenu: true
-  invsee: true
-  enderchestsee: true
-  offlinetp: true
-  socialspy: true
-  vanish: true
