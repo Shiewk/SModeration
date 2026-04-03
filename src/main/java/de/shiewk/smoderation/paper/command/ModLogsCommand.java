@@ -21,6 +21,7 @@ import static io.papermc.paper.command.brigadier.Commands.literal;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class ModLogsCommand implements CommandProvider {
 
     @Override

@@ -21,6 +21,7 @@ import java.util.UUID;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class BanCommand implements CommandProvider {
 
     @Override

@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class DurationArgument implements CustomArgumentType.Converted<Long, String> {
 
     public static final Pattern DURATION_PATTERN = Pattern.compile("([0-9]{1,9})(ms|s|min|h|d|w|mo|y)");

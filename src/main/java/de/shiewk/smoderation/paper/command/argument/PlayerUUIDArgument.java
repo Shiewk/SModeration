@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class PlayerUUIDArgument implements CustomArgumentType.Converted<UUID, String> {
 
     @Override

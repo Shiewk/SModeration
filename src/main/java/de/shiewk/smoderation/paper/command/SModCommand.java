@@ -15,6 +15,7 @@ import java.util.List;
 
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class SModCommand implements CommandProvider {
 
     @Override

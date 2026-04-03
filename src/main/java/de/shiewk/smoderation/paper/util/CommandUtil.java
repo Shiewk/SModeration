@@ -20,6 +20,7 @@ import java.util.function.Predicate;
 import static de.shiewk.smoderation.paper.util.PlayerUtil.UUID_CONSOLE;
 import static net.kyori.adventure.text.Component.translatable;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class CommandUtil {
     private CommandUtil(){}
 

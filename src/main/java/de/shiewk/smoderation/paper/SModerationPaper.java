@@ -36,6 +36,7 @@ import static de.shiewk.smoderation.paper.command.VanishCommand.isVanished;
 import static de.shiewk.smoderation.paper.command.VanishCommand.toggleVanish;
 import static org.bukkit.Bukkit.getPluginManager;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class SModerationPaper extends JavaPlugin {
 
     public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);

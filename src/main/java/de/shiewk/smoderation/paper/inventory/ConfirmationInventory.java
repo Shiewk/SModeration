@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import static de.shiewk.smoderation.paper.inventory.CustomInventory.renderComponent;
 import static net.kyori.adventure.text.Component.translatable;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public class ConfirmationInventory implements CustomInventory {
     private final Inventory inventory;
     private final Player player;

@@ -26,6 +26,7 @@ import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 import static net.kyori.adventure.text.Component.*;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class VanishCommand implements CommandProvider {
 
     public static final NamespacedKey KEY_VANISHED = new NamespacedKey("smoderation", "vanished");

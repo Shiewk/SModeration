@@ -37,6 +37,7 @@ import static de.shiewk.smoderation.paper.SModerationPaper.*;
 import static de.shiewk.smoderation.paper.inventory.CustomInventory.renderComponent;
 import static net.kyori.adventure.text.Component.*;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API, Paper Data Component API
 public class SModMenu extends PageableCustomInventory {
 
     public enum Filter {

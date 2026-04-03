@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import java.util.Collection;
 import java.util.List;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public interface CommandProvider {
 
     LiteralCommandNode<CommandSourceStack> getCommandNode();

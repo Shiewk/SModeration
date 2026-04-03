@@ -18,6 +18,7 @@ import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 import static net.kyori.adventure.text.Component.translatable;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class InvseeCommand implements CommandProvider {
 
     @Override

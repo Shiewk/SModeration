@@ -11,13 +11,15 @@ import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.CompletableFuture;
 
+@SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class OfflinePlayerArgument implements CustomArgumentType.Converted<OfflinePlayer, String> {
 
     @Override
-    public OfflinePlayer convert(@NotNull String nativeType) throws CommandSyntaxException {
+    public @NonNull OfflinePlayer convert(@NotNull String nativeType) throws CommandSyntaxException {
         OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(nativeType);
         if (player != null){
             return player;
