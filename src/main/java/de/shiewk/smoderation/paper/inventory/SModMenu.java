@@ -356,8 +356,8 @@ public class SModMenu extends PageableCustomInventory {
         for (int i = 45; i < 54; i++) {
             inventory.setItem(i, createEmptyStack());
         }
-        inventory.setItem(prevSlot, createPreviousPageStack());
-        inventory.setItem(nextSlot, createNextPageStack());
+        inventory.setItem(prevSlot, createPreviousPageStack(player));
+        inventory.setItem(nextSlot, createNextPageStack(player));
         inventory.setItem(47, createSearchItem());
         inventory.setItem(48, createTypeItem());
         inventory.setItem(50, createFilterItem());

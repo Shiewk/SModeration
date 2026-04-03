@@ -55,7 +55,8 @@ public final class SModerationPaper extends JavaPlugin {
             createMiniMessage(),
             "smoderation/translations/",
             new Locale[] {
-                    Locale.forLanguageTag("en-US")
+                    Locale.forLanguageTag("en-US"),
+                    Locale.forLanguageTag("de-DE")
             }
     );
 

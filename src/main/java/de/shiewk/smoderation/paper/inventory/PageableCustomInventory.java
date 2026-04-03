@@ -1,12 +1,17 @@
 package de.shiewk.smoderation.paper.inventory;
 
-import net.kyori.adventure.text.Component;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
+
+@SuppressWarnings("UnstableApiUsage") // Paper Data Component API
 public abstract class PageableCustomInventory implements CustomInventory {
 
     protected final int prevSlot, nextSlot;
@@ -49,21 +54,21 @@ public abstract class PageableCustomInventory implements CustomInventory {
         }
     }
 
-    public ItemStack createPreviousPageStack(){
+    public ItemStack createPreviousPageStack(Player viewer){
         boolean allowed = page > 0;
         TextColor color = allowed ? NamedTextColor.GREEN : NamedTextColor.RED;
         int skip = allowed ? page : page+1;
         ItemStack stack = new ItemStack(allowed ? Material.GREEN_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE);
-        stack.editMeta(meta -> meta.displayName(applyFormatting(Component.text("Previous page (%s/%s)".formatted(skip, lastPage()+1)).color(color))));
+        stack.setData(DataComponentTypes.ITEM_NAME, CustomInventory.renderComponent(viewer, applyFormatting(translatable("smod.inventory.previous", text(skip), text(lastPage()+1)).color(color))));
         return stack;
     }
 
-    public ItemStack createNextPageStack(){
+    public ItemStack createNextPageStack(Player viewer){
         boolean allowed = page < lastPage();
         TextColor color = allowed ? NamedTextColor.GREEN : NamedTextColor.RED;
         int skip = allowed ? page+2 : page+1;
         ItemStack stack = new ItemStack(allowed ? Material.GREEN_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE);
-        stack.editMeta(meta -> meta.displayName(applyFormatting(Component.text("Next page (%s/%s)".formatted(skip, lastPage()+1)).color(color))));
+        stack.setData(DataComponentTypes.ITEM_NAME, CustomInventory.renderComponent(viewer, applyFormatting(translatable("smod.inventory.next", text(skip), text(lastPage()+1)).color(color))));
         return stack;
     }
 }

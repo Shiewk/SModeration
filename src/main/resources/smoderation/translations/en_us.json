@@ -41,6 +41,8 @@
   "smod.command.vanish.toggle.on": "<primary>You are now vanished.",
   "smod.confirm.no": "<red>No",
   "smod.confirm.yes": "<green>Yes",
+  "smod.inventory.next": "Next page (<arg:0>/<arg:1>)",
+  "smod.inventory.previous": "Previous page (<arg:0>/<arg:1>)",
   "smod.menu": "SMod Menu",
   "smod.menu.filter": "Filter: <arg:0>",
   "smod.menu.filter.active": "Active punishments",
