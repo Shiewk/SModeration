@@ -8,24 +8,28 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 public abstract class PageableCustomInventory implements CustomInventory {
-    public abstract int lastPage();
-    public abstract void switchPage();
-    private ItemStack previousStack = null;
-    private ItemStack nextStack = null;
+
+    protected final int prevSlot, nextSlot;
     private int page = 0;
+
+    public PageableCustomInventory(int prevSlot, int nextSlot) {
+        this.prevSlot = prevSlot;
+        this.nextSlot = nextSlot;
+    }
 
     public int getPage(){
         return page;
     }
 
+    public abstract int lastPage();
+    public abstract void switchPage();
+
     @Override
-    public void click(ItemStack stack, InventoryClickEvent event) {
-        if (stack != null){
-            if (stack.equals(previousStack)){
-                previousPage();
-            } else if (stack.equals(nextStack)) {
-                nextPage();
-            }
+    public void click(InventoryClickEvent event) {
+        if (event.getSlot() == prevSlot) {
+            previousPage();
+        } else if (event.getSlot() == nextSlot) {
+            nextPage();
         }
     }
 
@@ -51,7 +55,6 @@ public abstract class PageableCustomInventory implements CustomInventory {
         int skip = allowed ? page : page+1;
         ItemStack stack = new ItemStack(allowed ? Material.GREEN_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE);
         stack.editMeta(meta -> meta.displayName(applyFormatting(Component.text("Previous page (%s/%s)".formatted(skip, lastPage()+1)).color(color))));
-        previousStack = stack;
         return stack;
     }
 
@@ -61,7 +64,6 @@ public abstract class PageableCustomInventory implements CustomInventory {
         int skip = allowed ? page+2 : page+1;
         ItemStack stack = new ItemStack(allowed ? Material.GREEN_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE);
         stack.editMeta(meta -> meta.displayName(applyFormatting(Component.text("Next page (%s/%s)".formatted(skip, lastPage()+1)).color(color))));
-        nextStack = stack;
         return stack;
     }
 }

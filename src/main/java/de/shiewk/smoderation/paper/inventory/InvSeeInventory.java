@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import static net.kyori.adventure.text.Component.text;
@@ -46,7 +45,7 @@ public class InvSeeInventory implements AutoUpdatingCustomInventory {
     }
 
     @Override
-    public void click(ItemStack stack, InventoryClickEvent event) {
+    public void click(InventoryClickEvent event) {
         if (viewer.hasPermission("smod.invsee.modify") && !subject.hasPermission("smod.invsee.preventmodify")){
             event.setCancelled(false);
             changing = true;

@@ -16,7 +16,7 @@ public interface CustomInventory extends InventoryHolder {
 
     void refresh();
     void open();
-    void click(ItemStack stack, InventoryClickEvent event);
+    void click(InventoryClickEvent event);
 
     default ItemStack createEmptyStack(){
         ItemStack stack = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);

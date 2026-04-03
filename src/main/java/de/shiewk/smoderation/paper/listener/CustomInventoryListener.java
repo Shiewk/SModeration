@@ -15,7 +15,7 @@ public class CustomInventoryListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event){
         if (event.getInventory().getHolder() instanceof CustomInventory customInventory){
             event.setCancelled(true);
-            customInventory.click(event.getCurrentItem(), event);
+            customInventory.click(event);
         }
     }
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

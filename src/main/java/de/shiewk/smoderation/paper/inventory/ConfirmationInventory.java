@@ -19,33 +19,30 @@ public class ConfirmationInventory implements CustomInventory {
     private final Inventory inventory;
     private final Player player;
     private final Component prompt;
-    private final ItemStack yesStack;
-    private final ItemStack noStack;
     private final Runnable onAccept;
     private final Runnable onReject;
-    private final boolean reversed;
 
-    public ConfirmationInventory(Player player, Component prompt, Runnable onAccept, Runnable onReject, boolean reversed) {
+    public ConfirmationInventory(Player player, Component prompt, Runnable onAccept, Runnable onReject) {
         this.player = player;
         this.prompt = prompt;
         this.onAccept = onAccept;
         this.onReject = onReject;
-        this.reversed = reversed;
         inventory = Bukkit.createInventory(this, InventoryType.HOPPER, this.prompt);
-        yesStack = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
-        noStack = new ItemStack(Material.RED_STAINED_GLASS_PANE);
     }
 
     @Override
     public void refresh() {
-        yesStack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, applyFormatting(translatable("smod.confirm.yes"))));
-        noStack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, applyFormatting(translatable("smod.confirm.no"))));
+        ItemStack accept = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
         ItemStack confirmation = new ItemStack(Material.PAPER);
-        confirmation.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, prompt.colorIfAbsent(NamedTextColor.GOLD)));
+        ItemStack reject = new ItemStack(Material.RED_STAINED_GLASS_PANE);
 
-        inventory.setItem(reversed ? 4 : 0, noStack);
+        accept.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, applyFormatting(translatable("smod.confirm.yes"))));
+        confirmation.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, prompt.colorIfAbsent(NamedTextColor.GOLD)));
+        reject.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, applyFormatting(translatable("smod.confirm.no"))));
+
+        inventory.setItem(0, accept);
         inventory.setItem(2, confirmation);
-        inventory.setItem(reversed ? 0 : 4, yesStack);
+        inventory.setItem(4, reject);
     }
 
     @Override
@@ -55,11 +52,11 @@ public class ConfirmationInventory implements CustomInventory {
     }
 
     @Override
-    public void click(ItemStack stack, InventoryClickEvent event) {
-        if (yesStack.equals(stack)){
+    public void click(InventoryClickEvent event) {
+        if (event.getSlot() == 0){
             inventory.close();
             onAccept.run();
-        } else if (noStack.equals(stack)) {
+        } else if (event.getSlot() == 4) {
             inventory.close();
             onReject.run();
         }
