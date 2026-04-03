@@ -11,7 +11,6 @@ import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -35,10 +34,13 @@ import java.util.Objects;
 
 import static de.shiewk.smoderation.paper.command.VanishCommand.isVanished;
 import static de.shiewk.smoderation.paper.command.VanishCommand.toggleVanish;
-import static net.kyori.adventure.text.Component.text;
 import static org.bukkit.Bukkit.getPluginManager;
 
 public final class SModerationPaper extends JavaPlugin {
+
+    public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
+    public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
+    public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
 
     public static final Gson gson = new Gson();
     public static final PunishmentContainer container = new PunishmentContainer();
@@ -46,11 +48,6 @@ public final class SModerationPaper extends JavaPlugin {
     public static SModerationPaper PLUGIN = null;
     public static File SAVE_FILE = null;
     private static SkinTextureProvider textureProvider = null;
-
-    public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
-    public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
-    public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
-    public static final TextComponent CHAT_PREFIX = text("SM \u00BB ").color(PRIMARY_COLOR);
 
     private final TranslatorManager translatorManager = new TranslatorManager(
             Key.key("smoderation", "translations"),
@@ -161,7 +158,6 @@ public final class SModerationPaper extends JavaPlugin {
     private MiniMessage createMiniMessage() {
         return MiniMessage.builder()
                 .tags(TagResolver.builder()
-                        .resolver(TagResolver.resolver("prefix", Tag.inserting(CHAT_PREFIX)))
                         .resolver(TagResolver.resolver("primary", Tag.styling(style -> style.color(PRIMARY_COLOR))))
                         .resolver(TagResolver.resolver("secondary", Tag.styling(style -> style.color(SECONDARY_COLOR))))
                         .resolver(TagResolver.standard())

@@ -18,7 +18,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 
 import java.util.List;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.CHAT_PREFIX;
+import static de.shiewk.smoderation.paper.SModerationPaper.PRIMARY_COLOR;
 import static net.kyori.adventure.text.Component.translatable;
 
 public class PunishmentListener implements Listener {
@@ -33,7 +33,7 @@ public class PunishmentListener implements Listener {
                 && p.to.equals(event.getUniqueId())
                 && p.isActive());
         if (punishment != null){
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, CHAT_PREFIX.append(punishment.playerMessage()));
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, punishment.playerMessage().colorIfAbsent(PRIMARY_COLOR));
         }
     }
 
@@ -46,7 +46,7 @@ public class PunishmentListener implements Listener {
                         && p.isActive());
         if (punishment != null) {
             event.setCancelled(true);
-            player.sendMessage(CHAT_PREFIX.append(punishment.playerMessage()));
+            player.sendMessage(punishment.playerMessage().colorIfAbsent(PRIMARY_COLOR));
         }
     }
 
@@ -66,7 +66,7 @@ public class PunishmentListener implements Listener {
                             || message.toLowerCase().startsWith(str.toLowerCase()+" ")
             )){
                 Bukkit.getConsoleSender().sendMessage(player.getName() + " tried to run forbidden command while muted");
-                player.sendMessage(CHAT_PREFIX.append(translatable("smod.punishment.playerMessage.mute.chat")));
+                player.sendMessage(translatable("smod.punishment.playerMessage.mute.chat", PRIMARY_COLOR));
                 event.setCancelled(true);
             }
         }
@@ -86,7 +86,7 @@ public class PunishmentListener implements Listener {
             case KICK, BAN -> {
                 final Player player = Bukkit.getPlayer(punishment.to);
                 if (player != null) {
-                    player.kick(CustomInventory.renderComponent(player, CHAT_PREFIX.append(punishment.playerMessage())));
+                    player.kick(CustomInventory.renderComponent(player, punishment.playerMessage().colorIfAbsent(PRIMARY_COLOR)));
                 }
             }
         }

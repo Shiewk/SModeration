@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.CHAT_PREFIX;
+import static de.shiewk.smoderation.paper.SModerationPaper.PRIMARY_COLOR;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
@@ -53,7 +53,7 @@ public class ChatInput {
 
     public static void prompt(Player player, Consumer<Component> consumer, Component prompt, int timeSeconds){
         runningInputs.put(player, new ChatInput(player, prompt, consumer, timeSeconds));
-        player.sendMessage(CHAT_PREFIX.append(prompt));
+        player.sendMessage(prompt.colorIfAbsent(PRIMARY_COLOR));
     }
 
     public Component getPrompt() {

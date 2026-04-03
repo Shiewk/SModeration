@@ -57,7 +57,7 @@ public class VanishListener implements Listener {
                     broadcast(message.color(null));
                 }
                 SchedulerUtil.scheduleForEntity(SModerationPaper.PLUGIN, player, () -> {
-                    player.sendMessage(translatable("smod.vanish.stillEnabled"));
+                    player.sendMessage(translatable("smod.command.vanish.stillEnabled"));
                     player.playSound(Sound.sound(
                             Key.key("minecraft", "block.beacon.power_select"),
                             Sound.Source.MASTER,

@@ -120,7 +120,7 @@ public class Punishment {
 
     public void broadcastUndo(PunishmentContainer container){
         for (CommandSender sender : container.collectBroadcastTargets()) {
-            sender.sendMessage(CHAT_PREFIX.append(undoMessage()));
+            sender.sendMessage(undoMessage().colorIfAbsent(PRIMARY_COLOR));
         }
     }
 
@@ -158,7 +158,7 @@ public class Punishment {
 
     private void broadcastIssue(PunishmentContainer container){
         for (CommandSender sender : container.collectBroadcastTargets()) {
-            sender.sendMessage(CHAT_PREFIX.append(broadcastMessage()));
+            sender.sendMessage(broadcastMessage().colorIfAbsent(PRIMARY_COLOR));
         }
     }
 
@@ -167,7 +167,7 @@ public class Punishment {
             case MUTE, BAN -> {
                 final CommandSender sender = PlayerUtil.senderByUUID(to);
                 if (sender != null) {
-                    sender.sendMessage(CHAT_PREFIX.append(playerMessage()));
+                    sender.sendMessage(playerMessage().colorIfAbsent(PRIMARY_COLOR));
                 }
             }
         }
