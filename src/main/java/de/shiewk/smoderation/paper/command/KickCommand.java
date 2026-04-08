@@ -6,7 +6,9 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.SModerationPaper;
+import de.shiewk.smoderation.paper.punishments.Kick;
 import de.shiewk.smoderation.paper.punishments.Punishment;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -21,6 +23,12 @@ import static io.papermc.paper.command.brigadier.Commands.literal;
 
 @SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class KickCommand implements CommandProvider {
+
+    private final PunishmentManager punishmentManager;
+
+    public KickCommand(PunishmentManager punishmentManager) {
+        this.punishmentManager = punishmentManager;
+    }
 
     @Override
     public LiteralCommandNode<CommandSourceStack> getCommandNode() {
@@ -39,7 +47,7 @@ public final class KickCommand implements CommandProvider {
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         Player target = CommandUtil.getPlayerSingle(context, "player");
         String reason = StringArgumentType.getString(context, "reason");
-        executeKick(sender, target, reason);
+        executeKick(punishmentManager, sender, target, reason);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -49,24 +57,25 @@ public final class KickCommand implements CommandProvider {
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         Player target = CommandUtil.getPlayerSingle(context, "player");
-        executeKick(sender, target, Punishment.DEFAULT_REASON);
+        executeKick(punishmentManager, sender, target, Punishment.DEFAULT_REASON);
         return Command.SINGLE_SUCCESS;
     }
 
-    public static void executeKick(UUID sender, Player target, String reason) throws CommandSyntaxException {
+    public static void executeKick(PunishmentManager manager, UUID sender, Player target, String reason) throws CommandSyntaxException {
         UUID targetId = target.getUniqueId();
         if (sender.equals(targetId)) {
             CommandUtil.errorTranslatable("smod.command.kick.fail.self");
         } else if (target.hasPermission("smod.preventkick")){
             CommandUtil.errorTranslatable("smod.command.kick.fail.protect");
         }
-        final Punishment punishment = Punishment.kick(
+        Punishment punishment = new Kick(
+                Punishment.generateUUID(),
                 System.currentTimeMillis(),
                 sender,
                 targetId,
                 reason
         );
-        Punishment.issue(punishment, SModerationPaper.container);
+        manager.tryIssue(punishment);
     }
 
     @Override

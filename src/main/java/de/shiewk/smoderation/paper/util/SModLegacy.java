@@ -3,20 +3,16 @@ package de.shiewk.smoderation.paper.util;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+public final class SModLegacy {
+    private SModLegacy() {}
 
-/**
- * Utility class for byte-based saving of integers, longs and UUIDs
- */
-public final class ByteUtil {
-    private ByteUtil(){}
-
-    public static byte[] longToBytes(long v){
+    private static byte[] longToBytes(long v){
         ByteBuffer buffer = ByteBuffer.allocate(8);
         buffer.putLong(v);
         return buffer.array();
     }
 
-    public static long bytesToLong(byte[] i){
+    private static long bytesToLong(byte[] i){
         if (i.length != 8){
             throw new IllegalArgumentException("length must be 8");
         }
@@ -25,7 +21,7 @@ public final class ByteUtil {
         return buffer.getLong(0);
     }
 
-    public static byte[] uuidToBytes(UUID uuid){
+    private static byte[] uuidToBytes(UUID uuid){
         byte[] l = longToBytes(uuid.getLeastSignificantBits());
         byte[] m = longToBytes(uuid.getMostSignificantBits());
         return new byte[]{
@@ -34,7 +30,7 @@ public final class ByteUtil {
         };
     }
 
-    public static UUID bytesToUuid(byte[] i){
+    private static UUID bytesToUuid(byte[] i){
         if (i.length != 16){
             throw new IllegalArgumentException("length must be 16, was " + i.length);
         }
@@ -43,7 +39,7 @@ public final class ByteUtil {
         return new UUID(m, l);
     }
 
-    public static int bytesToInt(byte[] bytes) {
+    private static int bytesToInt(byte[] bytes) {
         if (bytes.length != 4){
             throw new IllegalArgumentException("length must be 4");
         }
@@ -52,9 +48,10 @@ public final class ByteUtil {
         return buffer.getInt(0);
     }
 
-    public static byte[] intToBytes(int value) {
+    private static byte[] intToBytes(int value) {
         ByteBuffer buffer = ByteBuffer.allocate(4);
         buffer.putInt(value);
         return buffer.array();
     }
+
 }

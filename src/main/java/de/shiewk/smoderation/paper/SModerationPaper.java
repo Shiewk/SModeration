@@ -5,7 +5,10 @@ import de.shiewk.smoderation.paper.command.*;
 import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.input.ChatInputListener;
 import de.shiewk.smoderation.paper.listener.*;
-import de.shiewk.smoderation.paper.storage.PunishmentContainer;
+import de.shiewk.smoderation.paper.punishments.Ban;
+import de.shiewk.smoderation.paper.punishments.Kick;
+import de.shiewk.smoderation.paper.punishments.Mute;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
 import de.shiewk.smoderation.paper.translation.TranslatorManager;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import io.papermc.paper.command.brigadier.Commands;
@@ -24,7 +27,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -44,10 +46,8 @@ public final class SModerationPaper extends JavaPlugin {
     public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
 
     public static final Gson gson = new Gson();
-    public static final PunishmentContainer container = new PunishmentContainer();
     public static ComponentLogger LOGGER = null;
     public static SModerationPaper PLUGIN = null;
-    public static File SAVE_FILE = null;
     private static SkinTextureProvider textureProvider = null;
 
     private final TranslatorManager translatorManager = new TranslatorManager(
@@ -60,6 +60,8 @@ public final class SModerationPaper extends JavaPlugin {
             }
     );
 
+    private PunishmentManager punishmentManager;
+
     public static FileConfiguration config() {
         return PLUGIN.getConfig();
     }
@@ -67,11 +69,16 @@ public final class SModerationPaper extends JavaPlugin {
     @Override
     public void onLoad() {
         LOGGER = getComponentLogger();
+        LOGGER.info("Folia: {}", SchedulerUtil.isFolia ? "yes" : "no");
         PLUGIN = this;
-        SAVE_FILE = new File(this.getDataFolder().getAbsolutePath() + "/container.gz");
         LOGGER.info("Loading translations");
         translatorManager.load();
         updateConfig();
+
+        this.punishmentManager = new PunishmentManager(getDataPath().resolve("punishments.v2"));
+        this.punishmentManager.registerType("mute", new Mute.Factory());
+        this.punishmentManager.registerType("ban", new Ban.Factory());
+        this.punishmentManager.registerType("kick", new Kick.Factory());
     }
 
     public boolean isFeatureEnabled(String feature){
@@ -80,9 +87,7 @@ public final class SModerationPaper extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        LOGGER.info("Folia: {}", SchedulerUtil.isFolia ? "yes" : "no");
-
-        if (isFeatureEnabled("punishments")) listen(new PunishmentListener());
+        if (isFeatureEnabled("punishments")) listen(new PunishmentListener(punishmentManager));
         if (isFeatureEnabled("invsee")) listen(new InvSeeListener());
         if (isFeatureEnabled("enderchestsee")) listen(new EnderchestSeeListener());
         if (isFeatureEnabled("socialspy")) listen(new SocialSpyListener());
@@ -95,15 +100,15 @@ public final class SModerationPaper extends JavaPlugin {
             Commands commands = event.registrar();
 
             if (isFeatureEnabled("punishments")){
-                registerCommand(commands, new KickCommand());
-                registerCommand(commands, new ModLogsCommand());
-                registerCommand(commands, new UnmuteCommand());
-                registerCommand(commands, new UnbanCommand());
-                registerCommand(commands, new MuteCommand());
-                registerCommand(commands, new BanCommand());
+                registerCommand(commands, new KickCommand(punishmentManager));
+                registerCommand(commands, new ModLogsCommand(punishmentManager));
+                registerCommand(commands, new UnmuteCommand(punishmentManager));
+                registerCommand(commands, new UnbanCommand(punishmentManager));
+                registerCommand(commands, new MuteCommand(punishmentManager));
+                registerCommand(commands, new BanCommand(punishmentManager));
 
                 if (isFeatureEnabled("smodmenu")){
-                    registerCommand(commands, new SModCommand());
+                    registerCommand(commands, new SModCommand(punishmentManager));
                 }
             }
 
@@ -122,8 +127,6 @@ public final class SModerationPaper extends JavaPlugin {
         }
 
         SchedulerUtil.scheduleGlobalRepeating(PLUGIN, ChatInput::tickAll, 1, 1);
-
-        container.load(SAVE_FILE);
     }
 
     private void listen(Listener listener) {
@@ -140,7 +143,6 @@ public final class SModerationPaper extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        SModerationPaper.container.save(SModerationPaper.SAVE_FILE);
         for (Player player : Bukkit.getOnlinePlayers()) {
             // in case players are still vanished when the server shuts down
             if (isVanished(player)){

@@ -4,8 +4,8 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.event.VanishToggleEvent;
+import de.shiewk.smoderation.paper.punishments.Punishment;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -92,7 +92,7 @@ public final class VanishCommand implements CommandProvider {
         }
         if (newStatus){
             vanishedPlayers.add(player);
-            for (CommandSender sender : SModerationPaper.container.collectBroadcastTargets()) {
+            for (CommandSender sender : Punishment.getBroadcastTargets()) {
                 sender.sendMessage(translatable("smod.command.vanish.broadcast.on", player.teamDisplayName()));
             }
             player.sendMessage(translatable("smod.command.vanish.toggle.on"));
@@ -104,7 +104,7 @@ public final class VanishCommand implements CommandProvider {
             }
         } else {
             vanishedPlayers.remove(player);
-            for (CommandSender sender : container.collectBroadcastTargets()) {
+            for (CommandSender sender : Punishment.getBroadcastTargets()) {
                 sender.sendMessage(translatable("smod.command.vanish.broadcast.off", player.teamDisplayName()));
             }
             player.sendMessage(translatable("smod.command.vanish.toggle.off"));

@@ -5,8 +5,8 @@ import com.destroystokyo.paper.profile.ProfileProperty;
 import de.shiewk.smoderation.paper.SkinTextureProvider;
 import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.punishments.Punishment;
-import de.shiewk.smoderation.paper.punishments.PunishmentType;
-import de.shiewk.smoderation.paper.storage.PunishmentContainer;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
+import de.shiewk.smoderation.paper.punishments.TimedPunishment;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import de.shiewk.smoderation.paper.util.TimeUtil;
@@ -27,8 +27,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -41,8 +43,8 @@ import static net.kyori.adventure.text.Component.*;
 public class SModMenu extends PageableCustomInventory {
 
     public enum Filter {
-        ACTIVE(translatable("smod.menu.filter.active"), Punishment::isActive),
-        OLD(translatable("smod.menu.filter.expired"), p -> !p.isActive()),
+        ACTIVE(translatable("smod.menu.filter.active"), p -> p instanceof TimedPunishment timed && timed.isActive()),
+        OLD(translatable("smod.menu.filter.expired"), p -> !(p instanceof TimedPunishment timed && timed.isActive())),
         ALL(translatable("smod.menu.filter.all"), p -> true);
 
         public static final Material ICON = Material.HOPPER;
@@ -56,10 +58,10 @@ public class SModMenu extends PageableCustomInventory {
     }
 
     public enum Sort {
-        EXPIRY(translatable("smod.menu.sort.expiry"), Comparator.comparingLong(p -> p.until)),
-        TIME(translatable("smod.menu.sort.time"), Comparator.comparingLong(p -> p.time)),
-        PLAYER_NAME(translatable("smod.menu.sort.playerName"), (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.to), PlayerUtil.offlinePlayerName(p2.to))),
-        MODERATOR_NAME(translatable("smod.menu.sort.moderatorName"), (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.by), PlayerUtil.offlinePlayerName(p2.by)));
+        EXPIRY(translatable("smod.menu.sort.expiry"), Comparator.comparingLong(p -> p instanceof TimedPunishment timed ? p.getTimestamp() + timed.getDuration() : p.getTimestamp())),
+        TIME(translatable("smod.menu.sort.time"), Comparator.comparingLong(Punishment::getTimestamp)),
+        PLAYER_NAME(translatable("smod.menu.sort.playerName"), (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.getTargetID()), PlayerUtil.offlinePlayerName(p2.getTargetID()))),
+        MODERATOR_NAME(translatable("smod.menu.sort.moderatorName"), (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.getIssuerID()), PlayerUtil.offlinePlayerName(p2.getIssuerID())));
 
         public static final Material ICON = Material.COMPARATOR;
 
@@ -74,7 +76,7 @@ public class SModMenu extends PageableCustomInventory {
 
     private final Inventory inventory;
     private final Player player;
-    private final PunishmentContainer container;
+    private final PunishmentManager punishmentManager;
     private final Int2ObjectArrayMap<Punishment> slotMap = new Int2ObjectArrayMap<>(45);
     private List<Punishment> punishments;
     private int sort = 0;
@@ -83,10 +85,10 @@ public class SModMenu extends PageableCustomInventory {
     private int rfId = 0;
     private String searchQuery = null;
 
-    public SModMenu(Player player, PunishmentContainer container) {
+    public SModMenu(Player player, PunishmentManager punishmentManager) {
         super(45, 53);
         this.player = player;
-        this.container = container;
+        this.punishmentManager = punishmentManager;
         this.inventory = Bukkit.createInventory(this, 54, translatable("smod.menu"));
         reload();
     }
@@ -99,16 +101,21 @@ public class SModMenu extends PageableCustomInventory {
         return Filter.values()[filter];
     }
 
-    public PunishmentType getType(){
-        return type == -1 ? null : PunishmentType.values()[type];
+    public String getType(){
+        return type == -1 ? null : punishmentManager.getRegisteredTypes().get(type);
     }
 
-    private void reload(){
-        this.punishments = container.copy().stream()
-                .filter(getFilter().filter)
-                .filter(p -> getType() == null || p.type == getType())
-                .filter(p -> p.matchesSearchQuery(searchQuery))
-                .sorted(getSort().comparator).toList();
+    private void reload() {
+        try {
+            this.punishments = this.punishmentManager.getAll()
+                    .stream()
+                    .filter(getFilter().filter)
+                    .filter(p -> getType() == null || Objects.equals(p.getType(), getType()))
+                    .filter(p -> p.matchesSearchQuery(searchQuery))
+                    .sorted(getSort().comparator).toList();
+        } catch (IOException e) {
+            this.punishments = List.of();
+        }
     }
 
     public void promptSearchQuery(){
@@ -169,12 +176,12 @@ public class SModMenu extends PageableCustomInventory {
         player.playSound(player, Sound.UI_BUTTON_CLICK, 1f, backwards ? 0.8f : 2f);
         if (backwards){
             if (type <= -1){
-                type = PunishmentType.values().length-1;
+                type = punishmentManager.getRegisteredTypes().size()-1;
             } else {
                 type--;
             }
         } else {
-            if (type >= PunishmentType.values().length-1){
+            if (type >= punishmentManager.getRegisteredTypes().size()-1){
                 type = -1;
             } else {
                 type++;
@@ -209,19 +216,19 @@ public class SModMenu extends PageableCustomInventory {
     }
 
     private ItemStack createTypeItem(){
-        final PunishmentType type = getType();
+        final String type = getType();
         final ItemStack stack = new ItemStack(Material.CHEST);
-        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.type", (type == null ? translatable("smod.menu.type.all") : type.name))).color(PRIMARY_COLOR));
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.type", (type == null ? translatable("smod.menu.type.all") : translatable("smod.punishment.name." + type)))).color(PRIMARY_COLOR));
 
         ItemLore.Builder loreBuilder = ItemLore.lore();
         loreBuilder.addLine(empty());
-        final Consumer<PunishmentType> addToLore = value -> {
-            final boolean selected = type == value;
-            Component typeText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SECONDARY_COLOR : INACTIVE_COLOR).append(value == null ? translatable("smod.menu.type.all") : value.name)));
+        final Consumer<String> addToLore = value -> {
+            final boolean selected = Objects.equals(type, value);
+            Component typeText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SECONDARY_COLOR : INACTIVE_COLOR).append(value == null ? translatable("smod.menu.type.all") : translatable("smod.punishment.name." + value))));
             loreBuilder.addLine(typeText);
         };
         addToLore.accept(null);
-        for (PunishmentType value : PunishmentType.values()) {
+        for (String value : punishmentManager.getRegisteredTypes()) {
             addToLore.accept(value);
         }
 
@@ -282,12 +289,12 @@ public class SModMenu extends PageableCustomInventory {
     private CompletableFuture<ItemStack> createPunishmentItem(Punishment punishment){
         SkinTextureProvider provider = getTextureProvider();
         if (provider != null) {
-            return provider.textureProperty(punishment.to)
+            return provider.textureProperty(punishment.getTargetID())
                     .thenApply(texture -> {
                         ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
                         stack.editMeta(meta -> {
                             if (meta instanceof SkullMeta skullMeta){
-                                PlayerProfile profile = Bukkit.createProfile(punishment.to);
+                                PlayerProfile profile = Bukkit.createProfile(punishment.getTargetID());
                                 profile.setProperty(new ProfileProperty(
                                         "textures",
                                         texture
@@ -303,9 +310,9 @@ public class SModMenu extends PageableCustomInventory {
             stack.editMeta(meta -> {
                 if (meta instanceof SkullMeta skullMeta){
                     try {
-                        skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(punishment.to));
+                        skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(punishment.getTargetID()));
                     } catch (NullPointerException e) {
-                        LOGGER.warn("Player {} has a punishment but was never on this server!", punishment.to);
+                        LOGGER.warn("Player {} has a punishment but was never on this server!", punishment.getTargetID());
                     }
                 }
             });
@@ -315,16 +322,16 @@ public class SModMenu extends PageableCustomInventory {
     }
 
     private void addPunishmentInfo(Punishment punishment, ItemStack stack) {
-        stack.setData(DataComponentTypes.CUSTOM_NAME, renderComponent(player, applyFormatting(punishment.type.name.color(NamedTextColor.RED).decorate(TextDecoration.BOLD))));
+        stack.setData(DataComponentTypes.CUSTOM_NAME, renderComponent(player, applyFormatting(translatable("smod.punishment.name." + punishment.getType(), NamedTextColor.RED).decorate(TextDecoration.BOLD))));
         ItemLore.Builder lore = ItemLore.lore();
 
-        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.player", text(PlayerUtil.offlinePlayerName(punishment.to))))));
-        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.punishedBy", text(PlayerUtil.offlinePlayerName(punishment.by))))));
-        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.timestamp", TimeUtil.calendarTimestamp(punishment.time)))));
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.player", text(PlayerUtil.offlinePlayerName(punishment.getTargetID()))))));
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.punishedBy", text(PlayerUtil.offlinePlayerName(punishment.getIssuerID()))))));
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.timestamp", TimeUtil.calendarTimestamp(punishment.getTimestamp())))));
 
-        if (punishment.type != PunishmentType.KICK){
-            lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.duration", TimeUtil.formatTimeLong(punishment.until - punishment.time)))));
-            long remainingTime = punishment.until - System.currentTimeMillis();
+        if (punishment instanceof TimedPunishment timed){
+            lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.duration", TimeUtil.formatTimeLong(timed.getExpiry() - punishment.getTimestamp())))));
+            long remainingTime = timed.getExpiry() - System.currentTimeMillis();
             if (remainingTime > 0){
                 lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.expiry.future", TimeUtil.formatTimeLong(remainingTime)))));
             } else {
@@ -332,14 +339,16 @@ public class SModMenu extends PageableCustomInventory {
             }
         }
 
-        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.reason", text(punishment.reason)))));
+        lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.reason", text(punishment.getReason())))));
 
-        if (punishment.wasUndone()){
-            lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.undone", text(PlayerUtil.offlinePlayerName(punishment.undoneBy()))))));
-        } else if (punishment.isActive()) {
-            if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))){
-                lore.addLine(empty());
-                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.click", NamedTextColor.GOLD))));
+        if (punishment instanceof TimedPunishment timed){
+            if (timed.wasCancelled()){
+                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.cancelled", text(PlayerUtil.offlinePlayerName(timed.getCancelledBy()))))));
+            } else if (timed.isActive()) {
+                if (player.hasPermission("smod.un" + punishment.getType())){
+                    lore.addLine(empty());
+                    lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.click", NamedTextColor.GOLD))));
+                }
             }
         }
         stack.setData(DataComponentTypes.LORE, lore);
@@ -404,16 +413,13 @@ public class SModMenu extends PageableCustomInventory {
             cycleSort(event.isRightClick());
         } else {
             Punishment punishment = slotMap.get(slot);
-            if (punishment != null){
-                if (punishment.isActive()){
-                    if ((punishment.type == PunishmentType.BAN && player.hasPermission("smod.unban")) || (punishment.type == PunishmentType.MUTE && player.hasPermission("smod.unmute"))) {
-                        new ConfirmationInventory(player, translatable("smod.menu.undoConfirmation"), () -> {
-                            punishment.undo(player.getUniqueId());
-                            punishment.broadcastUndo(container);
-                            player.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
-                            this.open();
-                        }, this::open).open();
-                    }
+            if (punishment instanceof TimedPunishment timed && timed.isActive()){
+                if (player.hasPermission("smod.un" + punishment.getType())) {
+                    new ConfirmationInventory(player, translatable("smod.menu.cancelConfirmation"), () -> {
+                        punishmentManager.cancel(timed, player.getUniqueId());
+                        player.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
+                        this.open();
+                    }, this::open).open();
                 }
             }
         }

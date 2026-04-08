@@ -1,205 +1,123 @@
 package de.shiewk.smoderation.paper.punishments;
 
-import de.shiewk.smoderation.paper.event.PunishmentIssueEvent;
-import de.shiewk.smoderation.paper.storage.PunishmentContainer;
-import de.shiewk.smoderation.paper.util.ByteUtil;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
-import de.shiewk.smoderation.paper.util.TimeUtil;
+import de.shiewk.smoderation.paper.util.SerializationHelper;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.*;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
-public class Punishment {
+public abstract class Punishment {
+
     public static final String DEFAULT_REASON = "No reason provided.";
-    public final PunishmentType type;
-    public final long time;
-    public final long until;
-    public final UUID by;
-    public final UUID to;
-    public final String reason;
-    private UUID undoneBy;
 
-    public Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason) {
-        this(type, time, until, by, to, reason, null);
-    }
+    protected final UUID id;
+    protected final String type;
+    protected final long timestamp;
+    protected final UUID issuer;
+    protected final UUID target;
+    protected final String reason;
 
-    private Punishment(PunishmentType type, long time, long until, UUID by, UUID to, String reason, UUID undoneBy) {
+    protected Punishment(UUID id, String type, long timestamp, UUID issuer, UUID target, String reason) {
+        this.id = id;
         this.type = type;
-        this.time = time;
-        this.until = until;
-        this.by = by;
-        this.to = to;
+        this.timestamp = timestamp;
+        this.issuer = issuer;
+        this.target = target;
         this.reason = reason;
-        this.undoneBy = undoneBy;
     }
 
-    private static byte[] readStreamInternal(InputStream stream, int len) throws IOException {
-        final byte[] bytes = stream.readNBytes(len);
-        if (bytes.length != len){
-            throw new EOFException("Stream has ended before enough bytes were read");
-        }
-        return bytes;
+    public UUID getID() {
+        return id;
     }
 
-    public static Punishment load(InputStream in) throws IOException {
-        PunishmentType type = PunishmentType.values()[ByteUtil.bytesToInt(readStreamInternal(in, 4))];
-        long time = ByteUtil.bytesToLong(readStreamInternal(in, 8));
-        long until = ByteUtil.bytesToLong(readStreamInternal(in, 8));
-        UUID by = ByteUtil.bytesToUuid(readStreamInternal(in, 16));
-        UUID to = ByteUtil.bytesToUuid(readStreamInternal(in, 16));
-        int reasonLen = ByteUtil.bytesToInt(readStreamInternal(in, 4));
-        String reason = new String(readStreamInternal(in, reasonLen));
-        UUID undoneBy = null;
-        boolean undone = in.read() == 1;
-        if (undone){
-            undoneBy = ByteUtil.bytesToUuid(readStreamInternal(in, 16));
-        }
-        return new Punishment(type, time, until, by, to, reason, undoneBy);
+    public String getType() {
+        return type;
     }
 
-    public boolean wasUndone(){
-        return undoneBy != null;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public UUID undoneBy() {
-        return undoneBy;
+    public UUID getIssuerID() {
+        return issuer;
     }
 
-    public void undo(UUID undoneBy){
-        if (this.undoneBy != null){
-            throw new IllegalArgumentException("This punishment was already undone.");
-        }
-        this.undoneBy = undoneBy;
+    public UUID getTargetID() {
+        return target;
     }
 
-    public boolean isActive(){
-        return until > System.currentTimeMillis() && !wasUndone();
+    public String getReason() {
+        return reason;
     }
 
-    public static Punishment mute(long time, long until, UUID by, UUID to, String reason){
-        return new Punishment(PunishmentType.MUTE, time, until, by, to, reason);
+    public void addSerializableProperties(SerializationHelper helper){
+        helper.putUUID("id", id);
+        helper.putString("type", type);
+        helper.putLong("timestamp", timestamp);
+        helper.putUUID("issuer", issuer);
+        helper.putUUID("target", target);
+        helper.putString("reason", reason);
     }
 
-    public static Punishment ban(long time, long until, UUID by, UUID to, String reason){
-        return new Punishment(PunishmentType.BAN, time, until, by, to, reason);
+    public boolean matchesSearchQuery(String query){
+        if (query == null) return true;
+        query = query.toLowerCase();
+        return reason.toLowerCase().contains(query)
+                || issuer.toString().equalsIgnoreCase(query)
+                || target.toString().equalsIgnoreCase(query)
+                || PlayerUtil.offlinePlayerName(issuer).toLowerCase().contains(query)
+                || PlayerUtil.offlinePlayerName(target).toLowerCase().contains(query);
     }
 
-    public static Punishment kick(long time, UUID by, UUID to, String reason){
-        return new Punishment(PunishmentType.KICK, time, time, by, to, reason);
-    }
-
-    public void writeBytes(OutputStream stream) throws IOException {
-        stream.write(ByteUtil.intToBytes(type.ordinal()));
-        stream.write(ByteUtil.longToBytes(time));
-        stream.write(ByteUtil.longToBytes(until));
-        stream.write(ByteUtil.uuidToBytes(by));
-        stream.write(ByteUtil.uuidToBytes(to));
-        final byte[] reasonBytes = reason.getBytes();
-        stream.write(ByteUtil.intToBytes(reasonBytes.length));
-        stream.write(reasonBytes);
-        stream.write(wasUndone() ? 1 : 0);
-        if (wasUndone()){
-            stream.write(ByteUtil.uuidToBytes(undoneBy));
-        }
-    }
-
-    private Component undoMessage(){
-        String key = "smod.punishment.undo." + type.name().toLowerCase();
-        return translatable(key, text(PlayerUtil.offlinePlayerName(to)), text(PlayerUtil.offlinePlayerName(undoneBy)));
-    }
-
-    public void broadcastUndo(PunishmentContainer container){
-        for (CommandSender sender : container.collectBroadcastTargets()) {
-            sender.sendMessage(undoMessage().colorIfAbsent(PRIMARY_COLOR));
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "Punishment{" +
-                "type=" + type +
-                ", time=" + time +
-                ", until=" + until +
-                ", by=" + by +
-                ", to=" + to +
-                ", reason=" + reason +
-                '}';
-    }
-
-    public static void issue(Punishment punishment, PunishmentContainer container){
-        final PunishmentIssueEvent event = new PunishmentIssueEvent(punishment, container);
-        Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled()){
-            container.add(punishment);
-            punishment.firstIssue(container);
-        }
-    }
-
-    private Component broadcastMessage(){
-        String key = "smod.punishment.broadcast." + type.name().toLowerCase();
+    public Component infoMessage(){
         return translatable(
-                key,
-                text(PlayerUtil.offlinePlayerName(to)),
-                text(PlayerUtil.offlinePlayerName(by)),
-                TimeUtil.formatTimeLong(this.until - this.time),
+                "smod.punishment.playerMessage." + type,
+                text(PlayerUtil.offlinePlayerName(this.issuer)),
                 text(reason)
         );
     }
 
-    private void broadcastIssue(PunishmentContainer container){
-        for (CommandSender sender : container.collectBroadcastTargets()) {
-            sender.sendMessage(broadcastMessage().colorIfAbsent(PRIMARY_COLOR));
-        }
-    }
-
-    private void firstIssue(PunishmentContainer container){
-        switch (type) {
-            case MUTE, BAN -> {
-                final CommandSender sender = PlayerUtil.senderByUUID(to);
-                if (sender != null) {
-                    sender.sendMessage(playerMessage().colorIfAbsent(PRIMARY_COLOR));
-                }
-            }
-        }
-        broadcastIssue(container);
-    }
-
-    public Component playerMessage(){
-        String key = "smod.punishment.playerMessage." + type.name().toLowerCase();
+    public Component adminMessage(){
         return translatable(
-                key,
-                text(PlayerUtil.offlinePlayerName(this.by)),
-                text(reason),
-                TimeUtil.formatTimeLong(this.until - System.currentTimeMillis())
+                "smod.punishment.broadcast." + type,
+                text(PlayerUtil.offlinePlayerName(target)),
+                text(PlayerUtil.offlinePlayerName(issuer)),
+                text(reason)
         );
     }
 
-    public boolean matchesSearchQuery(String searchQuery) {
-        if (searchQuery == null) return true;
-        searchQuery = searchQuery.toLowerCase();
-        return reason.toLowerCase().contains(searchQuery)
-                || by.toString().equalsIgnoreCase(searchQuery)
-                || to.toString().equalsIgnoreCase(searchQuery)
-                || getPlayerName().toLowerCase().contains(searchQuery)
-                || getModeratorName().toLowerCase().contains(searchQuery);
-
+    public void processIssue() {
+        CommandSender sender = PlayerUtil.senderByUUID(target);
+        if (sender != null) {
+            sender.sendMessage(infoMessage());
+        }
+        for (CommandSender target : getBroadcastTargets()) {
+            target.sendMessage(adminMessage());
+        }
     }
 
-    private String getPlayerName() {
-        return PlayerUtil.offlinePlayerName(to);
+    public static List<CommandSender> getBroadcastTargets() {
+        ObjectArrayList<CommandSender> senders = new ObjectArrayList<>();
+        senders.add(Bukkit.getConsoleSender());
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (onlinePlayer.hasPermission("smod.notifications")){
+                senders.add(onlinePlayer);
+            }
+        }
+        return List.copyOf(senders);
     }
 
-    private String getModeratorName() {
-        return PlayerUtil.offlinePlayerName(by);
+    public static UUID generateUUID() {
+        Random random = new Random();
+        return new UUID(System.currentTimeMillis(), random.nextLong());
     }
 }

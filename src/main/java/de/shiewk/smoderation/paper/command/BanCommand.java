@@ -8,7 +8,9 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.command.argument.DurationArgument;
 import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
+import de.shiewk.smoderation.paper.punishments.Ban;
 import de.shiewk.smoderation.paper.punishments.Punishment;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.Bukkit;
@@ -23,6 +25,12 @@ import static io.papermc.paper.command.brigadier.Commands.literal;
 
 @SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class BanCommand implements CommandProvider {
+
+    private final PunishmentManager punishmentManager;
+
+    public BanCommand(PunishmentManager punishmentManager) {
+        this.punishmentManager = punishmentManager;
+    }
 
     @Override
     public LiteralCommandNode<CommandSourceStack> getCommandNode() {
@@ -46,7 +54,7 @@ public final class BanCommand implements CommandProvider {
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
         long duration = context.getArgument("duration", Long.class);
-        executeBan(sender, target, duration, Punishment.DEFAULT_REASON);
+        executeBan(punishmentManager, sender, target, duration, Punishment.DEFAULT_REASON);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -55,17 +63,17 @@ public final class BanCommand implements CommandProvider {
         UUID target = context.getArgument("player", UUID.class);
         long duration = context.getArgument("duration", Long.class);
         String reason = StringArgumentType.getString(context, "reason");
-        executeBan(sender, target, duration, reason);
+        executeBan(punishmentManager, sender, target, duration, reason);
         return Command.SINGLE_SUCCESS;
     }
 
-    public static void executeBan(UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
+    public static void executeBan(PunishmentManager manager, UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
         Player targetPlayer = Bukkit.getPlayer(target);
         if (duration == 0){
             if (targetPlayer == null){
                 CommandUtil.errorTranslatable("smod.command.ban.fail.tooShort");
             } else {
-                KickCommand.executeKick(sender, targetPlayer, reason);
+                KickCommand.executeKick(manager, sender, targetPlayer, reason);
             }
             return;
         }
@@ -75,14 +83,18 @@ public final class BanCommand implements CommandProvider {
             if (targetPlayer != null && targetPlayer.hasPermission("smod.preventban")){
                 CommandUtil.errorTranslatable("smod.command.ban.fail.protect");
             } else {
-                final Punishment punishment = Punishment.ban(
+                if (!manager.byTargetUUID(target, p -> p instanceof Ban ban && ban.isActive()).isEmpty()) {
+                    CommandUtil.errorTranslatable("smod.command.ban.fail.alreadyBanned");
+                }
+                Punishment punishment = new Ban(
+                        Punishment.generateUUID(),
                         System.currentTimeMillis(),
-                        System.currentTimeMillis() + duration,
                         sender,
                         target,
-                        reason
+                        reason,
+                        duration
                 );
-                Punishment.issue(punishment, SModerationPaper.container);
+                manager.tryIssue(punishment);
             }
         }
     }

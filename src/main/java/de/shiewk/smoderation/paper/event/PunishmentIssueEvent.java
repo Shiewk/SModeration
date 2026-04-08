@@ -1,7 +1,7 @@
 package de.shiewk.smoderation.paper.event;
 
 import de.shiewk.smoderation.paper.punishments.Punishment;
-import de.shiewk.smoderation.paper.storage.PunishmentContainer;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -11,20 +11,20 @@ public class PunishmentIssueEvent extends Event implements Cancellable {
     private static final HandlerList handlerList = new HandlerList();
 
     private final Punishment punishment;
-    private final PunishmentContainer container;
+    private final PunishmentManager manager;
     private boolean cancelled;
 
-    public PunishmentIssueEvent(Punishment punishment, PunishmentContainer container) {
+    public PunishmentIssueEvent(Punishment punishment, PunishmentManager manager) {
         this.punishment = punishment;
-        this.container = container;
+        this.manager = manager;
     }
 
     public Punishment getPunishment() {
         return punishment;
     }
 
-    public PunishmentContainer getContainer() {
-        return container;
+    public PunishmentManager getPunishmentManager() {
+        return manager;
     }
 
     @Override

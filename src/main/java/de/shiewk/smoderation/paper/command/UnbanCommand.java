@@ -4,10 +4,11 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
+import de.shiewk.smoderation.paper.punishments.Ban;
 import de.shiewk.smoderation.paper.punishments.Punishment;
-import de.shiewk.smoderation.paper.punishments.PunishmentType;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
+import de.shiewk.smoderation.paper.punishments.TimedPunishment;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 
@@ -20,6 +21,12 @@ import static io.papermc.paper.command.brigadier.Commands.literal;
 
 @SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class UnbanCommand implements CommandProvider {
+
+    private final PunishmentManager punishmentManager;
+
+    public UnbanCommand(PunishmentManager punishmentManager) {
+        this.punishmentManager = punishmentManager;
+    }
 
     @Override
     public LiteralCommandNode<CommandSourceStack> getCommandNode() {
@@ -34,13 +41,14 @@ public final class UnbanCommand implements CommandProvider {
     private int unbanPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         UUID senderUUID = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
-        final Punishment punishment = SModerationPaper.container.find(
-                p -> p.to.equals(target) && p.isActive() && p.type == PunishmentType.BAN
+        final List<Punishment> punishments = punishmentManager.byTargetUUID(
+                target,
+                p -> p instanceof Ban ban && ban.isActive()
         );
-        if (punishment != null) {
-            punishment.undo(senderUUID);
-            punishment.broadcastUndo(SModerationPaper.container);
-        } else {
+        for (Punishment punishment : punishments) {
+            punishmentManager.cancel((TimedPunishment) punishment, senderUUID);
+        }
+        if (punishments.isEmpty()) {
             CommandUtil.errorTranslatable("smod.command.unban.fail.notBanned");
         }
         return Command.SINGLE_SUCCESS;

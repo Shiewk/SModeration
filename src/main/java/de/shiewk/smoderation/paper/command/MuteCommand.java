@@ -8,7 +8,9 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.command.argument.DurationArgument;
 import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
+import de.shiewk.smoderation.paper.punishments.Mute;
 import de.shiewk.smoderation.paper.punishments.Punishment;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.Bukkit;
@@ -23,6 +25,12 @@ import static io.papermc.paper.command.brigadier.Commands.literal;
 
 @SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class MuteCommand implements CommandProvider {
+
+    private final PunishmentManager punishmentManager;
+
+    public MuteCommand(PunishmentManager punishmentManager) {
+        this.punishmentManager = punishmentManager;
+    }
 
     @Override
     public LiteralCommandNode<CommandSourceStack> getCommandNode() {
@@ -46,7 +54,7 @@ public final class MuteCommand implements CommandProvider {
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
         long duration = context.getArgument("duration", Long.class);
-        executeMute(sender, target, duration, Punishment.DEFAULT_REASON);
+        executeMute(punishmentManager, sender, target, duration, Punishment.DEFAULT_REASON);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -55,11 +63,11 @@ public final class MuteCommand implements CommandProvider {
         UUID target = context.getArgument("player", UUID.class);
         long duration = context.getArgument("duration", Long.class);
         String reason = StringArgumentType.getString(context, "reason");
-        executeMute(sender, target, duration, reason);
+        executeMute(punishmentManager, sender, target, duration, reason);
         return Command.SINGLE_SUCCESS;
     }
 
-    public static void executeMute(UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
+    public static void executeMute(PunishmentManager manager, UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
         if (duration == 0){
             CommandUtil.errorTranslatable("smod.command.mute.fail.tooShort");
         }
@@ -70,14 +78,18 @@ public final class MuteCommand implements CommandProvider {
             if (targetPlayer != null && targetPlayer.hasPermission("smod.preventmute")){
                 CommandUtil.errorTranslatable("smod.command.mute.fail.protect");
             } else {
-                final Punishment punishment = Punishment.mute(
+                if (!manager.byTargetUUID(target, p -> p instanceof Mute mute && mute.isActive()).isEmpty()) {
+                    CommandUtil.errorTranslatable("smod.command.mute.fail.alreadyMuted");
+                }
+                Punishment punishment = new Mute(
+                        Punishment.generateUUID(),
                         System.currentTimeMillis(),
-                        System.currentTimeMillis() + duration,
                         sender,
                         target,
-                        reason
+                        reason,
+                        duration
                 );
-                Punishment.issue(punishment, SModerationPaper.container);
+                manager.tryIssue(punishment);
             }
         }
     }

@@ -5,6 +5,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
 import de.shiewk.smoderation.paper.punishments.Punishment;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
+import de.shiewk.smoderation.paper.punishments.TimedPunishment;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
 import de.shiewk.smoderation.paper.util.TimeUtil;
@@ -15,7 +17,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.container;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 import static net.kyori.adventure.text.Component.text;
@@ -23,6 +24,12 @@ import static net.kyori.adventure.text.Component.translatable;
 
 @SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class ModLogsCommand implements CommandProvider {
+
+    private final PunishmentManager punishmentManager;
+
+    public ModLogsCommand(PunishmentManager punishmentManager) {
+        this.punishmentManager = punishmentManager;
+    }
 
     @Override
     public LiteralCommandNode<CommandSourceStack> getCommandNode() {
@@ -39,13 +46,15 @@ public final class ModLogsCommand implements CommandProvider {
         UUID uuid = context.getArgument("player", UUID.class);
         String name = PlayerUtil.offlinePlayerName(uuid);
         sender.sendMessage(translatable("smod.command.modlogs.heading", text(name), text(uuid.toString())));
-        final List<Punishment> punishments = container.findAll(p -> p.to.equals(uuid) && p.isActive());
+        List<Punishment> punishments = punishmentManager.byTargetUUID(uuid);
         for (Punishment punishment : punishments) {
-            sender.sendMessage(translatable("smod.command.modlogs." + punishment.type.name().toLowerCase(),
-                    TimeUtil.calendarTimestamp(punishment.until),
-                    TimeUtil.formatTimeLong(punishment.until - System.currentTimeMillis()),
-                    text(punishment.reason)
-            ));
+            if (punishment instanceof TimedPunishment timed && timed.isActive()){
+                sender.sendMessage(translatable("smod.command.modlogs." + punishment.getType(),
+                        TimeUtil.calendarTimestamp(timed.getExpiry()),
+                        TimeUtil.formatTimeLong(timed.getExpiry() - System.currentTimeMillis()),
+                        text(punishment.getReason())
+                ));
+            }
         }
         if (punishments.isEmpty()){
             sender.sendMessage(translatable("smod.command.modlogs.none"));

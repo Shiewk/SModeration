@@ -28,4 +28,12 @@ public final class PlayerUtil {
             return Bukkit.getPlayer(uid);
         }
     }
+
+    public static UUID uuidFromString(String string) {
+        if (string.length() == 36) {
+            return UUID.fromString(string);
+        } else {
+            return UUID.fromString(string.replaceFirst("(.{8})(.{4})(.{4})(.{4})(.{12})", "$1-$2-$3-$4-$5"));
+        }
+    }
 }

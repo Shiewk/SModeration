@@ -4,10 +4,11 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
+import de.shiewk.smoderation.paper.punishments.Mute;
 import de.shiewk.smoderation.paper.punishments.Punishment;
-import de.shiewk.smoderation.paper.punishments.PunishmentType;
+import de.shiewk.smoderation.paper.punishments.PunishmentManager;
+import de.shiewk.smoderation.paper.punishments.TimedPunishment;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 
@@ -20,6 +21,12 @@ import static io.papermc.paper.command.brigadier.Commands.literal;
 
 @SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class UnmuteCommand implements CommandProvider {
+
+    private final PunishmentManager punishmentManager;
+
+    public UnmuteCommand(PunishmentManager punishmentManager) {
+        this.punishmentManager = punishmentManager;
+    }
 
     @Override
     public LiteralCommandNode<CommandSourceStack> getCommandNode() {
@@ -34,14 +41,15 @@ public final class UnmuteCommand implements CommandProvider {
     private int unmutePlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         UUID senderUUID = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
-        final Punishment punishment = SModerationPaper.container.find(
-                p -> p.to.equals(target) && p.isActive() && p.type == PunishmentType.MUTE
+        final List<Punishment> punishments = punishmentManager.byTargetUUID(
+                target,
+                p -> p instanceof Mute mute && mute.isActive()
         );
-        if (punishment != null) {
-            punishment.undo(senderUUID);
-            punishment.broadcastUndo(SModerationPaper.container);
-        } else {
-            CommandUtil.errorTranslatable("smod.command.unmute.fail.notMuted");
+        for (Punishment punishment : punishments) {
+            punishmentManager.cancel((TimedPunishment) punishment, senderUUID);
+        }
+        if (punishments.isEmpty()) {
+            CommandUtil.errorTranslatable("smod.command.unmute.fail.notBanned");
         }
         return Command.SINGLE_SUCCESS;
     }
