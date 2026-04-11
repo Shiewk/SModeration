@@ -1,7 +1,18 @@
 package de.shiewk.smoderation.paper.util;
 
+import de.shiewk.smoderation.paper.punishments.*;
+
+import java.io.EOFException;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
+import java.util.zip.GZIPInputStream;
+
+import static de.shiewk.smoderation.paper.SModerationPaper.LOGGER;
 
 public final class SModLegacy {
     private SModLegacy() {}
@@ -54,4 +65,76 @@ public final class SModLegacy {
         return buffer.array();
     }
 
+    private static byte[] readStreamInternal(InputStream stream, int len) throws IOException {
+        final byte[] bytes = stream.readNBytes(len);
+        if (bytes.length != len){
+            throw new EOFException("Stream has ended before enough bytes were read");
+        }
+        return bytes;
+    }
+
+    public static void migrateV1PunishmentsFile(PunishmentManager manager, Path path, Path copy) {
+        int count = 0;
+        try {
+            if (Files.isRegularFile(path)) {
+                LOGGER.info("Migrating V1 punishment file: {}", path);
+                try (InputStream in = new FileInputStream(path.toFile());
+                     GZIPInputStream gzin = new GZIPInputStream(in)){
+                    while (gzin.available() > 0){
+                        int type = bytesToInt(readStreamInternal(gzin, 4));
+                        long time = bytesToLong(readStreamInternal(gzin, 8));
+                        long until = bytesToLong(readStreamInternal(gzin, 8));
+                        UUID by = bytesToUuid(readStreamInternal(gzin, 16));
+                        UUID to = bytesToUuid(readStreamInternal(gzin, 16));
+                        int reasonLen = bytesToInt(readStreamInternal(gzin, 4));
+                        String reason = new String(readStreamInternal(gzin, reasonLen));
+                        UUID canceller = null;
+                        boolean cancelled = gzin.read() == 1;
+                        if (cancelled){
+                            canceller = bytesToUuid(readStreamInternal(gzin, 16));
+                        }
+                        // Type 0: mute; 1: kick; 2: ban
+                        Punishment p = switch (type){
+                            case 0 -> new Mute(
+                                    Punishment.generateUUID(),
+                                    time,
+                                    by,
+                                    to,
+                                    reason,
+                                    until - time,
+                                    canceller
+                            );
+                            case 1 -> new Kick(
+                                    Punishment.generateUUID(),
+                                    time,
+                                    by,
+                                    to,
+                                    reason
+                            );
+                            case 2 -> new Ban(
+                                    Punishment.generateUUID(),
+                                    time,
+                                    by,
+                                    to,
+                                    reason,
+                                    until - time,
+                                    canceller
+                            );
+                            default -> throw new IllegalArgumentException("Invalid legacy type for punishment: " + type);
+                        };
+                        count++;
+                        manager.appendToSave(p);
+                        LOGGER.info("Migrated: {}", p);
+                    }
+                }
+                LOGGER.info("Successfully loaded {} items.", count);
+                Files.move(path, copy);
+            }
+        } catch (EOFException e) {
+            LOGGER.error("The file was not correctly saved, {} items could be recovered!", count);
+        } catch (IOException e){
+            LOGGER.error("An error occurred while loading", e);
+            throw new RuntimeException(e);
+        }
+    }
 }

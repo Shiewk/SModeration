@@ -115,7 +115,7 @@ public final class PunishmentManager {
         return List.copyOf(typeRegistry.keySet());
     }
 
-    private void appendToSave(Punishment punishment) throws IOException {
+    public void appendToSave(Punishment punishment) throws IOException {
         synchronized (ioLock) {
             Path file = getTargetFile(punishment.getTargetID());
             if (!Files.exists(file)) {

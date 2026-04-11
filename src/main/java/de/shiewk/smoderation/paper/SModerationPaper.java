@@ -10,6 +10,7 @@ import de.shiewk.smoderation.paper.punishments.Kick;
 import de.shiewk.smoderation.paper.punishments.Mute;
 import de.shiewk.smoderation.paper.punishments.PunishmentManager;
 import de.shiewk.smoderation.paper.translation.TranslatorManager;
+import de.shiewk.smoderation.paper.util.SModLegacy;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -79,6 +80,12 @@ public final class SModerationPaper extends JavaPlugin {
         this.punishmentManager.registerType("mute", new Mute.Factory());
         this.punishmentManager.registerType("ban", new Ban.Factory());
         this.punishmentManager.registerType("kick", new Kick.Factory());
+
+        SModLegacy.migrateV1PunishmentsFile(
+                this.punishmentManager,
+                getDataPath().resolve("container.gz"),
+                getDataPath().resolve("v1-backup.gz")
+        );
     }
 
     public boolean isFeatureEnabled(String feature){
