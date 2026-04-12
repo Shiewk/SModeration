@@ -49,11 +49,15 @@ public final class ModLogsCommand implements CommandProvider {
         List<Punishment> punishments = punishmentManager.byTargetUUID(uuid);
         for (Punishment punishment : punishments) {
             if (punishment instanceof TimedPunishment timed && timed.isActive()){
-                sender.sendMessage(translatable("smod.command.modlogs." + punishment.getType(),
-                        TimeUtil.calendarTimestamp(timed.getExpiry()),
-                        TimeUtil.formatTimeLong(timed.getExpiry() - System.currentTimeMillis()),
-                        text(punishment.getReason())
-                ));
+                if (timed.isPermanent()){
+                    sender.sendMessage(translatable("smod.command.modlogs." + punishment.getType() + ".permanent", text(punishment.getReason())));
+                } else {
+                    sender.sendMessage(translatable("smod.command.modlogs." + punishment.getType(),
+                            TimeUtil.calendarTimestamp(timed.getExpiry()),
+                            TimeUtil.formatTimeLong(timed.getExpiry() - System.currentTimeMillis()),
+                            text(punishment.getReason())
+                    ));
+                }
             }
         }
         if (punishments.isEmpty()){

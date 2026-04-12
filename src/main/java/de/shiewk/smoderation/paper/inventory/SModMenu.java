@@ -58,7 +58,7 @@ public class SModMenu extends PageableCustomInventory {
     }
 
     public enum Sort {
-        EXPIRY(translatable("smod.menu.sort.expiry"), Comparator.comparingLong(p -> p instanceof TimedPunishment timed ? p.getTimestamp() + timed.getDuration() : p.getTimestamp())),
+        EXPIRY(translatable("smod.menu.sort.expiry"), Comparator.comparingLong(p -> p instanceof TimedPunishment timed ? timed.getExpiry() : p.getTimestamp())),
         TIME(translatable("smod.menu.sort.time"), Comparator.comparingLong(Punishment::getTimestamp)),
         PLAYER_NAME(translatable("smod.menu.sort.playerName"), (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.getTargetID()), PlayerUtil.offlinePlayerName(p2.getTargetID()))),
         MODERATOR_NAME(translatable("smod.menu.sort.moderatorName"), (p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(PlayerUtil.offlinePlayerName(p1.getIssuerID()), PlayerUtil.offlinePlayerName(p2.getIssuerID())));
@@ -330,12 +330,17 @@ public class SModMenu extends PageableCustomInventory {
         lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.timestamp", TimeUtil.calendarTimestamp(punishment.getTimestamp())))));
 
         if (punishment instanceof TimedPunishment timed){
-            lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.duration", TimeUtil.formatTimeLong(timed.getExpiry() - punishment.getTimestamp())))));
-            long remainingTime = timed.getExpiry() - System.currentTimeMillis();
-            if (remainingTime > 0){
-                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.expiry.future", TimeUtil.formatTimeLong(remainingTime)))));
+            if (timed.isPermanent()){
+                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.duration", translatable("smod.time.permanent")))));
+                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.expiry.never"))));
             } else {
-                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.expiry.past", TimeUtil.formatTimeLong(-remainingTime)))));
+                lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.duration", TimeUtil.formatTimeLong(timed.getExpiry() - punishment.getTimestamp())))));
+                long remainingTime = timed.getExpiry() - System.currentTimeMillis();
+                if (remainingTime > 0){
+                    lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.expiry.future", TimeUtil.formatTimeLong(remainingTime)))));
+                } else {
+                    lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.expiry.past", TimeUtil.formatTimeLong(-remainingTime)))));
+                }
             }
         }
 

@@ -21,9 +21,13 @@ public final class DurationArgument implements CustomArgumentType.Converted<Long
 
     public static final Pattern DURATION_PATTERN = Pattern.compile("([0-9]{1,9})(ms|s|min|h|d|w|mo|y)");
     public static final Pattern VALIDATION_PATTERN = Pattern.compile("(([0-9]{1,9})(ms|s|min|h|d|w|mo|y))+");
+    public static final long INFINITE_DURATION = -1L;
 
     @Override
     public @NotNull Long convert(@NotNull String nativeType) throws CommandSyntaxException {
+        if (nativeType.startsWith("perm") || nativeType.startsWith("inf")) {
+            return INFINITE_DURATION;
+        }
         if (!VALIDATION_PATTERN.matcher(nativeType).matches()){
             CommandUtil.errorTranslatable("smod.argument.duration.fail.pattern");
         }
@@ -58,6 +62,8 @@ public final class DurationArgument implements CustomArgumentType.Converted<Long
     public @NotNull <S> CompletableFuture<Suggestions> listSuggestions(@NotNull CommandContext<S> context, @NotNull SuggestionsBuilder builder) {
         if (builder.getRemaining().isBlank()){
             List.of(
+                    "infinite", "inf",
+                    "permanent", "perm",
                     "100ms",
                     "15s",
                     "2min",

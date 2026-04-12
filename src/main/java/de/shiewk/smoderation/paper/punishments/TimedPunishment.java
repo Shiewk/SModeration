@@ -1,5 +1,6 @@
 package de.shiewk.smoderation.paper.punishments;
 
+import de.shiewk.smoderation.paper.command.argument.DurationArgument;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
 import de.shiewk.smoderation.paper.util.SerializationHelper;
 import de.shiewk.smoderation.paper.util.TimeUtil;
@@ -35,7 +36,7 @@ public abstract class TimedPunishment extends Punishment {
     }
 
     public boolean isActive(){
-        return !wasCancelled() && System.currentTimeMillis() < timestamp + duration;
+        return !wasCancelled() && (isPermanent() || System.currentTimeMillis() < getExpiry());
     }
 
     @Override
@@ -55,23 +56,40 @@ public abstract class TimedPunishment extends Punishment {
 
     @Override
     public Component infoMessage(){
-        return translatable(
-                "smod.punishment.playerMessage." + type,
-                text(PlayerUtil.offlinePlayerName(this.issuer)),
-                text(reason),
-                TimeUtil.formatTimeLong(this.timestamp + this.duration - System.currentTimeMillis())
-        );
+        if (isPermanent()){
+            return translatable(
+                    "smod.punishment.playerMessage." + type + ".permanent",
+                    text(PlayerUtil.offlinePlayerName(this.issuer)),
+                    text(reason)
+            );
+        } else {
+            return translatable(
+                    "smod.punishment.playerMessage." + type,
+                    text(PlayerUtil.offlinePlayerName(this.issuer)),
+                    text(reason),
+                    TimeUtil.formatTimeLong(this.timestamp + this.duration - System.currentTimeMillis())
+            );
+        }
     }
 
     @Override
     public Component adminMessage(){
-        return translatable(
-                "smod.punishment.broadcast." + type,
-                text(PlayerUtil.offlinePlayerName(target)),
-                text(PlayerUtil.offlinePlayerName(issuer)),
-                text(reason),
-                TimeUtil.formatTimeLong(this.duration)
-        );
+        if (isPermanent()){
+            return translatable(
+                    "smod.punishment.broadcast." + type + ".permanent",
+                    text(PlayerUtil.offlinePlayerName(target)),
+                    text(PlayerUtil.offlinePlayerName(issuer)),
+                    text(reason)
+            );
+        } else {
+            return translatable(
+                    "smod.punishment.broadcast." + type,
+                    text(PlayerUtil.offlinePlayerName(target)),
+                    text(PlayerUtil.offlinePlayerName(issuer)),
+                    text(reason),
+                    TimeUtil.formatTimeLong(this.duration)
+            );
+        }
     }
 
     public Component cancelMessage(){
@@ -83,7 +101,11 @@ public abstract class TimedPunishment extends Punishment {
     }
 
     public long getExpiry() {
-        return getTimestamp() + getDuration();
+        return isPermanent() ? Long.MAX_VALUE : getTimestamp() + getDuration();
+    }
+
+    public boolean isPermanent() {
+        return getDuration() == DurationArgument.INFINITE_DURATION;
     }
 
     protected void cancel(UUID canceller) {
