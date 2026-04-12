@@ -57,7 +57,7 @@ public final class KickCommand implements CommandProvider {
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         Player target = CommandUtil.getPlayerSingle(context, "player");
-        executeKick(punishmentManager, sender, target, Punishment.DEFAULT_REASON);
+        executeKick(punishmentManager, sender, target, SModerationPaper.config().getString("default-reason", "No reason provided."));
         return Command.SINGLE_SUCCESS;
     }
 

@@ -54,7 +54,7 @@ public final class BanCommand implements CommandProvider {
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
         long duration = context.getArgument("duration", Long.class);
-        executeBan(punishmentManager, sender, target, duration, Punishment.DEFAULT_REASON);
+        executeBan(punishmentManager, sender, target, duration, SModerationPaper.config().getString("default-reason", "No reason provided."));
         return Command.SINGLE_SUCCESS;
     }
 

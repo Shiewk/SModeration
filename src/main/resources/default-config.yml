@@ -1,6 +1,10 @@
 # If enabled, punishments can no longer be issued without providing a reason.
 force-reason: false
 
+# The string that should be used when no reason is provided.
+# This has no effect if 'force-reason' is set to true.
+default-reason: No reason provided.
+
 # Allows you to toggle specific plugin features.
 features:
   # Should punishments be tracked and executed?

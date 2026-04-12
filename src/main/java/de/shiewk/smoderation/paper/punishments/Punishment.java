@@ -17,8 +17,6 @@ import static net.kyori.adventure.text.Component.translatable;
 
 public abstract class Punishment {
 
-    public static final String DEFAULT_REASON = "No reason provided.";
-
     protected final UUID id;
     protected final String type;
     protected final long timestamp;
