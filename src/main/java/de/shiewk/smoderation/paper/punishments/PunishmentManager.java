@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -31,6 +32,7 @@ public final class PunishmentManager {
 
     private static final Logger log = LoggerFactory.getLogger(PunishmentManager.class);
     private final Object2ObjectArrayMap<String, PunishmentFactory<?>> typeRegistry = new Object2ObjectArrayMap<>(1);
+    private final ConcurrentHashMap<UUID, List<Punishment>> cache = new ConcurrentHashMap<>(1);
     private final Object ioLock = new Object();
     private final Path dataDir;
 
@@ -58,8 +60,13 @@ public final class PunishmentManager {
     }
 
     public List<Punishment> byTargetUUID(UUID target) {
+        List<Punishment> cached = cache.get(target);
+        if (cached != null) {
+            return cached;
+        }
         synchronized (ioLock) {
             Path file = getTargetFile(target);
+
             if (!Files.exists(file)) {
                 return List.of();
             }
@@ -129,6 +136,7 @@ public final class PunishmentManager {
                 writer.append('\n');
             }
         }
+        addToCachedList(punishment);
     }
 
     public @NotNull List<Punishment> getAll() throws IOException {
@@ -163,6 +171,23 @@ public final class PunishmentManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void loadToCache(UUID uuid) {
+        removeFromCache(uuid);
+        cache.put(uuid, byTargetUUID(uuid));
+    }
+
+    public void removeFromCache(UUID uuid) {
+        cache.remove(uuid);
+    }
+
+    private void addToCachedList(Punishment punishment) {
+        cache.computeIfPresent(punishment.getTargetID(), (k, v) -> {
+            ObjectArrayList<Punishment> newList = new ObjectArrayList<>(v);
+            newList.add(punishment);
+            return List.copyOf(newList);
+        });
     }
 
 }

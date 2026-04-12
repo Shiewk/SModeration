@@ -95,6 +95,7 @@ public final class SModerationPaper extends JavaPlugin {
     @Override
     public void onEnable() {
         if (isFeatureEnabled("punishments")) listen(new PunishmentListener(punishmentManager));
+        if (isFeatureEnabled("punishments")) listen(new CacheListener(punishmentManager));
         if (isFeatureEnabled("invsee")) listen(new InvSeeListener());
         if (isFeatureEnabled("enderchestsee")) listen(new EnderchestSeeListener());
         if (isFeatureEnabled("socialspy")) listen(new SocialSpyListener());
