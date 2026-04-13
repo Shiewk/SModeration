@@ -4,6 +4,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.event.VanishToggleEvent;
 import de.shiewk.smoderation.paper.punishments.Punishment;
 import de.shiewk.smoderation.paper.util.CommandUtil;
@@ -150,11 +151,11 @@ public final class VanishCommand implements CommandProvider {
             for (ObjectListIterator<Player> iterator = vanishedPlayers.iterator(); iterator.hasNext(); ) {
                 Player vanishedPlayer = iterator.next();
                 vanishList = vanishList.append(
-                        vanishedPlayer.teamDisplayName().colorIfAbsent(SECONDARY_COLOR)
+                        vanishedPlayer.teamDisplayName().colorIfAbsent(SModerationPaper.colors().secondary())
                 );
                 if (iterator.hasNext()){
                     vanishList = vanishList.append(
-                            text().content(", ").color(PRIMARY_COLOR)
+                            text().content(", ").color(SModerationPaper.colors().primary())
                     );
                 }
             }

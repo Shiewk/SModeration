@@ -19,13 +19,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.persistence.PersistentDataType;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.SECONDARY_COLOR;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
 public class VanishListener implements Listener {
 
-    public static final Component PREFIX = text("[VANISH] ").color(SECONDARY_COLOR);
+    public static final Component PREFIX = text("[VANISH] ").color(SModerationPaper.colors().secondary());
 
     @EventHandler(priority = EventPriority.HIGH) public void onPlayerQuit(PlayerQuitEvent event){
         final Player player = event.getPlayer();

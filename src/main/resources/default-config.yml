@@ -9,7 +9,7 @@ default-reason: No reason provided.
 features:
   # Should punishments be tracked and executed?
   # Note that disabling this will also disable the SMod menu and
-  # /modlogs command since their only use is viewing punishments
+  # /modlogs command since their only use is viewing punishments.
   punishments: true
   # Should commands for opening the SMod menu be registered?
   smodmenu: true
@@ -23,6 +23,13 @@ features:
   socialspy: true
   # Should players be able to enable vanish mode?
   vanish: true
+
+# Allows you to customize plugin colors.
+# Colors have to be formatted #rrggbb.
+colors:
+  primary: '#e26c04'
+  secondary: '#fc9e07'
+  detail: '#ababab'
 
 # A list of commands which will be captured and broadcast
 # to players which have SocialSpy enabled (/socialspy).

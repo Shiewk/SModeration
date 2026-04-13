@@ -16,7 +16,6 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.util.List;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.PRIMARY_COLOR;
 import static net.kyori.adventure.text.Component.translatable;
 
 public class PunishmentListener implements Listener {
@@ -41,7 +40,7 @@ public class PunishmentListener implements Listener {
         List<Punishment> list = punishmentManager.byTargetUUID(player.getUniqueId(), p -> p instanceof Mute mute && mute.isActive());
         if (!list.isEmpty()) {
             event.setCancelled(true);
-            player.sendMessage(list.getFirst().infoMessage().colorIfAbsent(PRIMARY_COLOR));
+            player.sendMessage(list.getFirst().infoMessage().colorIfAbsent(SModerationPaper.colors().primary()));
         }
     }
 
@@ -57,7 +56,7 @@ public class PunishmentListener implements Listener {
                             || message.toLowerCase().startsWith(str.toLowerCase()+" ")
             )){
                 Bukkit.getConsoleSender().sendMessage(player.getName() + " tried to run forbidden command while muted");
-                player.sendMessage(translatable("smod.punishment.playerMessage.mute.chat", PRIMARY_COLOR));
+                player.sendMessage(translatable("smod.punishment.playerMessage.mute.chat", SModerationPaper.colors().primary()));
                 event.setCancelled(true);
             }
         }

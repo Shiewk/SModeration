@@ -10,12 +10,12 @@ import de.shiewk.smoderation.paper.punishments.Kick;
 import de.shiewk.smoderation.paper.punishments.Mute;
 import de.shiewk.smoderation.paper.punishments.PunishmentManager;
 import de.shiewk.smoderation.paper.translation.TranslatorManager;
+import de.shiewk.smoderation.paper.util.ColorPalette;
 import de.shiewk.smoderation.paper.util.SModLegacy;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -42,14 +42,11 @@ import static org.bukkit.Bukkit.getPluginManager;
 @SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
 public final class SModerationPaper extends JavaPlugin {
 
-    public static final TextColor PRIMARY_COLOR = TextColor.color(212, 0, 255);
-    public static final TextColor SECONDARY_COLOR = TextColor.color(52, 143, 255);
-    public static final TextColor INACTIVE_COLOR = NamedTextColor.GRAY;
-
     public static final Gson gson = new Gson();
     public static ComponentLogger LOGGER = null;
     public static SModerationPaper PLUGIN = null;
     private static SkinTextureProvider textureProvider = null;
+    private ColorPalette colors;
 
     private final TranslatorManager translatorManager = new TranslatorManager(
             Key.key("smoderation", "translations"),
@@ -67,6 +64,10 @@ public final class SModerationPaper extends JavaPlugin {
         return PLUGIN.getConfig();
     }
 
+    public static ColorPalette colors() {
+        return PLUGIN.colors;
+    }
+
     @Override
     public void onLoad() {
         LOGGER = getComponentLogger();
@@ -81,11 +82,28 @@ public final class SModerationPaper extends JavaPlugin {
         this.punishmentManager.registerType("ban", new Ban.Factory());
         this.punishmentManager.registerType("kick", new Kick.Factory());
 
+        this.colors = new ColorPalette(
+                parseColor(config().getString("colors.primary")),
+                parseColor(config().getString("colors.secondary")),
+                parseColor(config().getString("colors.detail"))
+        );
+
         SModLegacy.migrateV1PunishmentsFile(
                 this.punishmentManager,
                 getDataPath().resolve("container.gz"),
                 getDataPath().resolve("v1-backup.gz")
         );
+    }
+
+    private TextColor parseColor(String string) {
+        if (string == null || string.length() != 7) {
+            throw new IllegalArgumentException("Color not formatted correctly: " + string);
+        }
+        TextColor color = TextColor.fromHexString(string);
+        if (color == null) {
+            throw new IllegalArgumentException("Color not formatted correctly: " + string);
+        }
+        return color;
     }
 
     public boolean isFeatureEnabled(String feature){
@@ -170,8 +188,9 @@ public final class SModerationPaper extends JavaPlugin {
     private MiniMessage createMiniMessage() {
         return MiniMessage.builder()
                 .tags(TagResolver.builder()
-                        .resolver(TagResolver.resolver("primary", Tag.styling(style -> style.color(PRIMARY_COLOR))))
-                        .resolver(TagResolver.resolver("secondary", Tag.styling(style -> style.color(SECONDARY_COLOR))))
+                        .resolver(TagResolver.resolver("primary", Tag.styling(style -> style.color(colors().primary()))))
+                        .resolver(TagResolver.resolver("secondary", Tag.styling(style -> style.color(colors().secondary()))))
+                        .resolver(TagResolver.resolver("detail", Tag.styling(style -> style.color(colors().detail()))))
                         .resolver(TagResolver.standard())
                         .build()
                 )

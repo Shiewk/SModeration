@@ -2,6 +2,7 @@ package de.shiewk.smoderation.paper.inventory;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
+import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.SkinTextureProvider;
 import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.punishments.Punishment;
@@ -126,7 +127,7 @@ public class SModMenu extends PageableCustomInventory {
                 // chat event is async
                 SchedulerUtil.scheduleForEntity(PLUGIN, player, this::open);
             }
-        }, translatable("smod.menu.search.query").color(SECONDARY_COLOR), 30);
+        }, translatable("smod.menu.search.query").color(SModerationPaper.colors().secondary()), 30);
     }
 
     @Override
@@ -199,13 +200,13 @@ public class SModMenu extends PageableCustomInventory {
     private ItemStack createFilterItem(){
         final Filter filter = getFilter();
         final ItemStack stack = new ItemStack(Filter.ICON);
-        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.filter", filter.name).color(PRIMARY_COLOR)));
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.filter", filter.name).color(SModerationPaper.colors().primary())));
         ItemLore.Builder loreBuilder = ItemLore.lore();
 
         loreBuilder.addLine(empty());
         for (Filter value : Filter.values()) {
             final boolean selected = filter == value;
-            Component filterText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SECONDARY_COLOR : INACTIVE_COLOR).append(value.name)));
+            Component filterText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SModerationPaper.colors().secondary() : SModerationPaper.colors().detail()).append(value.name)));
             loreBuilder.addLine(filterText);
         }
         loreBuilder.addLine(empty());
@@ -218,13 +219,13 @@ public class SModMenu extends PageableCustomInventory {
     private ItemStack createTypeItem(){
         final String type = getType();
         final ItemStack stack = new ItemStack(Material.CHEST);
-        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.type", (type == null ? translatable("smod.menu.type.all") : translatable("smod.punishment.name." + type)))).color(PRIMARY_COLOR));
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.type", (type == null ? translatable("smod.menu.type.all") : translatable("smod.punishment.name." + type)))).color(SModerationPaper.colors().primary()));
 
         ItemLore.Builder loreBuilder = ItemLore.lore();
         loreBuilder.addLine(empty());
         final Consumer<String> addToLore = value -> {
             final boolean selected = Objects.equals(type, value);
-            Component typeText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SECONDARY_COLOR : INACTIVE_COLOR).append(value == null ? translatable("smod.menu.type.all") : translatable("smod.punishment.name." + value))));
+            Component typeText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SModerationPaper.colors().secondary() : SModerationPaper.colors().detail()).append(value == null ? translatable("smod.menu.type.all") : translatable("smod.punishment.name." + value))));
             loreBuilder.addLine(typeText);
         };
         addToLore.accept(null);
@@ -242,14 +243,14 @@ public class SModMenu extends PageableCustomInventory {
     private ItemStack createSortItem(){
         final Sort sort = getSort();
         final ItemStack stack = new ItemStack(Sort.ICON);
-        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.sort", sort.name).color(PRIMARY_COLOR)));
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.sort", sort.name).color(SModerationPaper.colors().primary())));
 
         ItemLore.Builder loreBuilder = ItemLore.lore();
         loreBuilder.addLine(empty());
 
         for (Sort value : Sort.values()) {
             final boolean selected = sort == value;
-            Component sortText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SECONDARY_COLOR : INACTIVE_COLOR).append(value.name)));
+            Component sortText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SModerationPaper.colors().secondary() : SModerationPaper.colors().detail()).append(value.name)));
             loreBuilder.addLine(sortText);
         }
 
@@ -270,12 +271,12 @@ public class SModMenu extends PageableCustomInventory {
             // we just create the stack without it instead of throwing
         }
 
-        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.search", PRIMARY_COLOR)));
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.search", SModerationPaper.colors().primary())));
 
         ItemLore.Builder loreBuilder = ItemLore.lore();
         loreBuilder.addLines(List.of(
                 empty(),
-                renderComponent(player, applyFormatting(translatable("smod.menu.search.current", searchQuery == null ? translatable("smod.menu.search.none") : text('"' + searchQuery + '"'))).color(SECONDARY_COLOR)),
+                renderComponent(player, applyFormatting(translatable("smod.menu.search.current", searchQuery == null ? translatable("smod.menu.search.none") : text('"' + searchQuery + '"'))).color(SModerationPaper.colors().secondary())),
                 empty(),
                 renderComponent(player, applyFormatting(translatable("smod.menu.search.new", NamedTextColor.GOLD)))
         ));

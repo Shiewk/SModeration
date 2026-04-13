@@ -1,5 +1,6 @@
 package de.shiewk.smoderation.paper.input;
 
+import de.shiewk.smoderation.paper.SModerationPaper;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.entity.Player;
@@ -10,7 +11,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import static de.shiewk.smoderation.paper.SModerationPaper.PRIMARY_COLOR;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
@@ -53,7 +53,7 @@ public class ChatInput {
 
     public static void prompt(Player player, Consumer<Component> consumer, Component prompt, int timeSeconds){
         runningInputs.put(player, new ChatInput(player, prompt, consumer, timeSeconds));
-        player.sendMessage(prompt.colorIfAbsent(PRIMARY_COLOR));
+        player.sendMessage(prompt.colorIfAbsent(SModerationPaper.colors().primary()));
     }
 
     public Component getPrompt() {
