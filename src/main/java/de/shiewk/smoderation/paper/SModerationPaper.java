@@ -74,7 +74,11 @@ public final class SModerationPaper extends JavaPlugin {
         LOGGER.info("Folia: {}", SchedulerUtil.isFolia ? "yes" : "no");
         PLUGIN = this;
         LOGGER.info("Loading translations");
-        translatorManager.load();
+        if (config().getBoolean("custom-messages", false)) {
+            translatorManager.loadCustomMessages(getDataPath().resolve("messages.json"));
+        } else {
+            translatorManager.load();
+        }
         updateConfig();
 
         this.punishmentManager = new PunishmentManager(getDataPath().resolve("punishments.v2"));

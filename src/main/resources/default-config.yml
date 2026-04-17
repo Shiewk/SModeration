@@ -31,6 +31,14 @@ colors:
   secondary: '#fc9e07'
   detail: '#ababab'
 
+# Allows you to customize translation files.
+# - At 'false', the plugin's predefined localization is used
+#   and available for multiple languages:
+#   https://github.com/Shiewk/SModeration/tree/main/src/main/resources/smoderation/translations
+# - At 'true', a JSON localization file will be created in the plugin directory.
+#   Only the contained strings will be used and localization will be disabled.
+custom-messages: false
+
 # A list of commands which will be captured and broadcast
 # to players which have SocialSpy enabled (/socialspy).
 socialspy-commands:
