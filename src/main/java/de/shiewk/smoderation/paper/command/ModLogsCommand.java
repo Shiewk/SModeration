@@ -37,9 +37,9 @@ public final class ModLogsCommand implements CommandProvider {
         return literal("modlogs")
                 .requires(CommandUtil.requirePermission("smod.logs"))
                 .then(argument("player", new PlayerUUIDArgument())
-                        .executes(this::showModLogs)
+                        .executes(this::showCurrent)
                         .then(literal("current")
-                                .executes(this::showModLogs)
+                                .executes(this::showCurrent)
                         )
                         .then(literal("all")
                                 .executes(this::showHistory)
@@ -49,6 +49,38 @@ public final class ModLogsCommand implements CommandProvider {
                         )
                 )
                 .build();
+    }
+
+    private void printInformation(CommandSender target, List<Punishment> punishments) {
+        for (Punishment punishment : punishments) {
+            target.sendMessage(empty());
+            // Type
+            target.sendMessage(translatable("smod.command.modlogs.type", translatable("smod.punishment.name." + punishment.getType())));
+            // Timestamp
+            target.sendMessage(translatable("smod.command.modlogs.timestamp", TimeUtil.calendarTimestamp(punishment.getTimestamp())));
+            // Issuer
+            target.sendMessage(translatable("smod.command.modlogs.issuer", text(PlayerUtil.offlinePlayerName(punishment.getIssuerID()))));
+            if (punishment instanceof TimedPunishment timed) {
+                // Duration
+                target.sendMessage(translatable("smod.command.modlogs.duration",
+                        timed.isPermanent() ?
+                                translatable("smod.time.permanent") :
+                                TimeUtil.formatTimeLong(timed.getDuration())
+                ));
+                // Also, expiry time
+                target.sendMessage(translatable("smod.command.modlogs.expiry",
+                        timed.isPermanent() ?
+                                translatable("smod.time.never") :
+                                TimeUtil.calendarTimestamp(timed.getExpiry())
+                ));
+                // Who cancelled it
+                if (timed.wasCancelled()) {
+                    target.sendMessage(translatable("smod.command.modlogs.cancelled", text(PlayerUtil.offlinePlayerName(timed.getCancelledBy()))));
+                }
+            }
+            // Reason
+            target.sendMessage(translatable("smod.command.modlogs.reason", text(punishment.getReason())));
+        }
     }
 
     private int showHistory(CommandContext<CommandSourceStack> context){
@@ -62,50 +94,21 @@ public final class ModLogsCommand implements CommandProvider {
         if (punishments.isEmpty()){
             sender.sendMessage(translatable("smod.command.modlogs.history.empty"));
         }
-        for (Punishment punishment : punishments) {
-            sender.sendMessage(empty());
-            // Type
-            sender.sendMessage(translatable("smod.command.modlogs.history.type", translatable("smod.punishment.name." + punishment.getType())));
-            // Timestamp
-            sender.sendMessage(translatable("smod.command.modlogs.history.timestamp", TimeUtil.calendarTimestamp(punishment.getTimestamp())));
-            // Issuer
-            sender.sendMessage(translatable("smod.command.modlogs.history.issuer", text(PlayerUtil.offlinePlayerName(punishment.getIssuerID()))));
-            if (punishment instanceof TimedPunishment timed) {
-                // Duration
-                sender.sendMessage(translatable("smod.command.modlogs.history.duration", TimeUtil.formatTimeLong(timed.getDuration())));
-                // Also, expiry time
-                sender.sendMessage(translatable("smod.command.modlogs.history.expiry", TimeUtil.calendarTimestamp(timed.getExpiry())));
-                // Who cancelled it
-                if (timed.wasCancelled()) {
-                    sender.sendMessage(translatable("smod.command.modlogs.history.cancelled", text(PlayerUtil.offlinePlayerName(timed.getCancelledBy()))));
-                }
-            }
-            // Reason
-            sender.sendMessage(translatable("smod.command.modlogs.history.reason", text(punishment.getReason())));
-        }
+        printInformation(sender, punishments);
         return Command.SINGLE_SUCCESS;
     }
 
-    private int showModLogs(CommandContext<CommandSourceStack> context) {
+    private int showCurrent(CommandContext<CommandSourceStack> context) {
         CommandSender sender = context.getSource().getSender();
         UUID uuid = context.getArgument("player", UUID.class);
         String name = PlayerUtil.offlinePlayerName(uuid);
         sender.sendMessage(translatable("smod.command.modlogs.heading", text(name), text(uuid.toString())));
-        List<Punishment> punishments = punishmentManager.byTargetUUID(uuid);
-        for (Punishment punishment : punishments) {
-            if (punishment instanceof TimedPunishment timed && timed.isActive()){
-                if (timed.isPermanent()){
-                    sender.sendMessage(translatable("smod.command.modlogs." + punishment.getType() + ".permanent", text(punishment.getReason())));
-                } else {
-                    sender.sendMessage(translatable("smod.command.modlogs." + punishment.getType(),
-                            TimeUtil.calendarTimestamp(timed.getExpiry()),
-                            TimeUtil.formatTimeLong(timed.getExpiry() - System.currentTimeMillis()),
-                            text(punishment.getReason())
-                    ));
-                }
-            }
-        }
-        if (punishments.stream().noneMatch(p -> p instanceof TimedPunishment timed && timed.isActive())) {
+        List<Punishment> punishments = punishmentManager.byTargetUUID(uuid)
+                .stream()
+                .filter(p -> p instanceof TimedPunishment timed && timed.isActive())
+                .toList();
+        printInformation(sender, punishments);
+        if (punishments.isEmpty()) {
             sender.sendMessage(translatable("smod.command.modlogs.none"));
         }
         return Command.SINGLE_SUCCESS;
