@@ -105,7 +105,7 @@ public final class ModLogsCommand implements CommandProvider {
                 }
             }
         }
-        if (punishments.isEmpty()){
+        if (punishments.stream().noneMatch(p -> p instanceof TimedPunishment timed && timed.isActive())) {
             sender.sendMessage(translatable("smod.command.modlogs.none"));
         }
         return Command.SINGLE_SUCCESS;
