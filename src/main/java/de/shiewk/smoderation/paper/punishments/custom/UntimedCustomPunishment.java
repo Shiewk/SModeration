@@ -15,7 +15,6 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static de.shiewk.smoderation.paper.SModerationPaper.LOGGER;
@@ -107,7 +106,7 @@ public class UntimedCustomPunishment extends Punishment {
     protected final Metadata metadata;
 
     private UntimedCustomPunishment(PunishmentManager manager, UUID id, long timestamp, UUID issuer, UUID target, String reason, Metadata metadata) {
-        super(manager, id, metadata.type, timestamp, issuer, target, reason);
+        super(manager, id, metadata.type(), timestamp, issuer, target, reason);
         this.metadata = metadata;
     }
 
@@ -147,23 +146,7 @@ public class UntimedCustomPunishment extends Punishment {
         varMap.put("type", this.type);
 
         for (String command : metadata.effects) {
-            for (Map.Entry<String, String> entry : varMap.entrySet()) {
-                command = command.replaceAll("\\$" + entry.getKey(), entry.getValue());
-            }
-
-            String finalCommand = command;
-            CommandUtil.dispatchConsoleCommand(finalCommand)
-                    .thenAccept(found -> {
-                        if (found){
-                            LOGGER.info("Success dispatching command: '{}'", finalCommand);
-                        } else {
-                            LOGGER.info("Failed to dispatch: '{}'", finalCommand);
-                        }
-                    })
-                    .exceptionally(t -> {
-                        LOGGER.error("Failed to dispatch: '{}'", finalCommand, t);
-                        return null;
-                    });
+            TimedCustomPunishment.dispatchCommandWithVars(varMap, command);
         }
     }
 

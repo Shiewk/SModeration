@@ -63,4 +63,26 @@ public final class SerializationHelper {
         json.addProperty(key, value.toString().replace("-", ""));
     }
 
+    public boolean getBoolean(String key) {
+        try {
+            return json.get(key).getAsBoolean();
+        } catch (NullPointerException e) {
+            throw new IllegalStateException("Key " + key + " does not exist on this object");
+        } catch (UnsupportedOperationException | IllegalStateException e) {
+            throw new IllegalStateException("Tried to get " + key + ", but is " + json.get(key).getClass().getSimpleName());
+        }
+    }
+
+    public boolean getBoolean(String key, boolean defaultValue) {
+        try {
+            return getBoolean(key);
+        } catch (Exception ignored) {
+            return defaultValue;
+        }
+    }
+
+    public void putBoolean(String key, boolean value) {
+        json.addProperty(key, value);
+    }
+
 }

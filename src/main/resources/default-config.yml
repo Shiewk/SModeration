@@ -44,7 +44,7 @@ custom-messages: false
 # https://github.com/Shiewk/SModeration/blob/main/docs/config.md
 custom-punishments:
   # Whether custom punishments should be enabled.
-  enabled: true
+  enabled: false
 
 # A list of commands which will be captured and broadcast
 # to players who have SocialSpy enabled (/socialspy).

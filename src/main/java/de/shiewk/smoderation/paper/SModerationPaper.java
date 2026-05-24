@@ -6,6 +6,7 @@ import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.input.ChatInputListener;
 import de.shiewk.smoderation.paper.listener.*;
 import de.shiewk.smoderation.paper.punishments.*;
+import de.shiewk.smoderation.paper.punishments.custom.TimedCustomPunishment;
 import de.shiewk.smoderation.paper.punishments.custom.UntimedCustomPunishment;
 import de.shiewk.smoderation.paper.translation.TranslatorManager;
 import de.shiewk.smoderation.paper.util.ColorPalette;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static de.shiewk.smoderation.paper.command.VanishCommand.isVanished;
 import static de.shiewk.smoderation.paper.command.VanishCommand.toggleVanish;
@@ -176,20 +178,33 @@ public final class SModerationPaper extends JavaPlugin {
             // Handle the custom punishments
             ConfigurationSection section = getConfig().getConfigurationSection("custom-punishments");
             if (section != null) {
-                if (section.getBoolean("enabled", true)) {
+                if (section.getBoolean("enabled", false)) {
+
+                    // For the effects
+                    listen(new CustomPunishmentEffectListener(punishmentManager));
+                    SchedulerUtil.scheduleAsyncRepeating(
+                            SModerationPaper.PLUGIN,
+                            task -> TimedCustomPunishment.checkAllForExpiry(punishmentManager),
+                            5,
+                            5,
+                            TimeUnit.SECONDS
+                    );
+
                     for (String type : section.getKeys(false)) {
                         try {
                             LOGGER.info("Custom punishment {}", type);
                             ConfigurationSection typeConfig = section.getConfigurationSection(type);
                             if (typeConfig != null) {
-                                for (String requiredKey : new String[]{"timed", "commands"}) {
-                                    if (!typeConfig.contains(requiredKey)){
-                                        throw new IllegalArgumentException("Does not include required setting '" + requiredKey + "'");
-                                    }
+                                if (!typeConfig.contains("timed")){
+                                    throw new IllegalArgumentException("Does not include required setting 'timed'");
                                 }
                                 boolean timed = typeConfig.getBoolean("timed");
                                 if (timed){
-                                    throw new UnsupportedOperationException("Timed custom punishment not implemented yet");
+                                    TimedCustomPunishment.Metadata metadata = TimedCustomPunishment.tryCreateMetadata(type, typeConfig);
+                                    LOGGER.info("Timed custom punishment '{}': {}", type, metadata);
+                                    punishmentManager.registerType(metadata.createPunishmentType());
+                                    commands.add(metadata.createApplyCommand(punishmentManager));
+                                    commands.add(metadata.createCancelCommand(punishmentManager));
                                 } else {
                                     UntimedCustomPunishment.Metadata metadata = UntimedCustomPunishment.tryCreateMetadata(type, typeConfig);
                                     LOGGER.info("Custom punishment '{}': {}", type, metadata);

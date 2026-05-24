@@ -6,15 +6,14 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.shiewk.smoderation.paper.SModerationPaper;
+import de.shiewk.smoderation.paper.command.argument.DurationArgument;
 import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
 import de.shiewk.smoderation.paper.punishments.Punishment;
 import de.shiewk.smoderation.paper.punishments.PunishmentManager;
 import de.shiewk.smoderation.paper.punishments.PunishmentType;
+import de.shiewk.smoderation.paper.punishments.TimedPunishment;
 import de.shiewk.smoderation.paper.util.CommandUtil;
-import de.shiewk.smoderation.paper.util.PlayerUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 
 import java.util.Collection;
 import java.util.List;
@@ -24,11 +23,11 @@ import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
 @SuppressWarnings("UnstableApiUsage") // Paper Brigadier API
-public class UntimedPunishmentCommand implements CommandProvider {
+public class TimedPunishmentCommand implements CommandProvider {
 
     public interface PunishmentFactory {
 
-        Punishment create(PunishmentManager manager, UUID issuer, UUID target, String reason);
+        Punishment create(PunishmentManager manager, UUID issuer, UUID target, long duration, String reason);
 
     }
 
@@ -39,7 +38,7 @@ public class UntimedPunishmentCommand implements CommandProvider {
     private final boolean requireOnline;
     private final PunishmentFactory factory;
 
-    public UntimedPunishmentCommand(PunishmentManager manager, String[] names, PunishmentType<?> type, String description, boolean requireOnline, PunishmentFactory factory) {
+    public TimedPunishmentCommand(PunishmentManager manager, String[] names, PunishmentType<?> type, String description, boolean requireOnline, PunishmentFactory factory) {
         this.manager = manager;
         this.names = names;
         this.type = type;
@@ -53,9 +52,11 @@ public class UntimedPunishmentCommand implements CommandProvider {
         return literal(this.names[0])
                 .requires(CommandUtil.requirePermission(this.type.getPermission()))
                 .then(argument("player", new PlayerUUIDArgument())
-                        .executes(this::punishWithoutReason)
-                        .then(argument("reason", StringArgumentType.greedyString())
-                                .executes(this::punishWithReason)
+                        .then(argument("duration", new DurationArgument())
+                                .executes(this::punishWithoutReason)
+                                .then(argument("reason", StringArgumentType.greedyString())
+                                        .executes(this::punishWithReason)
+                                )
                         )
                 )
                 .build();
@@ -77,37 +78,30 @@ public class UntimedPunishmentCommand implements CommandProvider {
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
-        punish(sender, target, SModerationPaper.config().getString("default-reason", "No reason provided."));
+        long duration = context.getArgument("duration", Long.class);
+        punish(sender, target, duration, SModerationPaper.config().getString("default-reason", "No reason provided."));
         return Command.SINGLE_SUCCESS;
     }
 
     private int punishWithReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
+        long duration = context.getArgument("duration", Long.class);
         String reason = StringArgumentType.getString(context, "reason");
-        punish(sender, target, reason);
+        punish(sender, target, duration, reason);
         return Command.SINGLE_SUCCESS;
     }
 
-    private void punish(UUID sender, UUID target, String reason) throws CommandSyntaxException {
-        checkCommonConditions(sender, target, this.type, requireOnline);
-        Punishment punishment = factory.create(manager, sender, target, reason);
+    public void punish(UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
+        UntimedPunishmentCommand.checkCommonConditions(sender, target, this.type, requireOnline);
+        if (duration == 0){
+            CommandUtil.errorTranslatable("smod.command.generic.fail.tooShort");
+        }
+        if (!manager.byTargetUUID(target, p -> p instanceof TimedPunishment t && p.getTypeId().equals(type.getTypeId()) && t.isActive()).isEmpty()) {
+            CommandUtil.errorTranslatable("smod.command.generic.fail.alreadyActive");
+        }
+        Punishment punishment = factory.create(manager, sender, target, duration, reason);
         manager.tryIssue(punishment);
-    }
-
-    public static void checkCommonConditions(UUID sender, UUID target, PunishmentType<?> type, boolean requireOnline) throws CommandSyntaxException {
-        if (sender.equals(target)) {
-            CommandUtil.errorTranslatable("smod.command.generic.fail.self");
-        }
-        CommandSender targetSender = PlayerUtil.senderByUUID(target);
-        if (targetSender != null) {
-            if (targetSender.hasPermission(type.getProtectionPermission())) {
-                CommandUtil.errorTranslatable("smod.command.generic.fail.protect");
-            }
-        }
-        if (requireOnline && Bukkit.getPlayer(target) == null) {
-            CommandUtil.errorTranslatable("smod.command.generic.fail.notOnline");
-        }
     }
 
 }

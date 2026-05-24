@@ -15,7 +15,7 @@ public final class PlayerUtil {
 
     public static @NotNull String offlinePlayerName(UUID uuid){
         if (uuid.equals(UUID_CONSOLE)){
-            return "CONSOLE";
+            return "Console";
         }
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
         return player.getName() == null ? uuid.toString() : player.getName();

@@ -1,8 +1,12 @@
 package de.shiewk.smoderation.paper.util;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
+
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * This class provides some convenience methods that make Folia support easier
@@ -55,4 +59,7 @@ public final class SchedulerUtil {
         }
     }
 
+    public static void scheduleAsyncRepeating(Plugin plugin, Consumer<ScheduledTask> task, long delay, long interval, TimeUnit timeUnit) {
+        Bukkit.getAsyncScheduler().runAtFixedRate(plugin, task, delay, interval, timeUnit);
+    }
 }
