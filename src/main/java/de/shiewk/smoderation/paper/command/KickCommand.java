@@ -69,6 +69,7 @@ public final class KickCommand implements CommandProvider {
             CommandUtil.errorTranslatable("smod.command.kick.fail.protect");
         }
         Punishment punishment = new Kick(
+                manager,
                 Punishment.generateUUID(),
                 System.currentTimeMillis(),
                 sender,

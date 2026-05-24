@@ -2,23 +2,60 @@ package de.shiewk.smoderation.paper.punishments;
 
 import de.shiewk.smoderation.paper.inventory.CustomInventory;
 import de.shiewk.smoderation.paper.util.SerializationHelper;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 
 import java.util.UUID;
 
+import static net.kyori.adventure.text.Component.translatable;
+
 public class Kick extends Punishment {
 
-    public Kick(UUID id, long timestamp, UUID issuer, UUID target, String reason) {
-        super(id, "kick", timestamp, issuer, target, reason);
+    public Kick(PunishmentManager manager, UUID id, long timestamp, UUID issuer, UUID target, String reason) {
+        super(manager, id, "kick", timestamp, issuer, target, reason);
     }
 
-    public static class Factory implements PunishmentFactory<Kick> {
+    public static class Type implements PunishmentType<Kick> {
 
         @Override
-        public @NonNull Kick deserialize(SerializationHelper helper) {
+        public String getTypeId() {
+            return "kick";
+        }
+
+        @Override
+        public Component getDisplayName() {
+            return translatable("smod.punishment.name.kick");
+        }
+
+        @Override
+        public PunishmentDeserializer<Kick> getDeserializer() {
+            return new Deserializer();
+        }
+
+        @Override
+        public String getPermission() {
+            return "smod.kick";
+        }
+
+        @Override
+        public String getProtectionPermission() {
+            return "smod.preventkick";
+        }
+
+        @Override
+        public String getCancelPermission() {
+            throw new UnsupportedOperationException("can't cancel kick");
+        }
+    }
+
+    public static class Deserializer implements PunishmentDeserializer<Kick> {
+
+        @Override
+        public @NonNull Kick deserialize(PunishmentManager manager, SerializationHelper helper) {
             return new Kick(
+                    manager,
                     helper.getUUID("id"),
                     helper.getLong("timestamp"),
                     helper.getUUID("issuer"),

@@ -31,7 +31,7 @@ import static de.shiewk.smoderation.paper.SModerationPaper.LOGGER;
 public final class PunishmentManager {
 
     private static final Logger log = LoggerFactory.getLogger(PunishmentManager.class);
-    private final Object2ObjectArrayMap<String, PunishmentFactory<?>> typeRegistry = new Object2ObjectArrayMap<>(1);
+    private final Object2ObjectArrayMap<String, PunishmentType<?>> typeRegistry = new Object2ObjectArrayMap<>(1);
     private final ConcurrentHashMap<UUID, List<Punishment>> cache = new ConcurrentHashMap<>(1);
     private final Object ioLock = new Object();
     private final Path dataDir;
@@ -46,7 +46,7 @@ public final class PunishmentManager {
 
     public boolean tryIssue(Punishment punishment) {
         try {
-            PunishmentIssueEvent event = new PunishmentIssueEvent(punishment, this);
+            PunishmentIssueEvent event = new PunishmentIssueEvent(punishment);
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()){
                 this.appendToSave(punishment);
@@ -81,16 +81,16 @@ public final class PunishmentManager {
                     try {
                         SerializationHelper helper = new SerializationHelper(obj);
                         String type = helper.getString("type");
-                        PunishmentFactory<?> factory = typeRegistry.get(type);
-                        if (factory != null){
-                            Punishment punishment = factory.deserialize(helper);
+                        PunishmentType<?> meta = typeRegistry.get(type);
+                        if (meta != null){
+                            Punishment punishment = meta.getDeserializer().deserialize(this, helper);
                             if (!punishment.getTargetID().equals(target)){
                                 LOGGER.warn("Punishment saved in file for {} has incorrect target UUID {}", target, punishment.getTargetID());
                             } else {
                                 punishments.put(punishment.getID(), punishment);
                             }
                         } else {
-                            LOGGER.warn("Unknown punishment type '{}'! Can not load.", type);
+                            LOGGER.warn("Unknown punishment type id '{}'! Can not load.", type);
                             LOGGER.warn("Please check your configuration, or see file {} to remove corrupted data.", file);
                             LOGGER.warn(obj.toString());
                         }
@@ -111,15 +111,20 @@ public final class PunishmentManager {
         return byTargetUUID(target).stream().filter(filter).toList();
     }
 
-    public <T extends Punishment> void registerType(String type, PunishmentFactory<T> factory){
-        if (typeRegistry.containsKey(type)) {
-            throw new IllegalStateException("Punishment type already registered: " + type);
+    public void registerType(PunishmentType<?> meta){
+        String id = meta.getTypeId();
+        if (typeRegistry.containsKey(id)) {
+            throw new IllegalStateException("Punishment type already registered: " + id);
         }
-        typeRegistry.put(type, factory);
+        typeRegistry.put(id, meta);
     }
 
     public List<String> getRegisteredTypes(){
         return List.copyOf(typeRegistry.keySet());
+    }
+
+    public PunishmentType<?> getType(String id){
+        return typeRegistry.get(id);
     }
 
     public void appendToSave(Punishment punishment) throws IOException {
@@ -159,18 +164,6 @@ public final class PunishmentManager {
 
     public List<Punishment> getAll(Predicate<Punishment> filter) throws IOException {
         return getAll().stream().filter(filter).toList();
-    }
-
-    public void cancel(TimedPunishment punishment, UUID canceller) {
-        if (!punishment.isActive()){
-            throw new IllegalStateException("This punishment is not active");
-        }
-        punishment.cancel(canceller);
-        try {
-            appendToSave(punishment);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public void loadToCache(UUID uuid) {

@@ -39,8 +39,15 @@ colors:
 #   Only the contained strings will be used and localization will be disabled.
 custom-messages: false
 
+# Allows you to create custom punishment types.
+# See the config documentation for details:
+# https://github.com/Shiewk/SModeration/blob/main/docs/config.md
+custom-punishments:
+  # Whether custom punishments should be enabled.
+  enabled: true
+
 # A list of commands which will be captured and broadcast
-# to players which have SocialSpy enabled (/socialspy).
+# to players who have SocialSpy enabled (/socialspy).
 socialspy-commands:
   - w
   - tell

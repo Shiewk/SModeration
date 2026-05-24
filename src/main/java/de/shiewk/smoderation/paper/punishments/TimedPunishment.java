@@ -17,8 +17,8 @@ public abstract class TimedPunishment extends Punishment {
     protected final long duration;
     protected UUID cancelledBy;
 
-    protected TimedPunishment(UUID id, String type, long timestamp, UUID issuer, UUID target, String reason, long duration, UUID cancelledBy) {
-        super(id, type, timestamp, issuer, target, reason);
+    protected TimedPunishment(PunishmentManager manager, UUID id, String type, long timestamp, UUID issuer, UUID target, String reason, long duration, UUID cancelledBy) {
+        super(manager, id, type, timestamp, issuer, target, reason);
         this.duration = duration;
         this.cancelledBy = cancelledBy;
     }
@@ -108,7 +108,7 @@ public abstract class TimedPunishment extends Punishment {
         return getDuration() == DurationArgument.INFINITE_DURATION;
     }
 
-    protected void cancel(UUID canceller) {
+    public void cancel(UUID canceller) {
         if (this.cancelledBy != null){
             throw new IllegalArgumentException("This punishment was already cancelled.");
         }
@@ -117,4 +117,5 @@ public abstract class TimedPunishment extends Punishment {
             sender.sendMessage(cancelMessage());
         }
     }
+
 }

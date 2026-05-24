@@ -82,6 +82,7 @@ public final class MuteCommand implements CommandProvider {
                     CommandUtil.errorTranslatable("smod.command.mute.fail.alreadyMuted");
                 }
                 Punishment punishment = new Mute(
+                        manager,
                         Punishment.generateUUID(),
                         System.currentTimeMillis(),
                         sender,

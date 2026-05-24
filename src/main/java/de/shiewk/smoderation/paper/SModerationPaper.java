@@ -5,16 +5,15 @@ import de.shiewk.smoderation.paper.command.*;
 import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.input.ChatInputListener;
 import de.shiewk.smoderation.paper.listener.*;
-import de.shiewk.smoderation.paper.punishments.Ban;
-import de.shiewk.smoderation.paper.punishments.Kick;
-import de.shiewk.smoderation.paper.punishments.Mute;
-import de.shiewk.smoderation.paper.punishments.PunishmentManager;
+import de.shiewk.smoderation.paper.punishments.*;
+import de.shiewk.smoderation.paper.punishments.custom.UntimedCustomPunishment;
 import de.shiewk.smoderation.paper.translation.TranslatorManager;
 import de.shiewk.smoderation.paper.util.ColorPalette;
 import de.shiewk.smoderation.paper.util.SModLegacy;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -22,6 +21,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -74,17 +74,18 @@ public final class SModerationPaper extends JavaPlugin {
         LOGGER.info("Folia: {}", SchedulerUtil.isFolia ? "yes" : "no");
         PLUGIN = this;
         LOGGER.info("Loading translations");
+        updateConfig();
+
         if (config().getBoolean("custom-messages", false)) {
             translatorManager.loadCustomMessages(getDataPath().resolve("messages.json"));
         } else {
             translatorManager.load();
         }
-        updateConfig();
 
         this.punishmentManager = new PunishmentManager(getDataPath().resolve("punishments.v2"));
-        this.punishmentManager.registerType("mute", new Mute.Factory());
-        this.punishmentManager.registerType("ban", new Ban.Factory());
-        this.punishmentManager.registerType("kick", new Kick.Factory());
+        this.punishmentManager.registerType(new Mute.Type());
+        this.punishmentManager.registerType(new Ban.Type());
+        this.punishmentManager.registerType(new Kick.Type());
 
         this.colors = new ColorPalette(
                 parseColor(config().getString("colors.primary")),
@@ -126,28 +127,26 @@ public final class SModerationPaper extends JavaPlugin {
         listen(new CustomInventoryListener());
         listen(new ChatInputListener());
 
-        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            Commands commands = event.registrar();
+        ObjectArrayList<CommandProvider> commands = new ObjectArrayList<>();
 
-            if (isFeatureEnabled("punishments")){
-                registerCommand(commands, new KickCommand(punishmentManager));
-                registerCommand(commands, new ModLogsCommand(punishmentManager));
-                registerCommand(commands, new UnmuteCommand(punishmentManager));
-                registerCommand(commands, new UnbanCommand(punishmentManager));
-                registerCommand(commands, new MuteCommand(punishmentManager));
-                registerCommand(commands, new BanCommand(punishmentManager));
+        if (isFeatureEnabled("punishments")){
+            commands.add(new KickCommand(punishmentManager));
+            commands.add(new BanCommand(punishmentManager));
+            commands.add(new MuteCommand(punishmentManager));
+            commands.add(new UnbanCommand(punishmentManager));
+            commands.add(new UnmuteCommand(punishmentManager));
+            commands.add(new ModLogsCommand(punishmentManager));
 
-                if (isFeatureEnabled("smodmenu")){
-                    registerCommand(commands, new SModCommand(punishmentManager));
-                }
+            if (isFeatureEnabled("smodmenu")){
+                commands.add(new SModCommand(punishmentManager));
             }
+        }
 
-            if (isFeatureEnabled("invsee")) registerCommand(commands, new InvseeCommand());
-            if (isFeatureEnabled("enderchestsee")) registerCommand(commands, new EnderchestSeeCommand());
-            if (isFeatureEnabled("socialspy")) registerCommand(commands, new SocialSpyCommand());
-            if (isFeatureEnabled("vanish")) registerCommand(commands, new VanishCommand());
-            if (isFeatureEnabled("offlinetp")) registerCommand(commands, new OfflineTPCommand());
-        });
+        if (isFeatureEnabled("invsee")) commands.add(new InvseeCommand());
+        if (isFeatureEnabled("enderchestsee")) commands.add(new EnderchestSeeCommand());
+        if (isFeatureEnabled("socialspy")) commands.add(new SocialSpyCommand());
+        if (isFeatureEnabled("vanish")) commands.add(new VanishCommand());
+        if (isFeatureEnabled("offlinetp")) commands.add(new OfflineTPCommand());
 
         if (SchedulerUtil.isFolia){
             // Normal ticking logic can cause issues on Folia
@@ -157,18 +156,55 @@ public final class SModerationPaper extends JavaPlugin {
         }
 
         SchedulerUtil.scheduleGlobalRepeating(PLUGIN, ChatInput::tickAll, 1, 1);
+
+        if (isFeatureEnabled("punishments")){
+            // Handle the custom punishments
+            ConfigurationSection section = getConfig().getConfigurationSection("custom-punishments");
+            if (section != null) {
+                if (section.getBoolean("enabled", true)) {
+                    for (String type : section.getKeys(false)) {
+                        try {
+                            LOGGER.info("Custom punishment {}", type);
+                            ConfigurationSection typeConfig = section.getConfigurationSection(type);
+                            if (typeConfig != null) {
+                                for (String requiredKey : new String[]{"timed", "commands"}) {
+                                    if (!typeConfig.contains(requiredKey)){
+                                        throw new IllegalArgumentException("Does not include required setting '" + requiredKey + "'");
+                                    }
+                                }
+                                boolean timed = typeConfig.getBoolean("timed");
+                                if (timed){
+                                    throw new UnsupportedOperationException("Timed custom punishment not implemented yet");
+                                } else {
+                                    UntimedCustomPunishment.Metadata metadata = UntimedCustomPunishment.tryCreateMetadata(type, typeConfig);
+                                    LOGGER.info("Custom punishment '{}': {}", type, metadata);
+                                    punishmentManager.registerType(metadata.createPunishmentType());
+                                    commands.add(metadata.createCommand(punishmentManager));
+                                }
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Could not register custom punishment type '{}'", type, e);
+                        }
+                    }
+                }
+            }
+        }
+
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            Commands registrar = event.registrar();
+            LOGGER.info("Registering {} commands", commands.size());
+            for (CommandProvider provider : commands) {
+                registrar.register(
+                        provider.getCommandNode(),
+                        provider.getCommandDescription(),
+                        provider.getAliases()
+                );
+            }
+        });
     }
 
     private void listen(Listener listener) {
         getPluginManager().registerEvents(listener, this);
-    }
-
-    private void registerCommand(Commands commands, CommandProvider provider){
-        commands.register(
-                provider.getCommandNode(),
-                provider.getCommandDescription(),
-                provider.getAliases()
-        );
     }
 
     @Override

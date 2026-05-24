@@ -111,7 +111,7 @@ public class SModMenu extends PageableCustomInventory {
             this.punishments = this.punishmentManager.getAll()
                     .stream()
                     .filter(getFilter().filter)
-                    .filter(p -> getType() == null || Objects.equals(p.getType(), getType()))
+                    .filter(p -> getType() == null || Objects.equals(p.getTypeId(), getType()))
                     .filter(p -> p.matchesSearchQuery(searchQuery))
                     .sorted(getSort().comparator).toList();
         } catch (IOException e) {
@@ -219,13 +219,13 @@ public class SModMenu extends PageableCustomInventory {
     private ItemStack createTypeItem(){
         final String type = getType();
         final ItemStack stack = new ItemStack(Material.CHEST);
-        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.type", (type == null ? translatable("smod.menu.type.all") : translatable("smod.punishment.name." + type)))).color(SModerationPaper.colors().primary()));
+        stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.type", (type == null ? translatable("smod.menu.type.all") : punishmentManager.getType(type).getDisplayName()))).color(SModerationPaper.colors().primary()));
 
         ItemLore.Builder loreBuilder = ItemLore.lore();
         loreBuilder.addLine(empty());
         final Consumer<String> addToLore = value -> {
             final boolean selected = Objects.equals(type, value);
-            Component typeText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SModerationPaper.colors().secondary() : SModerationPaper.colors().detail()).append(value == null ? translatable("smod.menu.type.all") : translatable("smod.punishment.name." + value))));
+            Component typeText = renderComponent(player, applyFormatting(text((selected ? "\u00BB " : ""), selected ? SModerationPaper.colors().secondary() : SModerationPaper.colors().detail()).append(value == null ? translatable("smod.menu.type.all") : punishmentManager.getType(value).getDisplayName())));
             loreBuilder.addLine(typeText);
         };
         addToLore.accept(null);
@@ -323,7 +323,7 @@ public class SModMenu extends PageableCustomInventory {
     }
 
     private void addPunishmentInfo(Punishment punishment, ItemStack stack) {
-        stack.setData(DataComponentTypes.CUSTOM_NAME, renderComponent(player, applyFormatting(translatable("smod.punishment.name." + punishment.getType(), NamedTextColor.RED).decorate(TextDecoration.BOLD))));
+        stack.setData(DataComponentTypes.CUSTOM_NAME, renderComponent(player, applyFormatting(punishment.getType().getDisplayName()).color(NamedTextColor.RED).decorate(TextDecoration.BOLD)));
         ItemLore.Builder lore = ItemLore.lore();
 
         lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.player", text(PlayerUtil.offlinePlayerName(punishment.getTargetID()))))));
@@ -351,7 +351,7 @@ public class SModMenu extends PageableCustomInventory {
             if (timed.wasCancelled()){
                 lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.cancelled", text(PlayerUtil.offlinePlayerName(timed.getCancelledBy()))))));
             } else if (timed.isActive()) {
-                if (player.hasPermission("smod.un" + punishment.getType())){
+                if (player.hasPermission(timed.getType().getCancelPermission())){
                     lore.addLine(empty());
                     lore.addLine(renderComponent(player, applyFormatting(translatable("smod.menu.info.click", NamedTextColor.GOLD))));
                 }
@@ -420,11 +420,17 @@ public class SModMenu extends PageableCustomInventory {
         } else {
             Punishment punishment = slotMap.get(slot);
             if (punishment instanceof TimedPunishment timed && timed.isActive()){
-                if (player.hasPermission("smod.un" + punishment.getType())) {
+                if (player.hasPermission(timed.getType().getCancelPermission())) {
                     new ConfirmationInventory(player, translatable("smod.menu.cancelConfirmation"), () -> {
-                        punishmentManager.cancel(timed, player.getUniqueId());
-                        player.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
-                        this.open();
+                        timed.cancel(player.getUniqueId());
+                        try {
+                            timed.updateSaveData();
+                            player.playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
+                            this.open();
+                        } catch (IOException e) {
+                            player.sendMessage(text("Error :(", NamedTextColor.RED));
+                            LOGGER.error("Failed to save punishment update", e);
+                        }
                     }, this::open).open();
                 }
             }

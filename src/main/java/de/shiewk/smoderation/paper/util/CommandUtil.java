@@ -3,10 +3,12 @@ package de.shiewk.smoderation.paper.util;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import de.shiewk.smoderation.paper.SModerationPaper;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -15,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 import static de.shiewk.smoderation.paper.util.PlayerUtil.UUID_CONSOLE;
@@ -76,4 +79,29 @@ public final class CommandUtil {
     public static void errorTranslatable(String key, String...args) throws CommandSyntaxException {
         errorTranslatable(key, Arrays.stream(args).map(Component::text).toArray(Component[]::new));
     }
+
+    public static String removeLeadingSlash(String str){
+        if (str.startsWith("/")){
+            return str.substring(1);
+        } else {
+            return str;
+        }
+    }
+
+    public static CompletableFuture<Boolean> dispatchConsoleCommand(String cmdline){
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        SchedulerUtil.scheduleGlobal(SModerationPaper.PLUGIN, () -> {
+            try {
+                boolean found = Bukkit.dispatchCommand(
+                        Bukkit.getConsoleSender(),
+                        cmdline
+                );
+                future.complete(found);
+            } catch (Throwable e) {
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
+    }
+
 }

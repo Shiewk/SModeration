@@ -87,6 +87,7 @@ public final class BanCommand implements CommandProvider {
                     CommandUtil.errorTranslatable("smod.command.ban.fail.alreadyBanned");
                 }
                 Punishment punishment = new Ban(
+                        manager,
                         Punishment.generateUUID(),
                         System.currentTimeMillis(),
                         sender,

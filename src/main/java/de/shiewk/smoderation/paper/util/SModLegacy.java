@@ -96,6 +96,7 @@ public final class SModLegacy {
                         // Type 0: mute; 1: kick; 2: ban
                         Punishment p = switch (type){
                             case 0 -> new Mute(
+                                    manager,
                                     Punishment.generateUUID(),
                                     time,
                                     by,
@@ -105,6 +106,7 @@ public final class SModLegacy {
                                     canceller
                             );
                             case 1 -> new Kick(
+                                    manager,
                                     Punishment.generateUUID(),
                                     time,
                                     by,
@@ -112,6 +114,7 @@ public final class SModLegacy {
                                     reason
                             );
                             case 2 -> new Ban(
+                                    manager,
                                     Punishment.generateUUID(),
                                     time,
                                     by,

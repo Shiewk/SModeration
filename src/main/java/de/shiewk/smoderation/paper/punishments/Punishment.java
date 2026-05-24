@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import static net.kyori.adventure.text.Component.translatable;
 
 public abstract class Punishment {
 
+    protected final PunishmentManager manager;
     protected final UUID id;
     protected final String type;
     protected final long timestamp;
@@ -24,7 +26,8 @@ public abstract class Punishment {
     protected final UUID target;
     protected final String reason;
 
-    protected Punishment(UUID id, String type, long timestamp, UUID issuer, UUID target, String reason) {
+    protected Punishment(PunishmentManager manager, UUID id, String type, long timestamp, UUID issuer, UUID target, String reason) {
+        this.manager = manager;
         this.id = id;
         this.type = type;
         this.timestamp = timestamp;
@@ -37,8 +40,12 @@ public abstract class Punishment {
         return id;
     }
 
-    public String getType() {
+    public String getTypeId() {
         return type;
+    }
+
+    public PunishmentType<?> getType(){
+        return manager.getType(getTypeId());
     }
 
     public long getTimestamp() {
@@ -55,6 +62,10 @@ public abstract class Punishment {
 
     public String getReason() {
         return reason;
+    }
+
+    public PunishmentManager getManager() {
+        return manager;
     }
 
     public void addSerializableProperties(SerializationHelper helper){
@@ -101,6 +112,10 @@ public abstract class Punishment {
         for (CommandSender target : getBroadcastTargets()) {
             target.sendMessage(adminMessage());
         }
+    }
+
+    public void updateSaveData() throws IOException {
+        manager.appendToSave(this);
     }
 
     public static List<CommandSender> getBroadcastTargets() {

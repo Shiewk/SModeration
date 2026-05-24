@@ -55,7 +55,7 @@ public final class ModLogsCommand implements CommandProvider {
         for (Punishment punishment : punishments) {
             target.sendMessage(empty());
             // Type
-            target.sendMessage(translatable("smod.command.modlogs.type", translatable("smod.punishment.name." + punishment.getType())));
+            target.sendMessage(translatable("smod.command.modlogs.type", punishment.getType().getDisplayName()));
             // Timestamp
             target.sendMessage(translatable("smod.command.modlogs.timestamp", TimeUtil.calendarTimestamp(punishment.getTimestamp())));
             // Issuer
