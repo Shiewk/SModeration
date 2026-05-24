@@ -9,6 +9,7 @@ import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.command.argument.PlayerUUIDArgument;
 import de.shiewk.smoderation.paper.punishments.Punishment;
 import de.shiewk.smoderation.paper.punishments.PunishmentManager;
+import de.shiewk.smoderation.paper.punishments.PunishmentType;
 import de.shiewk.smoderation.paper.util.CommandUtil;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -33,17 +34,15 @@ public class UntimedPunishmentCommand implements CommandProvider {
 
     private final PunishmentManager manager;
     private final String[] names;
-    private final String permission;
-    private final String protectionPermission;
+    private final PunishmentType<?> type;
     private final String description;
     private final boolean requireOnline;
     private final PunishmentFactory factory;
 
-    public UntimedPunishmentCommand(PunishmentManager manager, String[] names, String permission, String protectionPermission, String description, boolean requireOnline, PunishmentFactory factory) {
+    public UntimedPunishmentCommand(PunishmentManager manager, String[] names, PunishmentType<?> type, String description, boolean requireOnline, PunishmentFactory factory) {
         this.manager = manager;
         this.names = names;
-        this.permission = permission;
-        this.protectionPermission = protectionPermission;
+        this.type = type;
         this.description = description;
         this.requireOnline = requireOnline;
         this.factory = factory;
@@ -52,7 +51,7 @@ public class UntimedPunishmentCommand implements CommandProvider {
     @Override
     public LiteralCommandNode<CommandSourceStack> getCommandNode() {
         return literal(this.names[0])
-                .requires(CommandUtil.requirePermission(this.permission))
+                .requires(CommandUtil.requirePermission(this.type.getPermission()))
                 .then(argument("player", new PlayerUUIDArgument())
                         .executes(this::punishWithoutReason)
                         .then(argument("reason", StringArgumentType.greedyString())
@@ -74,7 +73,7 @@ public class UntimedPunishmentCommand implements CommandProvider {
 
     private int punishWithoutReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         if (SModerationPaper.config().getBoolean("force-reason", false)){
-            CommandUtil.errorTranslatable("smod.command.punish.fail.forceReason");
+            CommandUtil.errorTranslatable("smod.command.generic.fail.forceReason");
         }
         UUID sender = CommandUtil.getSenderUUID(context.getSource());
         UUID target = context.getArgument("player", UUID.class);
@@ -96,7 +95,7 @@ public class UntimedPunishmentCommand implements CommandProvider {
         }
         CommandSender targetSender = PlayerUtil.senderByUUID(target);
         if (targetSender != null) {
-            if (targetSender.hasPermission(this.protectionPermission)) {
+            if (targetSender.hasPermission(this.type.getProtectionPermission())) {
                 CommandUtil.errorTranslatable("smod.command.generic.fail.protect");
             }
         }

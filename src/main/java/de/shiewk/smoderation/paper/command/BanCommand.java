@@ -70,11 +70,7 @@ public final class BanCommand implements CommandProvider {
     public static void executeBan(PunishmentManager manager, UUID sender, UUID target, long duration, String reason) throws CommandSyntaxException {
         Player targetPlayer = Bukkit.getPlayer(target);
         if (duration == 0){
-            if (targetPlayer == null){
-                CommandUtil.errorTranslatable("smod.command.ban.fail.tooShort");
-            } else {
-                KickCommand.executeKick(manager, sender, targetPlayer, reason);
-            }
+            CommandUtil.errorTranslatable("smod.command.ban.fail.tooShort");
             return;
         }
         if (sender.equals(target)) {

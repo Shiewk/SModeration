@@ -50,9 +50,8 @@ public class UntimedCustomPunishment extends Punishment {
             return new UntimedPunishmentCommand(
                     manager,
                     this.commandNames,
-                    this.commandPermission,
-                    this.protectionPermission,
-                    "Applies the '" + this.type + "' punishment on a player",
+                    this.createPunishmentType(),
+                    "Applies the '" + this.type + "' punishment to a player",
                     this.requireOnline,
                     (pm, issuer, target, reason) -> new UntimedCustomPunishment(
                             pm,

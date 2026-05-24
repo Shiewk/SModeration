@@ -130,7 +130,22 @@ public final class SModerationPaper extends JavaPlugin {
         ObjectArrayList<CommandProvider> commands = new ObjectArrayList<>();
 
         if (isFeatureEnabled("punishments")){
-            commands.add(new KickCommand(punishmentManager));
+            // kick command
+            commands.add(new UntimedPunishmentCommand(
+                    punishmentManager,
+                    new String[]{"kick", "smodkick"},
+                    punishmentManager.getType("kick"),
+                    "Kicks a player",
+                    true,
+                    (pm, issuer, target, reason) -> new Kick(
+                            pm,
+                            Punishment.generateUUID(),
+                            System.currentTimeMillis(),
+                            issuer,
+                            target,
+                            reason
+                    )
+            ));
             commands.add(new BanCommand(punishmentManager));
             commands.add(new MuteCommand(punishmentManager));
             commands.add(new UnbanCommand(punishmentManager));
