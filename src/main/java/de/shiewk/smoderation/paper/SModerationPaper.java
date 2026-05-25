@@ -132,6 +132,8 @@ public final class SModerationPaper extends JavaPlugin {
         ObjectArrayList<CommandProvider> commands = new ObjectArrayList<>();
 
         if (isFeatureEnabled("punishments")){
+            commands.add(new ModLogsCommand(punishmentManager));
+
             // kick command
             commands.add(new UntimedPunishmentCommand(
                     punishmentManager,
@@ -148,11 +150,58 @@ public final class SModerationPaper extends JavaPlugin {
                             reason
                     )
             ));
-            commands.add(new BanCommand(punishmentManager));
-            commands.add(new MuteCommand(punishmentManager));
-            commands.add(new UnbanCommand(punishmentManager));
-            commands.add(new UnmuteCommand(punishmentManager));
-            commands.add(new ModLogsCommand(punishmentManager));
+            // ban command
+            commands.add(new TimedPunishmentCommand(
+                    punishmentManager,
+                    new String[]{"ban", "smodban"},
+                    punishmentManager.getType("ban"),
+                    "Bans a player for a customizable duration.",
+                    false,
+                    (pm, issuer, target, duration, reason) -> new Ban(
+                            pm,
+                            Punishment.generateUUID(),
+                            System.currentTimeMillis(),
+                            issuer,
+                            target,
+                            reason,
+                            duration,
+                            null
+                    )
+            ));
+            // mute command
+            commands.add(new TimedPunishmentCommand(
+                    punishmentManager,
+                    new String[]{"mute", "smodmute"},
+                    punishmentManager.getType("mute"),
+                    "Mutes a player for a customizable duration.",
+                    false,
+                    (pm, issuer, target, duration, reason) -> new Mute(
+                            pm,
+                            Punishment.generateUUID(),
+                            System.currentTimeMillis(),
+                            issuer,
+                            target,
+                            reason,
+                            duration,
+                            null
+                    )
+            ));
+            // unban command
+            commands.add(new CancelPunishmentCommand(
+                    punishmentManager,
+                    new String[]{"unban", "smodunban"},
+                    "ban",
+                    "smod.unban",
+                    "Unbans a banned player."
+            ));
+            // unmute command
+            commands.add(new CancelPunishmentCommand(
+                    punishmentManager,
+                    new String[]{"unmute", "smodunmute"},
+                    "mute",
+                    "smod.unmute",
+                    "Unmutes a muted player."
+            ));
 
             if (isFeatureEnabled("smodmenu")){
                 commands.add(new SModCommand(punishmentManager));
