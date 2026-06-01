@@ -40,8 +40,8 @@ colors:
 custom-messages: false
 
 # Allows you to create custom punishment types.
-# See the config documentation for details:
-# https://github.com/Shiewk/SModeration/blob/main/docs/config.md
+# See the documentation for details:
+# https://github.com/Shiewk/SModeration/blob/main/docs/custom-punishments.md
 custom-punishments:
   # Whether custom punishments should be enabled.
   enabled: false
