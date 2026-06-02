@@ -8,6 +8,12 @@ authors:
   - Shiewk
 description: "SModeration is an easy-to-use minecraft plugin for moderating your server."
 folia-supported: true
+dependencies:
+  server:
+    voicechat:
+      load: BEFORE
+      required: false
+      join-classpath: true
 permissions:
   smod.mute:
     default: op

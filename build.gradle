@@ -12,6 +12,12 @@ repositories {
         name = "papermc-repo"
         url = "https://repo.papermc.io/repository/maven-public/"
     }
+    maven {
+        url = 'https://maven.maxhenkel.de/repository/public'
+        content {
+            includeGroup "de.maxhenkel.voicechat"
+        }
+    }
 }
 
 processResources {
@@ -30,17 +36,13 @@ runPaper {
 }
 
 runServer {
-    minecraftVersion("1.21.11")
-    downloadPlugins {
-        // for testing from other client versions
-        modrinth("ViaVersion", viaVersionVersion)
-        modrinth("ViaBackwards", viaVersionVersion)
-    }
+    minecraftVersion("26.1.2")
 }
 
 dependencies {
     //compileOnly "io.papermc.paper:paper-api:${apiVersion}"
     compileOnly "dev.folia:folia-api:${apiVersion}"
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${voiceChatApiVersion}"
 }
 
 jar {

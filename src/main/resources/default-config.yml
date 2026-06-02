@@ -46,6 +46,10 @@ custom-punishments:
   # Whether custom punishments should be enabled.
   enabled: false
 
+# Integrates with Simple Voice Chat (if installed)
+# to make muted players unable to talk
+voice-mute: false
+
 # A list of commands which will be captured and broadcast
 # to players who have SocialSpy enabled (/socialspy).
 socialspy-commands:

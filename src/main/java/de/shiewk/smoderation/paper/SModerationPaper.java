@@ -1,6 +1,8 @@
 package de.shiewk.smoderation.paper;
 
 import com.google.gson.Gson;
+import de.maxhenkel.voicechat.api.BukkitVoicechatService;
+import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.shiewk.smoderation.paper.command.*;
 import de.shiewk.smoderation.paper.input.ChatInput;
 import de.shiewk.smoderation.paper.input.ChatInputListener;
@@ -206,6 +208,10 @@ public final class SModerationPaper extends JavaPlugin {
             if (isFeatureEnabled("smodmenu")){
                 commands.add(new SModCommand(punishmentManager));
             }
+
+            if (config().getBoolean("voice-mute", false)){
+                SchedulerUtil.scheduleGlobal(this, this::registerVoicePlugin);
+            }
         }
 
         if (isFeatureEnabled("invsee")) commands.add(new InvseeCommand());
@@ -280,6 +286,25 @@ public final class SModerationPaper extends JavaPlugin {
                 );
             }
         });
+    }
+
+    private void registerVoicePlugin() {
+        try {
+            // have to use reflect here because else plugin crashes when voice chat not installed
+            Class<?> serviceClass = Class.forName("de.maxhenkel.voicechat.api.BukkitVoicechatService");
+            BukkitVoicechatService service = (BukkitVoicechatService) getServer().getServicesManager().load(serviceClass);
+            if (service == null) {
+                throw new IllegalStateException("Could not load BukkitVoicechatService");
+            }
+            Class<?> pluginClass = Class.forName("de.shiewk.smoderation.paper.voicechat.SModVoicePlugin");
+            Object plugin = pluginClass.getConstructor(SModerationPaper.class, PunishmentManager.class)
+                    .newInstance(this, punishmentManager);
+            service.registerPlugin((VoicechatPlugin) plugin);
+            LOGGER.info("Voicechat plugin registered");
+        } catch (ReflectiveOperationException | IllegalStateException e) {
+            LOGGER.warn("Could not load voice plugin, is Simple Voice Chat installed? {}", e.toString());
+            LOGGER.warn("If not, please set voice-mute to false");
+        }
     }
 
     private void listen(Listener listener) {
