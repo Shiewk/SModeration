@@ -62,17 +62,7 @@ public final class Webhook {
         ObjectArrayList<WebhookPayload.Embed.Field> fields = new ObjectArrayList<>();
         fields.add(new WebhookPayload.Embed.Field(
                 renderToText(translatable("smod.webhook.punishment.type")),
-                renderToText(punishment.getType().getDisplayName()) + " (" + punishment.getTypeId() + ")",
-                true
-        ));
-        fields.add(new WebhookPayload.Embed.Field(
-                renderToText(translatable("smod.webhook.punishment.target")),
-                PlayerUtil.offlinePlayerName(punishment.getTargetID()) + " (" + punishment.getTargetID() + ")",
-                true
-        ));
-        fields.add(new WebhookPayload.Embed.Field(
-                renderToText(translatable("smod.webhook.punishment.issuer")),
-                PlayerUtil.offlinePlayerName(punishment.getIssuerID()) + " (" + punishment.getIssuerID() + ")",
+                "**" + renderToText(punishment.getType().getDisplayName()) + "** (" + punishment.getTypeId() + ")",
                 true
         ));
         if (punishment instanceof TimedPunishment timed){
@@ -82,6 +72,16 @@ public final class Webhook {
                     true
             ));
         }
+        fields.add(new WebhookPayload.Embed.Field(
+                renderToText(translatable("smod.webhook.punishment.target")),
+                "**" + PlayerUtil.offlinePlayerName(punishment.getTargetID()) + "** (" + punishment.getTargetID() + ")",
+                false
+        ));
+        fields.add(new WebhookPayload.Embed.Field(
+                renderToText(translatable("smod.webhook.punishment.issuer")),
+                "**" + PlayerUtil.offlinePlayerName(punishment.getIssuerID()) + "** (" + punishment.getIssuerID() + ")",
+                false
+        ));
         fields.add(new WebhookPayload.Embed.Field(
                 renderToText(translatable("smod.webhook.punishment.reason")),
                 punishment.getReason(),
@@ -108,23 +108,23 @@ public final class Webhook {
         ObjectArrayList<WebhookPayload.Embed.Field> fields = new ObjectArrayList<>();
         fields.add(new WebhookPayload.Embed.Field(
                 renderToText(translatable("smod.webhook.punishment.type")),
-                renderToText(punishment.getType().getDisplayName()) + " (" + punishment.getTypeId() + ")",
-                true
-        ));
-        fields.add(new WebhookPayload.Embed.Field(
-                renderToText(translatable("smod.webhook.cancel.canceller")),
-                PlayerUtil.offlinePlayerName(punishment.getCancelledBy()) + " (" + punishment.getCancelledBy() + ")",
-                true
-        ));
-        fields.add(new WebhookPayload.Embed.Field(
-                renderToText(translatable("smod.webhook.cancel.target")),
-                PlayerUtil.offlinePlayerName(punishment.getTargetID()) + " (" + punishment.getTargetID() + ")",
+                "**" + renderToText(punishment.getType().getDisplayName()) + "** (" + punishment.getTypeId() + ")",
                 true
         ));
         fields.add(new WebhookPayload.Embed.Field(
                 renderToText(translatable("smod.webhook.cancel.durationRemaining")),
                 renderToText(TimeUtil.formatTimeLong(punishment.getExpiry() - System.currentTimeMillis())),
                 true
+        ));
+        fields.add(new WebhookPayload.Embed.Field(
+                renderToText(translatable("smod.webhook.cancel.canceller")),
+                "**" + PlayerUtil.offlinePlayerName(punishment.getCancelledBy()) + "** (" + punishment.getCancelledBy() + ")",
+                false
+        ));
+        fields.add(new WebhookPayload.Embed.Field(
+                renderToText(translatable("smod.webhook.cancel.target")),
+                "**" + PlayerUtil.offlinePlayerName(punishment.getTargetID()) + "** (" + punishment.getTargetID() + ")",
+                false
         ));
         return new WebhookPayload(
                 new WebhookPayload.Embed[]{
