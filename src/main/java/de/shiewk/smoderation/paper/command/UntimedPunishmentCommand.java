@@ -101,7 +101,7 @@ public class UntimedPunishmentCommand implements CommandProvider {
         }
         CommandSender targetSender = PlayerUtil.senderByUUID(target);
         if (targetSender != null) {
-            if (targetSender.hasPermission(type.getProtectionPermission())) {
+            if (targetSender.hasPermission(type.getProtectionPermission()) && sender != PlayerUtil.UUID_CONSOLE) {
                 CommandUtil.errorTranslatable("smod.command.generic.fail.protect");
             }
         }
