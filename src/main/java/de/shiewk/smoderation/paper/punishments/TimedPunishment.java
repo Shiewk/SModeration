@@ -50,8 +50,10 @@ public abstract class TimedPunishment extends Punishment {
     public boolean matchesSearchQuery(String query) {
         if (super.matchesSearchQuery(query)) return true;
         query = query.toLowerCase();
-        return cancelledBy.toString().equalsIgnoreCase(query)
-                || PlayerUtil.offlinePlayerName(cancelledBy).toLowerCase().contains(query);
+        return cancelledBy != null && (
+                cancelledBy.toString().equalsIgnoreCase(query)
+                || PlayerUtil.offlinePlayerName(cancelledBy).toLowerCase().contains(query)
+        );
     }
 
     @Override
