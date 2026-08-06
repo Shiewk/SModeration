@@ -68,7 +68,9 @@ public final class Webhook {
         if (punishment instanceof TimedPunishment timed){
             fields.add(new WebhookPayload.Embed.Field(
                     renderToText(translatable("smod.webhook.punishment.duration")),
-                    renderToText(TimeUtil.formatTimeLong(timed.getDuration())),
+                    timed.isPermanent() ?
+                            renderToText(translatable("smod.webhook.punishment.duration.infinite")) :
+                            renderToText(TimeUtil.formatTimeLong(timed.getDuration())),
                     true
             ));
         }
@@ -113,7 +115,9 @@ public final class Webhook {
         ));
         fields.add(new WebhookPayload.Embed.Field(
                 renderToText(translatable("smod.webhook.cancel.durationRemaining")),
-                renderToText(TimeUtil.formatTimeLong(punishment.getExpiry() - System.currentTimeMillis())),
+                punishment.isPermanent() ?
+                        renderToText(translatable("smod.webhook.punishment.duration.infinite")) :
+                        renderToText(TimeUtil.formatTimeLong(punishment.getExpiry() - System.currentTimeMillis())),
                 true
         ));
         fields.add(new WebhookPayload.Embed.Field(

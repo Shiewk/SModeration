@@ -128,6 +128,7 @@
   "smod.webhook.cancel.durationRemaining": "Duration remaining:",
   "smod.webhook.cancel.target": "Affected player:",
   "smod.webhook.punishment.duration": "Duration:",
+  "smod.webhook.punishment.duration.infinite": "permanent",
   "smod.webhook.punishment.issued": "<arg:0> applied!",
   "smod.webhook.punishment.issuer": "Applied by:",
   "smod.webhook.punishment.reason": "Reason:",
