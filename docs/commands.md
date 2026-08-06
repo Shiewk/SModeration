@@ -16,3 +16,5 @@
 | /vanish toggle \<players>              | Toggles vanish mode for other players.                                       | smod.vanish        |
 | /vanish list                           | Lists all vanished players.                                                  | smod.vanish.see    |
 | /socialspy                             | Enables SocialSpy mode where you can see other player's private messages.    | smod.socialspy     |
+
+Note that you can add additional commands for custom punishments.

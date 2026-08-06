@@ -22,3 +22,15 @@
 | smod.socialspy            | Allows the player to enable SocialSpy                            |
 
 All of these permissions are granted by default if the player is a server operator.
+
+## Permissions for custom punishments
+
+Permissions for custom punishments will, by default, be in the following format:
+
+- `smod.<type>` for issuing them,
+- `smod.prevent<type>` for immunity,
+- `smod.un<type>` for cancelling.
+
+The third only exists for timed punishments.
+
+So, if the custom punishment type was `levitate`, the three permissions' names would be `smod.levitate`, `smod.preventlevitate` and `smod.unlevitate`.
