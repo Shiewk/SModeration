@@ -62,4 +62,9 @@ public final class SchedulerUtil {
     public static void scheduleAsyncRepeating(Plugin plugin, Consumer<ScheduledTask> task, long delay, long interval, TimeUnit timeUnit) {
         Bukkit.getAsyncScheduler().runAtFixedRate(plugin, task, delay, interval, timeUnit);
     }
+
+    public static void runAsyncNow(Plugin plugin, Consumer<ScheduledTask> action) {
+        Bukkit.getAsyncScheduler().runNow(plugin, action);
+    }
+
 }

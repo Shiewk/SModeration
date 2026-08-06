@@ -116,6 +116,7 @@ public abstract class TimedPunishment extends Punishment {
         for (CommandSender sender : getBroadcastTargets()) {
             sender.sendMessage(cancelMessage());
         }
+        manager.executeCancelWebhook(this);
     }
 
 }

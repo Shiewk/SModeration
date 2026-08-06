@@ -264,13 +264,6 @@ public class SModMenu extends PageableCustomInventory {
     private ItemStack createSearchItem(){
         final ItemStack stack = new ItemStack(Material.FLOWER_BANNER_PATTERN);
 
-        try {
-            stack.setData(DataComponentTypes.HIDE_ADDITIONAL_TOOLTIP);
-        } catch (NoSuchFieldError e) {
-            // that component is no longer present under that name,
-            // we just create the stack without it instead of throwing
-        }
-
         stack.setData(DataComponentTypes.ITEM_NAME, renderComponent(player, translatable("smod.menu.search", SModerationPaper.colors().primary())));
 
         ItemLore.Builder loreBuilder = ItemLore.lore();

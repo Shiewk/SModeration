@@ -14,6 +14,7 @@ import de.shiewk.smoderation.paper.translation.TranslatorManager;
 import de.shiewk.smoderation.paper.util.ColorPalette;
 import de.shiewk.smoderation.paper.util.SModLegacy;
 import de.shiewk.smoderation.paper.util.SchedulerUtil;
+import de.shiewk.smoderation.paper.webhook.Webhook;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -33,6 +34,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -86,7 +88,24 @@ public final class SModerationPaper extends JavaPlugin {
             translatorManager.load();
         }
 
-        this.punishmentManager = new PunishmentManager(getDataPath().resolve("punishments.v2"));
+        Webhook webhook = null;
+        if (config().getBoolean("discord.enabled", false)){
+            try {
+                String url = config().getString("discord.webhook-url", "");
+                String lang = config().getString("discord.lang", "");
+
+                webhook = new Webhook(
+                        URI.create(url),
+                        Locale.forLanguageTag(lang)
+                );
+                LOGGER.info("Webhook has been set up");
+            } catch (Exception e) {
+                LOGGER.error("Parsing webhook config", e);
+                LOGGER.error("Could not read webhook configuration! It will be disabled.");
+            }
+        }
+
+        this.punishmentManager = new PunishmentManager(getDataPath().resolve("punishments.v2"), webhook);
         this.punishmentManager.registerType(new Mute.Type());
         this.punishmentManager.registerType(new Ban.Type());
         this.punishmentManager.registerType(new Kick.Type());
@@ -383,4 +402,5 @@ public final class SModerationPaper extends JavaPlugin {
             throw new RuntimeException("Could not update config", e);
         }
     }
+
 }

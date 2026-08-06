@@ -11,6 +11,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Locale;
 
 public interface CustomInventory extends InventoryHolder {
 
@@ -29,7 +30,11 @@ public interface CustomInventory extends InventoryHolder {
     }
 
     static Component renderComponent(Player viewer, Component component){
-        Component render = GlobalTranslator.render(component, viewer.locale());
+        return renderComponent(viewer.locale(), component);
+    }
+
+    static Component renderComponent(Locale viewer, Component component){
+        Component render = GlobalTranslator.render(component, viewer);
         List<Component> oldChildren = render.children();
         List<Component> newChildren = new ObjectArrayList<>(oldChildren.size());
         for (Component oldChild : oldChildren) {

@@ -50,6 +50,16 @@ custom-punishments:
 # to make muted players unable to talk
 voice-mute: false
 
+# Discord Webhook settings
+discord:
+  # Controls whether the webhook is enabled
+  enabled: false
+  # The URL of the webhook to post data to
+  webhook-url: ''
+  # The language to use for messages
+  # (one of en-US, de-DE)
+  lang: 'en-US'
+
 # A list of commands which will be captured and broadcast
 # to players who have SocialSpy enabled (/socialspy).
 socialspy-commands:

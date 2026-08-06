@@ -7,6 +7,8 @@ import de.shiewk.smoderation.paper.SModerationPaper;
 import de.shiewk.smoderation.paper.event.PunishmentIssueEvent;
 import de.shiewk.smoderation.paper.util.PlayerUtil;
 import de.shiewk.smoderation.paper.util.SerializationHelper;
+import de.shiewk.smoderation.paper.webhook.Webhook;
+import de.shiewk.smoderation.paper.webhook.WebhookPayload;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.bukkit.Bukkit;
@@ -35,9 +37,11 @@ public final class PunishmentManager {
     private final ConcurrentHashMap<UUID, List<Punishment>> cache = new ConcurrentHashMap<>(1);
     private final Object ioLock = new Object();
     private final Path dataDir;
+    private final Webhook webhook;
 
-    public PunishmentManager(Path dataDir) {
+    public PunishmentManager(Path dataDir, Webhook webhook) {
         this.dataDir = dataDir;
+        this.webhook = webhook;
     }
 
     private Path getTargetFile(UUID targetUUID){
@@ -51,6 +55,7 @@ public final class PunishmentManager {
             if (!event.isCancelled()){
                 this.appendToSave(punishment);
                 punishment.processIssue();
+                this.executeWebhookIfEnabled(webhook.makePunishmentIssueMessage(punishment));
                 return true;
             }
             return false;
@@ -183,4 +188,18 @@ public final class PunishmentManager {
         });
     }
 
+    public void executeWebhookIfEnabled(WebhookPayload payload){
+        if (this.webhook != null){
+            this.webhook.execute(payload).whenComplete((v, t) -> {
+                LOGGER.info("Executed webhook");
+                if (t != null){
+                    LOGGER.error("Failed to execute webhook", t);
+                }
+            });
+        }
+    }
+
+    public void executeCancelWebhook(TimedPunishment punishment) {
+        this.executeWebhookIfEnabled(this.webhook.makePunishmentCancelMessage(punishment));
+    }
 }

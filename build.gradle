@@ -36,7 +36,7 @@ runPaper {
 }
 
 runServer {
-    minecraftVersion("26.1.2")
+    minecraftVersion("1.21.6")
 }
 
 dependencies {

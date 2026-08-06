@@ -122,5 +122,15 @@
   "smod.time.seconds": "<arg:0> seconds",
   "smod.time.timestamp": "<arg:2> <arg:1> <arg:0> <arg:3>:<arg:4>:<arg:5> <arg:6>",
   "smod.time.weeks": "<arg:0> weeks",
-  "smod.time.years": "<arg:0> years"
+  "smod.time.years": "<arg:0> years",
+  "smod.webhook.cancel.cancelled": "<arg:0> cancelled",
+  "smod.webhook.cancel.canceller": "Cancelled by:",
+  "smod.webhook.cancel.durationRemaining": "Duration remaining:",
+  "smod.webhook.cancel.target": "Affected player:",
+  "smod.webhook.punishment.duration": "Duration:",
+  "smod.webhook.punishment.issued": "<arg:0> applied!",
+  "smod.webhook.punishment.issuer": "Applied by:",
+  "smod.webhook.punishment.reason": "Reason:",
+  "smod.webhook.punishment.target": "Target:",
+  "smod.webhook.punishment.type": "Type:"
 }
